@@ -1,0 +1,20 @@
+shell[apt-get update]:
+
+deb[apache2]:
+  depends: shell[apt-get update]
+
+deb[php5]:
+  depends: shell[apt-get update]
+  
+deb[proftpd]:
+  depends: shell[apt-get update]
+
+user[ftpuser]:
+  password: test
+
+file[/etc/apache2/sites-available/test-site.conf]:
+  ensure: present
+  depends: deb[apache2]
+
+shell[a2ensite test-site]:
+  depends: file[/etc/apache2/sites-available/test-site.conf]
