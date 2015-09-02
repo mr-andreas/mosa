@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 
-	"kiliaro.app/mosa/common"
+	"github.com/yoshiyaka/mosa/common"
 )
 
 type Executor interface {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"kiliaro.app/mosa/common"
+	"github.com/yoshiyaka/mosa/common"
 )
 
 type dryRun struct {

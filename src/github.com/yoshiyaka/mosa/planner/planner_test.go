@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"kiliaro.lib/rest/resttest"
-
-	"kiliaro.app/mosa/common"
+	"github.com/yoshiyaka/mosa/common"
 )
 
 type badPlanTest struct {
@@ -364,7 +362,7 @@ func TestGoodPlan(t *testing.T) {
 		if plan, err := planner.Plan(goodPlan.steps); err != nil {
 			t.Errorf("Failed planning %s: %s", goodPlan.comment, err)
 		} else {
-			if !resttest.EqualsAsJSON(expectedPlan, plan) {
+			if !common.EqualsAsJSON(expectedPlan, plan) {
 				js, _ := json.MarshalIndent(plan, "", "  ")
 				t.Errorf("For %s: got bad plan %s %s", goodPlan.comment, plan, string(js))
 			}

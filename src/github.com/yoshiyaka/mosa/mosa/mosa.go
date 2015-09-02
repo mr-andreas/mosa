@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"kiliaro.app/mosa/executor"
-	"kiliaro.app/mosa/manifest"
-	"kiliaro.app/mosa/planner"
+	"github.com/yoshiyaka/mosa/executor"
+	"github.com/yoshiyaka/mosa/manifest"
+	"github.com/yoshiyaka/mosa/planner"
 )
 
 func main() {

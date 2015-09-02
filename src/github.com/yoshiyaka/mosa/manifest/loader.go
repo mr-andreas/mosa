@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"kiliaro.app/mosa/common"
+	"github.com/yoshiyaka/mosa/common"
 )
 
 var nameRxp = regexp.MustCompile(`([A-Za-z0-9]+)\[([^[\]]+)\]$`)

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"kiliaro.app/mosa/common"
+	"github.com/yoshiyaka/mosa/common"
 )
 
 var (

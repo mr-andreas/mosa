@@ -5,9 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"kiliaro.lib/rest/resttest"
-
-	"kiliaro.app/mosa/common"
+	"github.com/yoshiyaka/mosa/common"
 )
 
 var loadTests = []struct {
@@ -178,7 +176,7 @@ func TestLoad(t *testing.T) {
 		if steps, err := Load(r); err != nil {
 			t.Errorf("Failed loading %s: %s", loadTest.data, err)
 		} else {
-			if !resttest.EqualsAsJSON(loadTest.expectedSteps, steps) {
+			if !common.EqualsAsJSON(loadTest.expectedSteps, steps) {
 				js, _ := json.MarshalIndent(steps, "", "  ")
 				t.Error("Got bad steps", string(js))
 			}
