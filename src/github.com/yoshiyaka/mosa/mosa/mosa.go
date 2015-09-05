@@ -6,10 +6,14 @@ import (
 
 	"github.com/yoshiyaka/mosa/executor"
 	"github.com/yoshiyaka/mosa/manifest"
+	"github.com/yoshiyaka/mosa/manifest2"
 	"github.com/yoshiyaka/mosa/planner"
 )
 
 func main() {
+	manifest2.Lex()
+	return
+
 	mfst, mfstErr := os.Open("../testdata/manifest.yaml")
 	if mfstErr != nil {
 		panic(mfstErr)

@@ -1,0 +1,5 @@
+class nginx($workers = 4) {
+  apt[nginx] {
+    ensure => installed,
+  }
+}
