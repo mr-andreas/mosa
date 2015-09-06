@@ -1,5 +1,5 @@
-/lex.tab.cpp
-/lex.tab.hpp
-/lex.yy.cpp
+/lex.tab.c
+/lex.tab.h
+/lex.yy.c
 
 /cprog

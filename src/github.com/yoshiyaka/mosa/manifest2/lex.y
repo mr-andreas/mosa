@@ -1,23 +1,23 @@
 %{
-#include <cstdio>
-#include <iostream>
-using namespace std;
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-extern "C" {
 #include "_cgo_export.h"
-}
+
 
 // stuff from flex that bison needs to know about:
 //extern "C" int yylex();
 //extern "C" int yyparse();
 //extern "C" int doparse();
-extern "C" int line_num;
-extern "C" FILE *yyin;
+extern int line_num;
+extern FILE *yyin;
 
-//extern "C" void GoFunc();
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+extern int yyparse();
+extern YY_BUFFER_STATE yy_scan_string(char * str);
+extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
-GoInterface x;
- 
 void yyerror(const char *s);
 %}
 
@@ -94,7 +94,7 @@ classes:
 
 class:
 	CLASS STRING '{' defs '}' {
-		cout << "saw class " << $2 << endl;
+		//cout << "saw class " << $2 << endl;
 		$$ = NewClass($2, $4);
 	}
 
@@ -105,44 +105,32 @@ defs:
 	
 def:
 	STRING '=' STRING {
-		cout << "saw def " << $1 << " = " << $3 << endl;
+		//cout << "saw def " << $1 << " = " << $3 << endl;
 		$$ = SawDef($1, $3);
 	}
 
 %%
 
-int main2(int, char**) {
-  // open a file handle to a particular file:
-  FILE *myfile = fopen("a.snazzle.file", "r");
-  // make sure it is valid:
-  if (!myfile) {
-    cout << "I can't open a.snazzle.file!" << endl;
-    return -1;
-  }
-  // set flex to read from it instead of defaulting to STDIN:
-  yyin = myfile;
-  
-  // parse through the input until there is no more:
-  do {
-    yyparse();
-  } while (!feof(yyin));
-  
-}
+char *last_error = NULL;
 
-int doparse() {
-	printf("doparse called\n");
-	GoFunc();
+t_error doparse(char *file) {
+	int ret;
 	
-  do {
-    yyparse();
-  } while (!feof(yyin));
-  
-  return 0;
+	YY_BUFFER_STATE buffer = yy_scan_string(file);
+    ret = yyparse();
+    yy_delete_buffer(buffer);
+	
+	t_error err;
+	err.code = ret;
+	err.error = last_error;
+	err.line = line_num;
+	
+	return err;
 }
 
 void yyerror(const char *s) {
-  cout << "EEK, parse error on line " << line_num << "!  Message: " << s << endl;
-
-  // might as well halt now:
-  exit(-1);
+	if(!last_error) {
+		free(last_error);
+	}
+	last_error = strdup(s);
 }

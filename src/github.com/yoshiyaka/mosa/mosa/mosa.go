@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	manifest2.Lex()
+	manifest2.Lex(os.Stdin)
 	return
 
 	mfst, mfstErr := os.Open("../testdata/manifest.yaml")

@@ -1,8 +1,7 @@
 %{
 #include <stdio.h>
-#define YY_DECL extern "C" int yylex()
 
-#include "lex.tab.hpp"  // to get the token types that we return
+#include "lex.tab.h"  // to get the token types that we return
 
 int line_num = 1;
 

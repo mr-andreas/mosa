@@ -1,12 +1,18 @@
 package manifest2
 
 // #cgo LDFLAGS: -lfl
-// extern int yylex();
-// extern int doparse();
+// typedef struct {
+//   int code;
+//   const char *error;
+//   int line;
+// } t_error;
+// extern t_error doparse(char *);
 import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 )
 
 var (
@@ -93,13 +99,20 @@ func SawDef(name, val *C.char) goHandle {
 	})
 }
 
-func Lex() {
-	ret := C.doparse()
+func Lex(r io.Reader) error {
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
 
-	fmt.Println("yylex returned", ret)
-
-	js, _ := json.MarshalIndent(lastFile, "", "  ")
-	fmt.Println(string(js))
-
-	//	panic(ret)
+	ret := C.doparse(C.CString(string(buf)))
+	if ret.code != 0 {
+		return fmt.Errorf(
+			"Failed parsing:", C.GoString(ret.error), "on line", ret.code,
+		)
+	} else {
+		js, _ := json.MarshalIndent(lastFile, "", "  ")
+		fmt.Println(string(js))
+		return nil
+	}
 }

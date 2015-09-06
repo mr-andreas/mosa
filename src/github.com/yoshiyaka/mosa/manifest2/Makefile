@@ -1,15 +1,14 @@
-all: lex.yy.cpp lex.tab.cpp
+all: lex.yy.c lex.tab.c
 .PHONY: all
 
-lex.yy.cpp: lex.l
-	flex -o lex.yy.cpp lex.l 
+lex.yy.c: lex.l
+	flex -o lex.yy.c lex.l 
 
-lex.tab.hpp: lex.tab.cpp
-lex.tab.cpp: lex.y
-	bison -d lex.y -o lex.tab.cpp
+lex.tab.h lex.tab.c: lex.y
+	bison -d lex.y -o lex.tab.c
 
 clean:
-	rm -rf lex.yy.cpp lex.tab.cpp lex.tab.hpp cprog _obj
+	rm -rf lex.yy.c lex.tab.c lex.tab.h cprog _obj
 
 cprog: lex.yy.cpp lex.tab.cpp
 	g++ lex.yy.cpp lex.tab.cpp -lfl -o cprog
