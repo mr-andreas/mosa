@@ -9,10 +9,14 @@ lex.tab.cpp: lex.y
 	bison -d lex.y -o lex.tab.cpp
 
 clean:
-	rm -f lex.yy.cpp lex.tab.cpp lex.tab.hpp cprog
+	rm -rf lex.yy.cpp lex.tab.cpp lex.tab.hpp cprog _obj
 
 cprog: lex.yy.cpp lex.tab.cpp
 	g++ lex.yy.cpp lex.tab.cpp -lfl -o cprog
 
 run: cprog
 	echo "this is a string" | ./cprog
+
+cgo: lex.go
+	go tool cgo lex.go
+.PHONY: cgo

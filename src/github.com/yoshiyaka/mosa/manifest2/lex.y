@@ -3,12 +3,20 @@
 #include <iostream>
 using namespace std;
 
+extern "C" {
+#include "_cgo_export.h"
+}
+
 // stuff from flex that bison needs to know about:
-extern "C" int yylex();
-extern "C" int yyparse();
-extern "C" int doparse();
+//extern "C" int yylex();
+//extern "C" int yyparse();
+//extern "C" int doparse();
 extern "C" int line_num;
 extern "C" FILE *yyin;
+
+//extern "C" void GoFunc();
+
+GoInterface x;
  
 void yyerror(const char *s);
 %}
@@ -22,6 +30,7 @@ void yyerror(const char *s);
   int ival;
   float fval;
   char *sval;
+  int gohandle;
 }
 
 %token SNAZZLE TYPE
@@ -32,12 +41,19 @@ void yyerror(const char *s);
 %token <ival> INT
 %token <fval> FLOAT
 %token <sval> STRING
+%token <sval> CLASS
+
+%type <gohandle> def
+%type <gohandle> defs
+%type <gohandle> class
+%type <gohandle> classes
+%type <gohandle> file
 
 %%
 
 // the first rule defined is the highest-level rule, which in our
 // case is just the concept of a whole "snazzle file":
-snazzle:
+/*snazzle:
   header template body_section footer { cout << "done with a snazzle file!" << endl; }
   ;
 header:
@@ -65,7 +81,33 @@ body_line:
   ;
 footer:
   END
-  ;
+  ;*/
+
+file:
+	classes			{ NewFile($1); }
+	;
+
+classes:
+	classes class   { AddClasses($1, $2); }
+	| class			{ $$ = NewClasses($1); }
+	;
+
+class:
+	CLASS STRING '{' defs '}' {
+		cout << "saw class " << $2 << endl;
+		$$ = NewClass($2, $4);
+	}
+
+defs:
+	defs ',' def { AddDefs($1, $3); }
+	| def        { $$ = NewDefs($1); }
+	;
+	
+def:
+	STRING '=' STRING {
+		cout << "saw def " << $1 << " = " << $3 << endl;
+		$$ = SawDef($1, $3);
+	}
 
 %%
 
@@ -88,6 +130,9 @@ int main2(int, char**) {
 }
 
 int doparse() {
+	printf("doparse called\n");
+	GoFunc();
+	
   do {
     yyparse();
   } while (!feof(yyin));

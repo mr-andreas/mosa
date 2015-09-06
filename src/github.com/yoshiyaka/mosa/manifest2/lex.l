@@ -9,9 +9,7 @@ int line_num = 1;
 %}
 %%
 [ \t] ;
-sNaZZle        { return SNAZZLE; }
-type           { return TYPE; }
-end            { return END; }
+class          { return CLASS; }
 [0-9]+\.[0-9]+ { yylval.fval = atof(yytext); return FLOAT; }
 [0-9]+         { yylval.ival = atoi(yytext); return INT; }
 [a-zA-Z0-9]+   {
@@ -19,6 +17,6 @@ end            { return END; }
   yylval.sval = strdup(yytext);
   return STRING;
 }
+[\(\)\{\}:;=,]    { return yytext[0]; }
 [\n]           { line_num++; }
-.              ;
 %%
