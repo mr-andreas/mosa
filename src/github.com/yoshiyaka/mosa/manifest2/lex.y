@@ -42,6 +42,7 @@ void yyerror(const char *s);
 %token <fval> FLOAT
 %token <sval> STRING
 %token <sval> CLASS
+%token <sval> QUOTED_STRING
 
 %type <gohandle> def
 %type <gohandle> defs
@@ -53,35 +54,6 @@ void yyerror(const char *s);
 
 // the first rule defined is the highest-level rule, which in our
 // case is just the concept of a whole "snazzle file":
-/*snazzle:
-  header template body_section footer { cout << "done with a snazzle file!" << endl; }
-  ;
-header:
-  SNAZZLE FLOAT { cout << "reading a snazzle file version " << $2 << endl; }
-  ;
-template:
-  typelines
-  ;
-typelines:
-  typelines typeline
-  | typeline
-  ;
-typeline:
-  TYPE STRING { cout << "new defined snazzle type: " << $2 << endl; }
-  ;
-body_section:
-  body_lines
-  ;
-body_lines:
-  body_lines body_line
-  | body_line
-  ;
-body_line:
-  INT INT INT INT STRING { cout << "new snazzle: " << $1 << $2 << $3 << $4 << $5 << endl; }
-  ;
-footer:
-  END
-  ;*/
 
 file:
 	classes			{ NewFile($1); }
