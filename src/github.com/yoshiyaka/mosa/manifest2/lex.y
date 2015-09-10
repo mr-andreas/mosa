@@ -99,8 +99,9 @@ class:
 	}
 
 defs:
-	defs ',' def { AddDefs($1, $3); }
+	defs ',' def { AddDefs($1, $3);  }
 	| def        { $$ = NewDefs($1); }
+	|		     { $$ = NilDefs();   }
 	;
 	
 def:

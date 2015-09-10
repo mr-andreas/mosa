@@ -1,12 +1,34 @@
 package manifest2
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
 
-func TestLex(t *testing.T) {
-	manifest := `
+var lexTests = []struct {
+	manifest string
+	ast      *File
+}{
+	{
+		`
+		class Test {
+		}
+		`,
+
+		&File{
+			Classes: &Classes{
+				Classes: []*Class{
+					{
+						Name: "Test",
+						Defs: &Defs{},
+					},
+				},
+			},
+		},
+	},
+	{
+		`
 		class Test {
 			foo = bar,
 			baz = yup
@@ -15,9 +37,53 @@ func TestLex(t *testing.T) {
 		class Class2 {
 			good = text
 		}
-	`
+		`,
 
-	if err := Lex(strings.NewReader(manifest)); err != nil {
-		t.Fatal(err)
+		&File{
+			Classes: &Classes{
+				Classes: []*Class{
+					{
+						Name: "Test",
+						Defs: &Defs{
+							Defs: []*Def{
+								{
+									Name: "foo",
+									Val:  "bar",
+								},
+
+								{
+									Name: "baz",
+									Val:  "yup",
+								},
+							},
+						},
+					},
+
+					{
+						Name: "Class2",
+						Defs: &Defs{
+							Defs: []*Def{
+								{
+									Name: "good",
+									Val:  "text",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestLex(t *testing.T) {
+	for _, test := range lexTests {
+		if file, err := Lex("test.manifest", strings.NewReader(test.manifest)); err != nil {
+			t.Fatal(err)
+		} else {
+			if !reflect.DeepEqual(file, test.ast) {
+				t.Error(test.manifest)
+			}
+		}
 	}
 }

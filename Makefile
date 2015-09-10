@@ -17,3 +17,7 @@ clean:
 run: bin/mosa
 	cat test2.manifest
 	cat test2.manifest | bin/mosa
+
+test: lex
+	GOPATH=`pwd` go test github.com/yoshiyaka/mosa/...
+.PHONY: test
