@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "_cgo_export.h"
+#include "types.h"
 
 
 // stuff from flex that bison needs to know about:
@@ -60,8 +61,9 @@ file:
 	;
 
 classes:
-	classes class   { AddClasses($1, $2); }
-	| class			{ $$ = NewClasses($1); }
+	classes class   { $$ = AppendArray($1, $2); }
+	| class			{ $$ = AppendArray(NilArray(ASTTYPE_CLASSES), $1); }
+/* 	|				{ $$ = NilArray(ASTTYPE_CLASSES); } */
 	;
 
 class:
@@ -71,9 +73,9 @@ class:
 	}
 
 defs:
-	defs ',' def { AddDefs($1, $3);  }
-	| def        { $$ = NewDefs($1); }
-	|		     { $$ = NilDefs();   }
+	defs ',' def { $$ = AppendArray($1, $3);  }
+	| def        { $$ = AppendArray(NilArray(ASTTYPE_DEFS), $1); }
+	|		     { $$ = NilArray(ASTTYPE_DEFS);   }
 	;
 	
 def:

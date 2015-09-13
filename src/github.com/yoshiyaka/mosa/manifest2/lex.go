@@ -8,9 +8,10 @@ package manifest2
 // } t_error;
 // extern t_error doparse(char *);
 // extern int line_num;
+//
+// #include "types.h"
 import "C"
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -22,7 +23,7 @@ var (
 )
 
 type File struct {
-	Classes *Classes
+	Classes []Class
 }
 
 type Classes struct {
@@ -31,7 +32,7 @@ type Classes struct {
 
 type Class struct {
 	Name string
-	Defs *Defs
+	Defs []Def
 }
 
 type Defs struct {
@@ -48,10 +49,35 @@ func GoFunc() {
 	fmt.Println("A GO FUNC")
 }
 
+//export NilArray
+func NilArray(typ C.ASTTYPE) goHandle {
+	switch typ {
+	case C.ASTTYPE_DEFS:
+		return ht.Add([]Def{})
+	case C.ASTTYPE_CLASSES:
+		return ht.Add([]Class{})
+	}
+
+	panic("Bad type")
+}
+
+//export AppendArray
+func AppendArray(arrayHandle, newValue goHandle) goHandle {
+	array := ht.Get(arrayHandle)
+	switch array.(type) {
+	case []Def:
+		return ht.Add(append(array.([]Def), ht.Get(newValue).(Def)))
+	case []Class:
+		return ht.Add(append(array.([]Class), ht.Get(newValue).(Class)))
+	}
+
+	panic("Bad type")
+}
+
 //export NewFile
 func NewFile(classes goHandle) goHandle {
 	lastFile = &File{
-		Classes: ht.Get(classes).(*Classes),
+		Classes: ht.Get(classes).([]Class),
 	}
 	return ht.Add(lastFile)
 }
@@ -71,9 +97,9 @@ func NewClasses(class goHandle) goHandle {
 
 //export NewClass
 func NewClass(identifier *C.char, defs goHandle) goHandle {
-	return ht.Add(&Class{
+	return ht.Add(Class{
 		Name: C.GoString(identifier),
-		Defs: ht.Get(defs).(*Defs),
+		Defs: ht.Get(defs).([]Def),
 	})
 }
 
@@ -90,16 +116,9 @@ func NewDefs(def goHandle) goHandle {
 	})
 }
 
-//export NilDefs
-func NilDefs() goHandle {
-	return ht.Add(&Defs{})
-}
-
 //export SawDef
 func SawDef(name, val *C.char) goHandle {
-	fmt.Println("GOLANG SawDef", C.GoString(name), C.GoString(val))
-
-	return ht.Add(&Def{
+	return ht.Add(Def{
 		C.GoString(name),
 		C.GoString(val),
 	})
@@ -117,8 +136,6 @@ func Lex(filename string, r io.Reader) (*File, error) {
 			"%s:%d: %s", filename, C.line_num, C.GoString(ret.error),
 		)
 	} else {
-		js, _ := json.MarshalIndent(lastFile, "", "  ")
-		fmt.Println(string(js))
 		return lastFile, nil
 	}
 }

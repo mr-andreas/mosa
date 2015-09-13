@@ -1,6 +1,7 @@
 package manifest2
 
 import (
+	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
@@ -17,16 +18,58 @@ var lexTests = []struct {
 		`,
 
 		&File{
-			Classes: &Classes{
-				Classes: []*Class{
-					{
-						Name: "Test",
-						Defs: &Defs{},
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
+		}
+		class Bar {}
+		`,
+
+		&File{
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{},
+				},
+				{
+					Name: "Bar",
+					Defs: []Def{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
+			prop = x
+		}
+		`,
+
+		&File{
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{
+						{
+							Name: "prop",
+							Val:  "x",
+						},
 					},
 				},
 			},
 		},
 	},
+
 	{
 		`
 		class Test {
@@ -40,34 +83,28 @@ var lexTests = []struct {
 		`,
 
 		&File{
-			Classes: &Classes{
-				Classes: []*Class{
-					{
-						Name: "Test",
-						Defs: &Defs{
-							Defs: []*Def{
-								{
-									Name: "foo",
-									Val:  "bar",
-								},
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{
+						{
+							Name: "foo",
+							Val:  "bar",
+						},
 
-								{
-									Name: "baz",
-									Val:  "yup",
-								},
-							},
+						{
+							Name: "baz",
+							Val:  "yup",
 						},
 					},
+				},
 
-					{
-						Name: "Class2",
-						Defs: &Defs{
-							Defs: []*Def{
-								{
-									Name: "good",
-									Val:  "text",
-								},
-							},
+				{
+					Name: "Class2",
+					Defs: []Def{
+						{
+							Name: "good",
+							Val:  "text",
 						},
 					},
 				},
@@ -82,6 +119,8 @@ func TestLex(t *testing.T) {
 			t.Fatal(err)
 		} else {
 			if !reflect.DeepEqual(file, test.ast) {
+				js, _ := json.MarshalIndent(lastFile, "", "  ")
+				t.Log(string(js))
 				t.Error(test.manifest)
 			}
 		}
