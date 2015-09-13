@@ -53,9 +53,6 @@ void yyerror(const char *s);
 
 %%
 
-// the first rule defined is the highest-level rule, which in our
-// case is just the concept of a whole "snazzle file":
-
 file:
 	classes			{ NewFile($1); }
 	;
@@ -63,12 +60,10 @@ file:
 classes:
 	classes class   { $$ = AppendArray($1, $2); }
 	| class			{ $$ = AppendArray(NilArray(ASTTYPE_CLASSES), $1); }
-/* 	|				{ $$ = NilArray(ASTTYPE_CLASSES); } */
 	;
 
 class:
 	CLASS STRING '{' defs '}' {
-		//cout << "saw class " << $2 << endl;
 		$$ = NewClass($2, $4);
 	}
 
@@ -80,7 +75,6 @@ defs:
 	
 def:
 	STRING '=' STRING {
-		//cout << "saw def " << $1 << " = " << $3 << endl;
 		$$ = SawDef($1, $3);
 	}
 
