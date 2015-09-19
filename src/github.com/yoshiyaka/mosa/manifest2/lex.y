@@ -42,6 +42,7 @@ void yyerror(const char *s);
 %token <ival> INT
 %token <fval> FLOAT
 %token <sval> STRING
+%token <sval> VARIABLE
 %token <sval> CLASS
 %token <sval> QUOTED_STRING
 
@@ -74,9 +75,8 @@ defs:
 	;
 	
 def:
-	STRING '=' STRING {
-		$$ = SawDef($1, $3);
-	}
+	VARIABLE '=' QUOTED_STRING	{ $$ = SawDef($1, $3);	}
+	| VARIABLE '=' VARIABLE		{ $$ = SawDef($1, $3);	}
 
 %%
 

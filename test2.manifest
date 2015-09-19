@@ -1,8 +1,8 @@
 class MyClass {
-	foo = bar,
-	baz = zorg
+	$foo = 'bar',
+	$baz = $foo
 }
 
 class AnotherClass {
-	test = hej	
+	$test = 'hej'
 }

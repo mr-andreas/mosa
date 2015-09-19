@@ -51,7 +51,7 @@ var lexTests = []struct {
 	{
 		`
 		class Test {
-			prop = x
+			$prop = 'x'
 		}
 		`,
 
@@ -61,8 +61,8 @@ var lexTests = []struct {
 					Name: "Test",
 					Defs: []Def{
 						{
-							Name: "prop",
-							Val:  "x",
+							Name: "$prop",
+							Val:  "'x'",
 						},
 					},
 				},
@@ -73,12 +73,12 @@ var lexTests = []struct {
 	{
 		`
 		class Test {
-			foo = bar,
-			baz = yup
+			$foo = 'bar',
+			$baz = $foo
 		}
 		
 		class Class2 {
-			good = text
+			$good = 'text'
 		}
 		`,
 
@@ -88,13 +88,13 @@ var lexTests = []struct {
 					Name: "Test",
 					Defs: []Def{
 						{
-							Name: "foo",
-							Val:  "bar",
+							Name: "$foo",
+							Val:  "'bar'",
 						},
 
 						{
-							Name: "baz",
-							Val:  "yup",
+							Name: "$baz",
+							Val:  "$foo",
 						},
 					},
 				},
@@ -103,8 +103,8 @@ var lexTests = []struct {
 					Name: "Class2",
 					Defs: []Def{
 						{
-							Name: "good",
-							Val:  "text",
+							Name: "$good",
+							Val:  "'text'",
 						},
 					},
 				},
@@ -116,6 +116,7 @@ var lexTests = []struct {
 func TestLex(t *testing.T) {
 	for _, test := range lexTests {
 		if file, err := Lex("test.manifest", strings.NewReader(test.manifest)); err != nil {
+			t.Log(test.manifest)
 			t.Fatal(err)
 		} else {
 			if !reflect.DeepEqual(file, test.ast) {
