@@ -27,6 +27,6 @@ class			{ return CLASS; }
   yylval.sval[strlen(yylval.sval)-1] = '\0';
   return QUOTED_STRING;
 }
-[\(\)\{\}:;=,]    { return yytext[0]; }
+[\(\)\{\}:;=,[\]]    { return yytext[0]; }
 [\n]           { line_num++; }
 %%

@@ -22,6 +22,8 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 void yyerror(const char *s);
 %}
 
+%define parse.error verbose
+
 // Bison fundamentally works by asking flex to get the next token, which it
 // returns as an object of type "yystype".  But tokens could be of any
 // arbitrary data type!  So we deal with that in Bison by defining a C union
@@ -54,6 +56,10 @@ void yyerror(const char *s);
 %type <gohandle> proplist
 %type <gohandle> prop
 %type <gohandle> value
+%type <gohandle> arrayentries
+%type <gohandle> array
+%type <gohandle> scalar
+%type <gohandle> reference
 
 %%
 
@@ -83,17 +89,33 @@ declaration:
 	| STRING '{' QUOTED_STRING ':' '}'			{ $$ = SawDeclaration($1, $3, NilArray(ASTTYPE_PROPLIST)); }
 
 proplist:
-	proplist ',' prop	{ $$ = AppendArray($1, $3); }
-	| prop				{ $$ = AppendArray(NilArray(ASTTYPE_PROPLIST), $1); }
+	proplist prop	{ $$ = AppendArray($1, $2); }
+	| prop			{ $$ = AppendArray(NilArray(ASTTYPE_PROPLIST), $1); }
 	;
 
 prop:
 	STRING ARROW value ','	{ $$ = SawProp($1, $3); }
 
 value:
+	scalar			{ $$ = $1; }
+	| array			{ $$ = $1; }
+	| reference		{ $$ = $1; }
+
+scalar:
 	QUOTED_STRING	{ $$ = SawQuotedString($1);	}
 	| VARIABLE		{ $$ = SawVariable($1);		}
-	
+
+reference:
+	STRING '[' scalar ']' { $$ = SawReference($1, $3); }
+
+array:
+	'[' arrayentries ']'	{ $$ = $2; }
+	| '[' ']' 				{ $$ = NilArray(ASTTYPE_ARRAY); }
+
+arrayentries:
+	arrayentries value ','	{ $$ = AppendArray($1, $2); }
+	| value ','				{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY), $1); }
+
 %%
 
 char *last_error = NULL;

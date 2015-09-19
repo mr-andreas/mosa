@@ -51,7 +51,18 @@ type Prop struct {
 	Value Value
 }
 
+// A value, for instance 1, 'foo', $bar or [ 1, 'five', ]
 type Value interface{}
+
+// An array of strings, number or references, for instance
+// [ 1, 'foo', package[$webserver], ]
+type Array []interface{}
+
+// A reference, for instance package['nginx'] or package[$webserver]
+type Reference struct {
+	Type   string
+	Scalar Value
+}
 
 //export NilArray
 func NilArray(typ C.ASTTYPE) goHandle {
@@ -62,8 +73,11 @@ func NilArray(typ C.ASTTYPE) goHandle {
 		return ht.Add([]Class{})
 	case C.ASTTYPE_PROPLIST:
 		return ht.Add([]Prop{})
+	case C.ASTTYPE_ARRAY:
+		return ht.Add(Array{})
 	}
 
+	fmt.Printf("%#v\n", typ)
 	panic("Bad type")
 }
 
@@ -79,6 +93,8 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 		return ht.Add(append(array.([]Prop), ht.Get(newValue).(Prop)))
 	case []interface{}:
 		return ht.Add(append(array.([]interface{}), ht.Get(newValue)))
+	case Array:
+		return ht.Add(append(array.(Array), ht.Get(newValue)))
 	}
 
 	fmt.Printf("%#v\n", array)
@@ -150,6 +166,14 @@ func SawProp(propName *C.char, value goHandle) goHandle {
 	return ht.Add(Prop{
 		Name:  C.GoString(propName),
 		Value: ht.Get(value),
+	})
+}
+
+//export SawReference
+func SawReference(typ *C.char, scalar goHandle) goHandle {
+	return ht.Add(Reference{
+		Type:   C.GoString(typ),
+		Scalar: ht.Get(scalar),
 	})
 }
 
