@@ -20,8 +20,9 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
-					Defs: []Def{},
+					Name:         "Test",
+					Defs:         []Def{},
+					Declarations: []Declaration{},
 				},
 			},
 		},
@@ -37,12 +38,14 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
-					Defs: []Def{},
+					Name:         "Test",
+					Defs:         []Def{},
+					Declarations: []Declaration{},
 				},
 				{
-					Name: "Bar",
-					Defs: []Def{},
+					Name:         "Bar",
+					Defs:         []Def{},
+					Declarations: []Declaration{},
 				},
 			},
 		},
@@ -61,8 +64,34 @@ var lexTests = []struct {
 					Name: "Test",
 					Defs: []Def{
 						{
-							Name: "$prop",
-							Val:  "'x'",
+							Name: Variable("$prop"),
+							Val:  Value("x"),
+						},
+					},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
+			package { 'pkg-name':
+			}
+		}
+		`,
+
+		&File{
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{},
+					Declarations: []Declaration{
+						{
+							Type:  "package",
+							Name:  "pkg-name",
+							Props: []Prop{},
 						},
 					},
 				},
@@ -73,7 +102,38 @@ var lexTests = []struct {
 	{
 		`
 		class Test {
-			$foo = 'bar',
+			package { 'pkg':
+				foo => 'bar',
+			}
+		}
+		`,
+
+		&File{
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{},
+					Declarations: []Declaration{
+						{
+							Type: "package",
+							Name: "pkg",
+							Props: []Prop{
+								{
+									Name:  "foo",
+									Value: "bar",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
+			$foo = 'bar'
 			$baz = $foo
 		}
 		
@@ -89,7 +149,7 @@ var lexTests = []struct {
 					Defs: []Def{
 						{
 							Name: "$foo",
-							Val:  "'bar'",
+							Val:  "bar",
 						},
 
 						{
@@ -97,6 +157,7 @@ var lexTests = []struct {
 							Val:  "$foo",
 						},
 					},
+					Declarations: []Declaration{},
 				},
 
 				{
@@ -104,9 +165,10 @@ var lexTests = []struct {
 					Defs: []Def{
 						{
 							Name: "$good",
-							Val:  "'text'",
+							Val:  "text",
 						},
 					},
+					Declarations: []Declaration{},
 				},
 			},
 		},
@@ -117,13 +179,32 @@ func TestLex(t *testing.T) {
 	for _, test := range lexTests {
 		if file, err := Lex("test.manifest", strings.NewReader(test.manifest)); err != nil {
 			t.Log(test.manifest)
-			t.Fatal(err)
+			t.Error(err)
 		} else {
-			if !reflect.DeepEqual(file, test.ast) {
+			if !equalsAsJson(file, test.ast) {
+				t.Logf("%#v", test.ast)
+				t.Logf("%#v", lastFile)
+				js2, _ := json.MarshalIndent(test.ast, "", "  ")
+				t.Log(string(js2))
 				js, _ := json.MarshalIndent(lastFile, "", "  ")
 				t.Log(string(js))
-				t.Error(test.manifest)
+				t.Fatal(test.manifest)
 			}
 		}
 	}
+}
+
+func equalsAsJson(i1, i2 interface{}) bool {
+	j1, err1 := json.Marshal(i1)
+	j2, err2 := json.Marshal(i2)
+
+	if err1 != nil || err2 != nil {
+		return false
+	}
+
+	var unserialized1, unserialized2 interface{}
+	json.Unmarshal(j1, &unserialized1)
+	json.Unmarshal(j2, &unserialized2)
+
+	return reflect.DeepEqual(unserialized1, unserialized2)
 }

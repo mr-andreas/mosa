@@ -27,22 +27,41 @@ type File struct {
 }
 
 type Class struct {
-	Name string
-	Defs []Def
+	Name         string
+	Defs         []Def
+	Declarations []Declaration
 }
 
 type Def struct {
-	Name,
-	Val string
+	Name Variable
+	Val  Value
 }
+
+type QuotedString string
+type Variable string
+
+type Declaration struct {
+	Type  string
+	Name  string
+	Props []Prop
+}
+
+type Prop struct {
+	Name  string
+	Value Value
+}
+
+type Value interface{}
 
 //export NilArray
 func NilArray(typ C.ASTTYPE) goHandle {
 	switch typ {
 	case C.ASTTYPE_DEFS:
-		return ht.Add([]Def{})
+		return ht.Add([]interface{}{})
 	case C.ASTTYPE_CLASSES:
 		return ht.Add([]Class{})
+	case C.ASTTYPE_PROPLIST:
+		return ht.Add([]Prop{})
 	}
 
 	panic("Bad type")
@@ -56,8 +75,13 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 		return ht.Add(append(array.([]Def), ht.Get(newValue).(Def)))
 	case []Class:
 		return ht.Add(append(array.([]Class), ht.Get(newValue).(Class)))
+	case []Prop:
+		return ht.Add(append(array.([]Prop), ht.Get(newValue).(Prop)))
+	case []interface{}:
+		return ht.Add(append(array.([]interface{}), ht.Get(newValue)))
 	}
 
+	fmt.Printf("%#v\n", array)
 	panic("Bad type")
 }
 
@@ -70,18 +94,62 @@ func NewFile(classes goHandle) goHandle {
 }
 
 //export NewClass
-func NewClass(identifier *C.char, defs goHandle) goHandle {
+func NewClass(identifier *C.char, defsAndDeclsHandle goHandle) goHandle {
+	defsAndDecls := ht.Get(defsAndDeclsHandle).([]interface{})
+
+	defs := []Def{}
+	decls := []Declaration{}
+
+	for _, val := range defsAndDecls {
+		switch val.(type) {
+		case Def:
+			defs = append(defs, val.(Def))
+		case Declaration:
+			decls = append(decls, val.(Declaration))
+		default:
+			panic("Value is neither def nor decl")
+		}
+	}
+
 	return ht.Add(Class{
-		Name: C.GoString(identifier),
-		Defs: ht.Get(defs).([]Def),
+		Name:         C.GoString(identifier),
+		Defs:         defs,
+		Declarations: decls,
 	})
 }
 
 //export SawDef
-func SawDef(name, val *C.char) goHandle {
+func SawDef(varName *C.char, val goHandle) goHandle {
 	return ht.Add(Def{
-		C.GoString(name),
-		C.GoString(val),
+		Variable(C.GoString(varName)),
+		ht.Get(val),
+	})
+}
+
+//export SawQuotedString
+func SawQuotedString(val *C.char) goHandle {
+	return ht.Add(QuotedString(C.GoString(val)))
+}
+
+//export SawVariable
+func SawVariable(name *C.char) goHandle {
+	return ht.Add(Variable(C.GoString(name)))
+}
+
+//export SawDeclaration
+func SawDeclaration(typ, name *C.char, proplist goHandle) goHandle {
+	return ht.Add(Declaration{
+		Type:  C.GoString(typ),
+		Name:  C.GoString(name),
+		Props: ht.Get(proplist).([]Prop),
+	})
+}
+
+//export SawProp
+func SawProp(propName *C.char, value goHandle) goHandle {
+	return ht.Add(Prop{
+		Name:  C.GoString(propName),
+		Value: ht.Get(value),
 	})
 }
 

@@ -8,9 +8,10 @@ int line_num = 1;
 %}
 %%
 [ \t] ;
-class          { return CLASS; }
-[0-9]+\.[0-9]+ { yylval.fval = atof(yytext); return FLOAT; }
-[0-9]+         { yylval.ival = atoi(yytext); return INT; }
+class			{ return CLASS; }
+[0-9]+\.[0-9]+	{ yylval.fval = atof(yytext); return FLOAT; }
+[0-9]+			{ yylval.ival = atoi(yytext); return INT; }
+=>				{ return ARROW; }
 \$[a-zA-Z0-9]+   {
   yylval.sval = strdup(yytext);
   return VARIABLE;
@@ -20,9 +21,10 @@ class          { return CLASS; }
   yylval.sval = strdup(yytext);
   return STRING;
 }
-'[a-zA-Z0-9]*' {
-  // we have to copy because we can't rely on yytext not changing underneath us:
-  yylval.sval = strdup(yytext);
+'[^']*' {
+  // Remove the quotes at scan time
+  yylval.sval = strdup(yytext+1);
+  yylval.sval[strlen(yylval.sval)-1] = '\0';
   return QUOTED_STRING;
 }
 [\(\)\{\}:;=,]    { return yytext[0]; }
