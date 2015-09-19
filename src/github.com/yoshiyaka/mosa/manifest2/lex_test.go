@@ -89,9 +89,9 @@ var lexTests = []struct {
 					Defs: []Def{},
 					Declarations: []Declaration{
 						{
-							Type:  "package",
-							Name:  "pkg-name",
-							Props: []Prop{},
+							Type:   "package",
+							Scalar: "pkg-name",
+							Props:  []Prop{},
 						},
 					},
 				},
@@ -115,8 +115,8 @@ var lexTests = []struct {
 					Defs: []Def{},
 					Declarations: []Declaration{
 						{
-							Type: "package",
-							Name: "pkg",
+							Type:   "package",
+							Scalar: "pkg",
 							Props: []Prop{
 								{
 									Name:  "foo",
@@ -190,8 +190,8 @@ var lexTests = []struct {
 					Defs: []Def{},
 					Declarations: []Declaration{
 						{
-							Type: "package",
-							Name: "pkg3",
+							Type:   "package",
+							Scalar: "pkg3",
 							Props: []Prop{
 								{
 									Name:  "depends",
@@ -221,8 +221,8 @@ var lexTests = []struct {
 					Defs: []Def{},
 					Declarations: []Declaration{
 						{
-							Type: "package",
-							Name: "pkg3",
+							Type:   "package",
+							Scalar: "pkg3",
 							Props: []Prop{
 								{
 									Name: "depends",
@@ -260,8 +260,8 @@ var lexTests = []struct {
 					Defs: []Def{},
 					Declarations: []Declaration{
 						{
-							Type: "package",
-							Name: "pkg3",
+							Type:   "package",
+							Scalar: "pkg3",
 							Props: []Prop{
 								{
 									Name: "depends",
@@ -354,8 +354,8 @@ var lexTests = []struct {
 					},
 					Declarations: []Declaration{
 						{
-							Type: "package",
-							Name: "pkg3",
+							Type:   "package",
+							Scalar: "pkg3",
 							Props: []Prop{
 								{
 									Name: "depends",
@@ -364,6 +364,61 @@ var lexTests = []struct {
 											Type:   "package",
 											Scalar: "$webserver",
 										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
+			$webserver = 'nginx'
+			
+			package { $webserver:
+		    	ensure => 'latest',
+			}
+			
+			package { 'website':
+				depends => package[$webserver],
+			}
+		}
+		`,
+
+		&File{
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{
+						{
+							Name: Variable("$webserver"),
+							Val:  "nginx",
+						},
+					},
+					Declarations: []Declaration{
+						{
+							Type:   "package",
+							Scalar: Variable("$webserver"),
+							Props: []Prop{
+								{
+									Name:  "ensure",
+									Value: "latest",
+								},
+							},
+						},
+						{
+							Type:   "package",
+							Scalar: "website",
+							Props: []Prop{
+								{
+									Name: "depends",
+									Value: Reference{
+										Type:   "package",
+										Scalar: Variable("$webserver"),
 									},
 								},
 							},

@@ -40,10 +40,11 @@ type Def struct {
 type QuotedString string
 type Variable string
 
+// A used type, for instance package { 'nginx': ensure => 'latest' }
 type Declaration struct {
-	Type  string
-	Name  string
-	Props []Prop
+	Type   string
+	Scalar Scalar
+	Props  []Prop
 }
 
 type Prop struct {
@@ -53,6 +54,9 @@ type Prop struct {
 
 // A value, for instance 1, 'foo', $bar or [ 1, 'five', ]
 type Value interface{}
+
+// A number, string or variable
+type Scalar interface{}
 
 // An array of strings, number or references, for instance
 // [ 1, 'foo', package[$webserver], ]
@@ -153,11 +157,11 @@ func SawVariable(name *C.char) goHandle {
 }
 
 //export SawDeclaration
-func SawDeclaration(typ, name *C.char, proplist goHandle) goHandle {
+func SawDeclaration(typ *C.char, scalar, proplist goHandle) goHandle {
 	return ht.Add(Declaration{
-		Type:  C.GoString(typ),
-		Name:  C.GoString(name),
-		Props: ht.Get(proplist).([]Prop),
+		Type:   C.GoString(typ),
+		Scalar: ht.Get(scalar).(Scalar),
+		Props:  ht.Get(proplist).([]Prop),
 	})
 }
 

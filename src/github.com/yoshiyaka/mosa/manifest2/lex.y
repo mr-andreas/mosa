@@ -85,8 +85,8 @@ variable_def:
 	VARIABLE '=' value { $$ = SawDef($1, $3);	}
 
 declaration:
-	STRING '{' QUOTED_STRING ':' proplist '}'	{ $$ = SawDeclaration($1, $3, $5); }
-	| STRING '{' QUOTED_STRING ':' '}'			{ $$ = SawDeclaration($1, $3, NilArray(ASTTYPE_PROPLIST)); }
+	STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration($1, $3, $5); }
+	| STRING '{' scalar':' '}'			{ $$ = SawDeclaration($1, $3, NilArray(ASTTYPE_PROPLIST)); }
 
 proplist:
 	proplist prop	{ $$ = AppendArray($1, $2); }
