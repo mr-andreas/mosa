@@ -429,64 +429,105 @@ var lexTests = []struct {
 		},
 	},
 
-	//	{
-	//		`class Test {
-	//			package { 'pkg1':
-	//		    	depends => [
-	//		        - deb[pkg2]
-	//		        - file[file1]
+	{
+		`
+		class Deps {
+			package { 'pkg1':
+		    	depends => [ deb['pkg2'], file['file1'], ],
+			}
 
-	//		deb[pkg2]:
-	//		    depends:
-	//		        - file[file1]
-	//		        - file[file2]
+			package { 'pkg2':
+			    depends => [ file['file1'], file['file2'], ],
+			}
 
-	//		file[file1]:
-	//		    depends:
-	//		        - shell[cmd1]
+			file { 'file1':
+			    depends => shell['cmd1'],
+			}
 
-	//		file[file2]:
-	//		    depends:
-	//		        - shell[cmd2]
+			file { 'file2':
+			    depends => shell['cmd2'],
+			}
 
-	//		shell[cmd1]:
-	//		    depends:
-	//		        - shell[cmd2]
+			shell { 'cmd1':
+			    depends => shell['cmd2'],
+			}
 
-	//		shell[cmd2]:
-	//		`
+			shell { 'cmd2': }
+		}
+		`,
 
-	//		&File{
-	//			Classes: []Class{
-	//				{
-	//					Name: "Test",
-	//					Defs: []Def{
-	//						{
-	//							Name: "$foo",
-	//							Val:  "bar",
-	//						},
-
-	//						{
-	//							Name: "$baz",
-	//							Val:  "$foo",
-	//						},
-	//					},
-	//					Declarations: []Declaration{},
-	//				},
-
-	//				{
-	//					Name: "Class2",
-	//					Defs: []Def{
-	//						{
-	//							Name: "$good",
-	//							Val:  "text",
-	//						},
-	//					},
-	//					Declarations: []Declaration{},
-	//				},
-	//			},
-	//		},
-	//	},
+		&File{
+			Classes: []Class{
+				{
+					Name: "Deps",
+					Defs: []Def{},
+					Declarations: []Declaration{
+						{
+							Type:   "package",
+							Scalar: "pkg1",
+							Props: []Prop{
+								{
+									Name: "depends",
+									Value: Array{
+										Reference{"deb", "pkg2"},
+										Reference{"file", "file1"},
+									},
+								},
+							},
+						},
+						{
+							Type:   "package",
+							Scalar: "pkg2",
+							Props: []Prop{
+								{
+									Name: "depends",
+									Value: Array{
+										Reference{"file", "file1"},
+										Reference{"file", "file2"},
+									},
+								},
+							},
+						},
+						{
+							Type:   "file",
+							Scalar: "file1",
+							Props: []Prop{
+								{
+									Name:  "depends",
+									Value: Reference{"shell", "cmd1"},
+								},
+							},
+						},
+						{
+							Type:   "file",
+							Scalar: "file2",
+							Props: []Prop{
+								{
+									Name:  "depends",
+									Value: Reference{"shell", "cmd2"},
+								},
+							},
+						},
+						{
+							Type:   "shell",
+							Scalar: "cmd1",
+							Props: []Prop{
+								{
+									Name:  "depends",
+									Value: Reference{"shell", "cmd2"},
+								},
+							},
+						},
+						{
+							Type:   "shell",
+							Scalar: "cmd2",
+							Props:  []Prop{},
+						},
+					},
+				},
+			},
+		},
+	},
 }
 
 func TestLex(t *testing.T) {
