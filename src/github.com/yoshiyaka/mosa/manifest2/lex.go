@@ -26,15 +26,42 @@ type File struct {
 	Classes []Class
 }
 
+func (f *File) String() string {
+	s := ""
+	for _, class := range f.Classes {
+		s = class.String() + "\n"
+	}
+
+	return s
+}
+
 type Class struct {
 	Name         string
 	Defs         []Def
 	Declarations []Declaration
 }
 
+func (c *Class) String() string {
+	defs := ""
+	decls := ""
+	for _, def := range c.Defs {
+		defs += fmt.Sprintf("\t\t%s\n", def.String())
+	}
+
+	for _, decl := range c.Declarations {
+		decls += fmt.Sprintf("\t\t%s\n", decl.String())
+	}
+
+	return fmt.Sprintf("\tclass %s {\n%s\n%s\n\t}\n", c.Name, defs, decls)
+}
+
 type Def struct {
 	Name Variable
 	Val  Value
+}
+
+func (d *Def) String() string {
+	return fmt.Sprintf("%s = %s", d.Name, d.Val)
 }
 
 type QuotedString string
@@ -46,11 +73,20 @@ type Declaration struct {
 	Type string
 
 	// The name of the declaration, 'nginx' in the example above
-	Scalar Scalar
+	Scalar Value
 
 	// All properties for the declaration, ensure => 'latest' in the example
 	// above.
 	Props []Prop
+}
+
+func (d *Declaration) String() string {
+	props := ""
+	for _, prop := range d.Props {
+		props += fmt.Sprintf("\t\t\t%s\n", prop.String())
+	}
+
+	return fmt.Sprintf("\t\t%s { %s:\n%s\n\t\t}\n", d.Type, d.Scalar, props)
 }
 
 // A property in declaration, for instance ensure => 'latest'
@@ -59,11 +95,12 @@ type Prop struct {
 	Value Value
 }
 
+func (p *Prop) String() string {
+	return fmt.Sprintf("%s => %s", p.Name, p.Value)
+}
+
 // A value, for instance 1, 'foo', $bar or [ 1, 'five', ]
 type Value interface{}
-
-// A number, string or variable
-type Scalar interface{}
 
 // An array of strings, number or references, for instance
 // [ 1, 'foo', package[$webserver], ]
@@ -167,7 +204,7 @@ func SawVariable(name *C.char) goHandle {
 func SawDeclaration(typ *C.char, scalar, proplist goHandle) goHandle {
 	return ht.Add(Declaration{
 		Type:   C.GoString(typ),
-		Scalar: ht.Get(scalar).(Scalar),
+		Scalar: ht.Get(scalar).(Value),
 		Props:  ht.Get(proplist).([]Prop),
 	})
 }

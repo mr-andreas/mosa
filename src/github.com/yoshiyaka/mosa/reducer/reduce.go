@@ -50,5 +50,5 @@ func Reduce(ast *manifest2.File) []*common.Step {
 //		package { 'bar': }
 //	}
 func resolveVariables(c *manifest2.Class) (manifest2.Class, error) {
-
+	return *c, nil
 }

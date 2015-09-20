@@ -1,6 +1,12 @@
 package reducer
 
-import "testing"
+import (
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/yoshiyaka/mosa/manifest2"
+)
 
 var resolveVariablesTest = []struct {
 	inputManifest,
@@ -51,7 +57,25 @@ var resolveVariablesTest = []struct {
 }
 
 func TestResolveVariable(t *testing.T) {
+	for _, test := range resolveVariablesTest {
+		expectedFile, err := manifest2.Lex(
+			"expected.ms", strings.NewReader(test.expectedManifest),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
 
+		realFile, realErr := manifest2.Lex(
+			"real.ms", strings.NewReader(test.inputManifest),
+		)
+		if realErr != nil {
+			t.Fatal(realErr)
+		}
+
+		if !reflect.DeepEqual(expectedFile, realFile) {
+			t.Error(realFile.String())
+		}
+	}
 }
 
 var badVariableTest = []struct {
