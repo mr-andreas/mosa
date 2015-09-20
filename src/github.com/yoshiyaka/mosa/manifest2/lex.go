@@ -42,11 +42,18 @@ type Variable string
 
 // A used type, for instance package { 'nginx': ensure => 'latest' }
 type Declaration struct {
-	Type   string
+	// The type of declaration, 'package' in the example above
+	Type string
+
+	// The name of the declaration, 'nginx' in the example above
 	Scalar Scalar
-	Props  []Prop
+
+	// All properties for the declaration, ensure => 'latest' in the example
+	// above.
+	Props []Prop
 }
 
+// A property in declaration, for instance ensure => 'latest'
 type Prop struct {
 	Name  string
 	Value Value
