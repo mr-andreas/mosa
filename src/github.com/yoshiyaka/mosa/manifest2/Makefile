@@ -10,12 +10,6 @@ lex.tab.h lex.tab.c: lex.y
 clean:
 	rm -rf lex.yy.c lex.tab.c lex.tab.h cprog _obj
 
-cprog: lex.yy.cpp lex.tab.cpp
-	g++ lex.yy.cpp lex.tab.cpp -lfl -o cprog
-
-run: cprog
-	echo "this is a string" | ./cprog
-
 cgo: lex.go
 	go tool cgo lex.go
 .PHONY: cgo
