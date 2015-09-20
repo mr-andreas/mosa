@@ -36,6 +36,7 @@ func (f *File) String() string {
 }
 
 type Class struct {
+	LineNum      int
 	Name         string
 	Defs         []Def
 	Declarations []Declaration
@@ -56,8 +57,9 @@ func (c *Class) String() string {
 }
 
 type Def struct {
-	Name Variable
-	Val  Value
+	LineNum int
+	Name    Variable
+	Val     Value
 }
 
 func (d *Def) String() string {
@@ -69,6 +71,8 @@ type Variable string
 
 // A used type, for instance package { 'nginx': ensure => 'latest' }
 type Declaration struct {
+	LineNum int
+
 	// The type of declaration, 'package' in the example above
 	Type string
 
@@ -91,8 +95,9 @@ func (d *Declaration) String() string {
 
 // A property in declaration, for instance ensure => 'latest'
 type Prop struct {
-	Name  string
-	Value Value
+	LineNum int
+	Name    string
+	Value   Value
 }
 
 func (p *Prop) String() string {
@@ -108,8 +113,9 @@ type Array []interface{}
 
 // A reference, for instance package['nginx'] or package[$webserver]
 type Reference struct {
-	Type   string
-	Scalar Value
+	LineNum int
+	Type    string
+	Scalar  Value
 }
 
 //export NilArray
@@ -158,7 +164,7 @@ func NewFile(classes goHandle) goHandle {
 }
 
 //export NewClass
-func NewClass(identifier *C.char, defsAndDeclsHandle goHandle) goHandle {
+func NewClass(lineNum C.int, identifier *C.char, defsAndDeclsHandle goHandle) goHandle {
 	defsAndDecls := ht.Get(defsAndDeclsHandle).([]interface{})
 
 	defs := []Def{}
@@ -176,6 +182,7 @@ func NewClass(identifier *C.char, defsAndDeclsHandle goHandle) goHandle {
 	}
 
 	return ht.Add(Class{
+		LineNum:      int(lineNum),
 		Name:         C.GoString(identifier),
 		Defs:         defs,
 		Declarations: decls,
@@ -183,50 +190,54 @@ func NewClass(identifier *C.char, defsAndDeclsHandle goHandle) goHandle {
 }
 
 //export SawDef
-func SawDef(varName *C.char, val goHandle) goHandle {
+func SawDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 	return ht.Add(Def{
+		int(lineNum),
 		Variable(C.GoString(varName)),
 		ht.Get(val),
 	})
 }
 
 //export SawQuotedString
-func SawQuotedString(val *C.char) goHandle {
+func SawQuotedString(lineNum C.int, val *C.char) goHandle {
 	return ht.Add(QuotedString(C.GoString(val)))
 }
 
 //export SawInt
-func SawInt(val int) goHandle {
+func SawInt(lineNum C.int, val int) goHandle {
 	return ht.Add(val)
 }
 
 //export SawVariable
-func SawVariable(name *C.char) goHandle {
+func SawVariable(lineNum C.int, name *C.char) goHandle {
 	return ht.Add(Variable(C.GoString(name)))
 }
 
 //export SawDeclaration
-func SawDeclaration(typ *C.char, scalar, proplist goHandle) goHandle {
+func SawDeclaration(lineNum C.int, typ *C.char, scalar, proplist goHandle) goHandle {
 	return ht.Add(Declaration{
-		Type:   C.GoString(typ),
-		Scalar: ht.Get(scalar).(Value),
-		Props:  ht.Get(proplist).([]Prop),
+		LineNum: int(lineNum),
+		Type:    C.GoString(typ),
+		Scalar:  ht.Get(scalar).(Value),
+		Props:   ht.Get(proplist).([]Prop),
 	})
 }
 
 //export SawProp
-func SawProp(propName *C.char, value goHandle) goHandle {
+func SawProp(lineNum C.int, propName *C.char, value goHandle) goHandle {
 	return ht.Add(Prop{
-		Name:  C.GoString(propName),
-		Value: ht.Get(value),
+		LineNum: int(lineNum),
+		Name:    C.GoString(propName),
+		Value:   ht.Get(value),
 	})
 }
 
 //export SawReference
-func SawReference(typ *C.char, scalar goHandle) goHandle {
+func SawReference(lineNum C.int, typ *C.char, scalar goHandle) goHandle {
 	return ht.Add(Reference{
-		Type:   C.GoString(typ),
-		Scalar: ht.Get(scalar),
+		LineNum: int(lineNum),
+		Type:    C.GoString(typ),
+		Scalar:  ht.Get(scalar),
 	})
 }
 

@@ -6,13 +6,9 @@
 #include "_cgo_export.h"
 #include "types.h"
 
-
-// stuff from flex that bison needs to know about:
-//extern "C" int yylex();
-//extern "C" int yyparse();
-//extern "C" int doparse();
 extern int line_num;
 extern FILE *yyin;
+extern int yylineno;
 
 typedef struct yy_buffer_state * YY_BUFFER_STATE;
 extern int yyparse();
@@ -20,9 +16,11 @@ extern YY_BUFFER_STATE yy_scan_string(char * str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 void yyerror(const char *s);
+
 %}
 
 %define parse.error verbose
+%locations
 
 // Bison fundamentally works by asking flex to get the next token, which it
 // returns as an object of type "yystype".  But tokens could be of any
@@ -71,8 +69,8 @@ classes:
 	| class			{ $$ = AppendArray(NilArray(ASTTYPE_CLASSES), $1); }
 
 class:
-	CLASS STRING '{' defs '}'	{ $$ = NewClass($2, $4);						}
-	| CLASS STRING '{' '}'		{ $$ = NewClass($2, NilArray(ASTTYPE_DEFS));	}
+	CLASS STRING '{' defs '}'	{ $$ = NewClass(@1.first_line, $2, $4);						}
+	| CLASS STRING '{' '}'		{ $$ = NewClass(@1.first_line, $2, NilArray(ASTTYPE_DEFS));	}
 
 defs:
 	defs def	{ $$ = AppendArray($1, $2);						}
@@ -82,11 +80,11 @@ def:
 	variable_def | declaration;
 	
 variable_def:
-	VARIABLE '=' value { $$ = SawDef($1, $3);	}
+	VARIABLE '=' value { $$ = SawDef(@1.first_line, $1, $3);	}
 
 declaration:
-	STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration($1, $3, $5); }
-	| STRING '{' scalar':' '}'			{ $$ = SawDeclaration($1, $3, NilArray(ASTTYPE_PROPLIST)); }
+	STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
+	| STRING '{' scalar':' '}'			{ $$ = SawDeclaration(@1.first_line, $1, $3, NilArray(ASTTYPE_PROPLIST)); }
 
 proplist:
 	proplist prop	{ $$ = AppendArray($1, $2); }
@@ -94,7 +92,7 @@ proplist:
 	;
 
 prop:
-	STRING ARROW value ','	{ $$ = SawProp($1, $3); }
+	STRING ARROW value ','	{ $$ = SawProp(@1.first_line, $1, $3); }
 
 value:
 	scalar			{ $$ = $1; }
@@ -102,12 +100,12 @@ value:
 	| reference		{ $$ = $1; }
 
 scalar:
-	QUOTED_STRING	{ $$ = SawQuotedString($1);	}
-	| VARIABLE		{ $$ = SawVariable($1);		}
-	| INT			{ $$ = SawInt($1);			}
+	QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
+	| VARIABLE		{ $$ = SawVariable(@1.first_line, $1);		}
+	| INT			{ $$ = SawInt(@1.first_line, $1);			}
 
 reference:
-	STRING '[' scalar ']' { $$ = SawReference($1, $3); }
+	STRING '[' scalar ']' { $$ = SawReference(@1.first_line, $1, $3); }
 
 array:
 	'[' arrayentries ']'	{ $$ = $2; }
@@ -124,6 +122,9 @@ char *last_error = NULL;
 t_error doparse(char *file) {
 	int ret;
 	line_num = 0;
+	
+	memset(&yylloc, 0, sizeof(YYLTYPE));
+	yylineno = 1;
 	
 	YY_BUFFER_STATE buffer = yy_scan_string(file);
     ret = yyparse();

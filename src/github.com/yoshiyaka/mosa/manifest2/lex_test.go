@@ -12,14 +12,12 @@ var lexTests = []struct {
 	ast      *File
 }{
 	{
-		`
-		class Test {
-		}
-		`,
+		`class Test {}`,
 
 		&File{
 			Classes: []Class{
 				{
+					LineNum:      1,
 					Name:         "Test",
 					Defs:         []Def{},
 					Declarations: []Declaration{},
@@ -38,11 +36,13 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
+					LineNum:      2,
 					Name:         "Test",
 					Defs:         []Def{},
 					Declarations: []Declaration{},
 				},
 				{
+					LineNum:      4,
 					Name:         "Bar",
 					Defs:         []Def{},
 					Declarations: []Declaration{},
@@ -61,11 +61,13 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
+					LineNum: 2,
+					Name:    "Test",
 					Defs: []Def{
 						{
-							Name: Variable("$prop"),
-							Val:  Value("x"),
+							LineNum: 3,
+							Name:    Variable("$prop"),
+							Val:     Value("x"),
 						},
 					},
 					Declarations: []Declaration{},
@@ -84,10 +86,12 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
+					LineNum: 2,
+					Name:    "Test",
 					Defs: []Def{
 						{
-							Name: Variable("$prop"),
+							LineNum: 3,
+							Name:    Variable("$prop"),
 							Val: Array{
 								Value("x"),
 								Value(1),
@@ -114,13 +118,15 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
-					Defs: []Def{},
+					LineNum: 2,
+					Name:    "Test",
+					Defs:    []Def{},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: "pkg-name",
-							Props:  []Prop{},
+							LineNum: 3,
+							Type:    "package",
+							Scalar:  "pkg-name",
+							Props:   []Prop{},
 						},
 					},
 				},
@@ -140,16 +146,19 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
-					Defs: []Def{},
+					LineNum: 2,
+					Name:    "Test",
+					Defs:    []Def{},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: "pkg",
+							LineNum: 3,
+							Type:    "package",
+							Scalar:  "pkg",
 							Props: []Prop{
 								{
-									Name:  "foo",
-									Value: "bar",
+									LineNum: 4,
+									Name:    "foo",
+									Value:   "bar",
 								},
 							},
 						},
@@ -174,27 +183,32 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
+					LineNum: 2,
+					Name:    "Test",
 					Defs: []Def{
 						{
-							Name: "$foo",
-							Val:  "bar",
+							LineNum: 3,
+							Name:    "$foo",
+							Val:     "bar",
 						},
 
 						{
-							Name: "$baz",
-							Val:  "$foo",
+							LineNum: 4,
+							Name:    "$baz",
+							Val:     "$foo",
 						},
 					},
 					Declarations: []Declaration{},
 				},
 
 				{
-					Name: "Class2",
+					LineNum: 7,
+					Name:    "Class2",
 					Defs: []Def{
 						{
-							Name: "$good",
-							Val:  "text",
+							LineNum: 8,
+							Name:    "$good",
+							Val:     "text",
 						},
 					},
 					Declarations: []Declaration{},
@@ -215,16 +229,19 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
-					Defs: []Def{},
+					LineNum: 2,
+					Name:    "Test",
+					Defs:    []Def{},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: "pkg3",
+							LineNum: 3,
+							Type:    "package",
+							Scalar:  "pkg3",
 							Props: []Prop{
 								{
-									Name:  "depends",
-									Value: Array{},
+									LineNum: 4,
+									Name:    "depends",
+									Value:   Array{},
 								},
 							},
 						},
@@ -246,19 +263,23 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
-					Defs: []Def{},
+					LineNum: 2,
+					Name:    "Test",
+					Defs:    []Def{},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: "pkg3",
+							LineNum: 3,
+							Type:    "package",
+							Scalar:  "pkg3",
 							Props: []Prop{
 								{
-									Name: "depends",
+									LineNum: 4,
+									Name:    "depends",
 									Value: Array{
 										Reference{
-											Type:   "package",
-											Scalar: "pkg1",
+											LineNum: 4,
+											Type:    "package",
+											Scalar:  "pkg1",
 										},
 									},
 								},
@@ -274,10 +295,10 @@ var lexTests = []struct {
 		`
 		class Test {
 			package { 'pkg3':
-		    	depends => [ 
-				package['pkg1'], 
-				package['pkg2'],
-				 ],
+		    	depends => [
+					package['pkg1'], 
+					package['pkg2'],
+				],
 			}
 		}
 		`,
@@ -285,23 +306,28 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
-					Defs: []Def{},
+					LineNum: 2,
+					Name:    "Test",
+					Defs:    []Def{},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: "pkg3",
+							LineNum: 3,
+							Type:    "package",
+							Scalar:  "pkg3",
 							Props: []Prop{
 								{
-									Name: "depends",
+									LineNum: 4,
+									Name:    "depends",
 									Value: Array{
 										Reference{
-											Type:   "package",
-											Scalar: "pkg1",
+											LineNum: 5,
+											Type:    "package",
+											Scalar:  "pkg1",
 										},
 										Reference{
-											Type:   "package",
-											Scalar: "pkg2",
+											LineNum: 6,
+											Type:    "package",
+											Scalar:  "pkg2",
 										},
 									},
 								},
@@ -328,31 +354,38 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Arrays",
+					LineNum: 2,
+					Name:    "Arrays",
 					Defs: []Def{
 						{
-							Name: "$a1",
-							Val:  Array{},
+							LineNum: 3,
+							Name:    "$a1",
+							Val:     Array{},
 						},
 						{
-							Name: "$a2",
-							Val:  Array{"foo"},
+							LineNum: 4,
+							Name:    "$a2",
+							Val:     Array{"foo"},
 						},
 						{
-							Name: "$a3",
-							Val:  Array{"foo", "bar"},
+							LineNum: 5,
+							Name:    "$a3",
+							Val:     Array{"foo", "bar"},
 						},
 						{
-							Name: "$a4",
-							Val:  Array{Variable("$a1")},
+							LineNum: 6,
+							Name:    "$a4",
+							Val:     Array{Variable("$a1")},
 						},
 						{
-							Name: "$a5",
-							Val:  Array{Variable("$a1"), Variable("$a2")},
+							LineNum: 7,
+							Name:    "$a5",
+							Val:     Array{Variable("$a1"), Variable("$a2")},
 						},
 						{
-							Name: "$a6",
-							Val:  Array{Variable("$a1"), "foo"},
+							LineNum: 8,
+							Name:    "$a6",
+							Val:     Array{Variable("$a1"), "foo"},
 						},
 					},
 					Declarations: []Declaration{},
@@ -374,24 +407,29 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
+					LineNum: 2,
+					Name:    "Test",
 					Defs: []Def{
 						{
-							Name: "$webserver",
-							Val:  "nginx",
+							LineNum: 3,
+							Name:    "$webserver",
+							Val:     "nginx",
 						},
 					},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: "pkg3",
+							LineNum: 4,
+							Type:    "package",
+							Scalar:  "pkg3",
 							Props: []Prop{
 								{
-									Name: "depends",
+									Name:    "depends",
+									LineNum: 5,
 									Value: Array{
 										Reference{
-											Type:   "package",
-											Scalar: "$webserver",
+											LineNum: 5,
+											Type:    "package",
+											Scalar:  "$webserver",
 										},
 									},
 								},
@@ -421,33 +459,40 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Test",
+					LineNum: 2,
+					Name:    "Test",
 					Defs: []Def{
 						{
-							Name: Variable("$webserver"),
-							Val:  "nginx",
+							LineNum: 3,
+							Name:    Variable("$webserver"),
+							Val:     "nginx",
 						},
 					},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: Variable("$webserver"),
+							LineNum: 5,
+							Type:    "package",
+							Scalar:  Variable("$webserver"),
 							Props: []Prop{
 								{
-									Name:  "ensure",
-									Value: "latest",
+									LineNum: 6,
+									Name:    "ensure",
+									Value:   "latest",
 								},
 							},
 						},
 						{
-							Type:   "package",
-							Scalar: "website",
+							LineNum: 9,
+							Type:    "package",
+							Scalar:  "website",
 							Props: []Prop{
 								{
-									Name: "depends",
+									LineNum: 10,
+									Name:    "depends",
 									Value: Reference{
-										Type:   "package",
-										Scalar: Variable("$webserver"),
+										LineNum: 10,
+										Type:    "package",
+										Scalar:  Variable("$webserver"),
 									},
 								},
 							},
@@ -488,69 +533,81 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					Name: "Deps",
-					Defs: []Def{},
+					LineNum: 2,
+					Name:    "Deps",
+					Defs:    []Def{},
 					Declarations: []Declaration{
 						{
-							Type:   "package",
-							Scalar: "pkg1",
+							LineNum: 3,
+							Type:    "package",
+							Scalar:  "pkg1",
 							Props: []Prop{
 								{
-									Name: "depends",
+									LineNum: 4,
+									Name:    "depends",
 									Value: Array{
-										Reference{"deb", "pkg2"},
-										Reference{"file", "file1"},
+										Reference{4, "deb", "pkg2"},
+										Reference{4, "file", "file1"},
 									},
 								},
 							},
 						},
 						{
-							Type:   "package",
-							Scalar: "pkg2",
+							LineNum: 7,
+							Type:    "package",
+							Scalar:  "pkg2",
 							Props: []Prop{
 								{
-									Name: "depends",
+									LineNum: 8,
+									Name:    "depends",
 									Value: Array{
-										Reference{"file", "file1"},
-										Reference{"file", "file2"},
+										Reference{8, "file", "file1"},
+										Reference{8, "file", "file2"},
 									},
 								},
 							},
 						},
 						{
-							Type:   "file",
-							Scalar: "file1",
+							LineNum: 11,
+							Type:    "file",
+							Scalar:  "file1",
 							Props: []Prop{
 								{
-									Name:  "depends",
-									Value: Reference{"shell", "cmd1"},
+									LineNum: 12,
+									Name:    "depends",
+									Value:   Reference{12, "shell", "cmd1"},
 								},
 							},
 						},
 						{
-							Type:   "file",
-							Scalar: "file2",
+							LineNum: 15,
+							Type:    "file",
+							Scalar:  "file2",
 							Props: []Prop{
 								{
-									Name:  "depends",
-									Value: Reference{"shell", "cmd2"},
+									LineNum: 16,
+									Name:    "depends",
+									Value:   Reference{16, "shell", "cmd2"},
 								},
 							},
 						},
 						{
-							Type:   "shell",
-							Scalar: "cmd1",
+							LineNum: 19,
+							Type:    "shell",
+							Scalar:  "cmd1",
 							Props: []Prop{
 								{
-									Name:  "depends",
-									Value: Reference{"shell", "cmd2"},
+									LineNum: 20,
+									Name:    "depends",
+									Value:   Reference{20, "shell", "cmd2"},
 								},
 							},
 						},
 						{
-							Type:   "shell",
-							Scalar: "cmd2",
-							Props:  []Prop{},
+							LineNum: 23,
+							Type:    "shell",
+							Scalar:  "cmd2",
+							Props:   []Prop{},
 						},
 					},
 				},

@@ -3,10 +3,16 @@
 
 #include "lex.tab.h"  // to get the token types that we return
 
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
+
 int line_num = 1;
 
 %}
+
+%option yylineno
+
 %%
+
 [ \t] ;
 class			{ return CLASS; }
 [0-9]+\.[0-9]+	{ yylval.fval = atof(yytext); return FLOAT; }
