@@ -2,6 +2,7 @@ package reducer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/yoshiyaka/mosa/common"
 	. "github.com/yoshiyaka/mosa/manifest2"
@@ -10,31 +11,43 @@ import (
 type ErrorType int
 
 const (
-	ErrorTypeUnresolvableVariable = iota
+	ErrorTypeUnresolvableVariable ErrorType = iota
 	ErrorTypeCyclicVariable
 	ErrorTypeMultipleDefinition
 )
 
-type Error struct {
-	Type ErrorType
-	File string
-	Line int
+type Err struct {
+	Type       ErrorType
+	File       string
+	Line       int
+	SymbolName string
 }
 
-func (e *Error) Error() string {
+func (e *Err) Error() string {
 	msg := ""
 	switch e.Type {
 	case ErrorTypeCyclicVariable:
-		msg = "Cyclic dependency for variable"
+		msg = "Cyclic dependency for variable " + e.SymbolName
 	case ErrorTypeMultipleDefinition:
-		msg = "Multiple definition for variable"
+		msg = "Multiple definition for variable " + e.SymbolName
 	case ErrorTypeUnresolvableVariable:
-		msg = "Reference to non-defined variable"
+		msg = "Reference to non-defined variable " + e.SymbolName
 	default:
 		msg = "Unknown"
 	}
 
 	return fmt.Sprintf("Error at %s:%d: %s", e.File, e.Line, msg)
+}
+
+type CyclicError struct {
+	Err
+	Cycle []string
+}
+
+func (ce *CyclicError) Error() string {
+	msg := ce.Err.Error()
+	msg += fmt.Sprintf(" (%s)", strings.Join(ce.Cycle, " -> "))
+	return msg
 }
 
 // Resolves the specified manifest and converts into a number of steps the need
@@ -67,9 +80,10 @@ func resolveVariables(c *Class) (Class, error) {
 	varsByName := map[Variable]*Def{}
 	for _, def := range c.Defs {
 		if _, exists := varsByName[def.Name]; exists {
-			return retClass, &Error{
-				Line: 0,
-				Type: ErrorTypeMultipleDefinition,
+			return retClass, &Err{
+				Line:       def.LineNum,
+				Type:       ErrorTypeMultipleDefinition,
+				SymbolName: string(def.Name),
 			}
 		}
 
@@ -82,7 +96,7 @@ func resolveVariables(c *Class) (Class, error) {
 		case Variable:
 			varName := def.Val.(Variable)
 			val, err := resolveVariable(
-				varName, varsByName, map[Variable]bool{},
+				&def, []*Def{&def}, varsByName, map[Variable]bool{},
 			)
 			if err != nil {
 				return retClass, err
@@ -101,26 +115,37 @@ func resolveVariables(c *Class) (Class, error) {
 	return retClass, nil
 }
 
-func resolveVariable(name Variable, varsByName map[Variable]*Def, seenNames map[Variable]bool) (Value, error) {
-	foundVar, found := varsByName[name]
+func resolveVariable(varDef *Def, chain []*Def, varsByName map[Variable]*Def, seenNames map[Variable]bool) (Value, error) {
+	seenNames[varDef.Name] = true
+
+	foundVar, found := varsByName[varDef.Val.(Variable)]
 	if !found {
-		return nil, &Error{
-			Line: 0,
-			Type: ErrorTypeUnresolvableVariable,
+		return nil, &Err{
+			Line:       varDef.LineNum,
+			Type:       ErrorTypeUnresolvableVariable,
+			SymbolName: string(varDef.Name),
 		}
 	}
 
-	if _, seen := seenNames[name]; seen {
-		return nil, &Error{
-			Line: 0,
-			Type: ErrorTypeCyclicVariable,
+	if _, seen := seenNames[varDef.Val.(Variable)]; seen {
+		cycle := make([]string, len(chain)+1)
+		for i, def := range chain {
+			cycle[i] = string(def.Name)
+		}
+		cycle[len(cycle)-1] = string(varDef.Name)
+
+		return nil, &CyclicError{
+			Err: Err{
+				Line:       chain[0].LineNum,
+				Type:       ErrorTypeCyclicVariable,
+				SymbolName: string(chain[0].Name),
+			},
+			Cycle: cycle,
 		}
 	}
 
-	seenNames[name] = true
-
-	if variable, isVar := foundVar.Val.(Variable); isVar {
-		return resolveVariable(variable, varsByName, seenNames)
+	if _, isVar := foundVar.Val.(Variable); isVar {
+		return resolveVariable(foundVar, append(chain, varDef), varsByName, seenNames)
 	} else {
 		// This is an actual value
 		return foundVar.Val, nil

@@ -152,12 +152,12 @@ func TestResolveVariable(t *testing.T) {
 var badVariableTest = []struct {
 	comment       string
 	inputManifest string
-	expectedError Error
+	expectedError error
 }{
 	{
 		"Non-existing variable",
 		`class C { $foo = $bar }`,
-		Error{Line: 1, Type: ErrorTypeUnresolvableVariable},
+		&Err{Line: 1, Type: ErrorTypeUnresolvableVariable},
 	},
 
 	{
@@ -165,7 +165,7 @@ var badVariableTest = []struct {
 		`class C {
 			file { $undefined: }
 		}`,
-		Error{Line: 2, Type: ErrorTypeUnresolvableVariable},
+		&Err{Line: 2, Type: ErrorTypeUnresolvableVariable},
 	},
 
 	{
@@ -173,7 +173,7 @@ var badVariableTest = []struct {
 		`class C {
 			file { '/etc/issue': content => $text, }
 		}`,
-		Error{Line: 2, Type: ErrorTypeUnresolvableVariable},
+		&Err{Line: 2, Type: ErrorTypeUnresolvableVariable},
 	},
 
 	{
@@ -182,15 +182,18 @@ var badVariableTest = []struct {
 			$foo = $bar
 			$bar = $baz
 		}`,
-		Error{Line: 3, Type: ErrorTypeUnresolvableVariable},
+		&Err{Line: 3, Type: ErrorTypeUnresolvableVariable},
 	},
 
 	{
 		"Cyclic variables",
 		`class C {
-			$foo = $$foo
+			$foo = $foo
 		}`,
-		Error{Line: 2, Type: ErrorTypeCyclicVariable},
+		&CyclicError{
+			Err:   Err{Line: 2, Type: ErrorTypeCyclicVariable},
+			Cycle: []string{"$foo", "$foo"},
+		},
 	},
 
 	{
@@ -199,17 +202,17 @@ var badVariableTest = []struct {
 			$foo = $bar
 			$bar = $foo
 		}`,
-		Error{Line: 2, Type: ErrorTypeCyclicVariable},
+		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
 	},
 
 	{
-		"Nested cyclic variables",
+		"Nested cyclic variables $foo -> $bar -> $baz -> $foo",
 		`class C {
 			$foo = $bar
 			$bar = $baz
 			$baz = $foo
 		}`,
-		Error{Line: 2, Type: ErrorTypeCyclicVariable},
+		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
 	},
 
 	{
@@ -218,7 +221,7 @@ var badVariableTest = []struct {
 			$foo = $bar
 			$bar = [ 1, 'foo', $foo, ]
 		}`,
-		Error{Line: 2, Type: ErrorTypeCyclicVariable},
+		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
 	},
 
 	{
@@ -227,7 +230,7 @@ var badVariableTest = []struct {
 			$foo = 1
 			$foo = 1
 		}`,
-		Error{Line: 2, Type: ErrorTypeMultipleDefinition},
+		&Err{Line: 3, Type: ErrorTypeMultipleDefinition},
 	},
 
 	{
@@ -236,7 +239,7 @@ var badVariableTest = []struct {
 			$foo = 1
 			$foo = 'bar'
 		}`,
-		Error{Line: 2, Type: ErrorTypeMultipleDefinition},
+		&Err{Line: 3, Type: ErrorTypeMultipleDefinition},
 	},
 }
 
@@ -251,11 +254,36 @@ func TestResolveBadVariable(t *testing.T) {
 
 		_, resolveErr := resolveVariables(&ast.Classes[0])
 		if resolveErr == nil {
+			t.Log(test.inputManifest)
 			t.Error("Got no error for", test.comment)
-		} else if e, ok := resolveErr.(*Error); !ok {
-			t.Errorf("%s: Error was not *Error: %s", test.comment, resolveErr)
 		} else {
-			if e.Line != test.expectedError.Line || e.Type != test.expectedError.Type {
+			var e, expE *Err
+			if ce, ok := resolveErr.(*CyclicError); ok {
+				e = &ce.Err
+			} else {
+				e = resolveErr.(*Err)
+			}
+
+			if ce, ok := test.expectedError.(*CyclicError); ok {
+				expE = &ce.Err
+			} else {
+				expE = test.expectedError.(*Err)
+			}
+
+			if cyclicE, ok := test.expectedError.(*CyclicError); ok {
+				if re, cyclic := resolveErr.(*CyclicError); !cyclic {
+					t.Log(test.inputManifest)
+					t.Errorf(
+						"%s: Got non-cyclic error: %s", test.comment, resolveErr,
+					)
+				} else if !reflect.DeepEqual(cyclicE.Cycle, re.Cycle) {
+					t.Log(test.inputManifest)
+					t.Errorf("%s: Got bad cycle error: %s", test.comment, e)
+				}
+			}
+
+			if e.Line != expE.Line || e.Type != expE.Type {
+				t.Log(test.inputManifest)
 				t.Errorf("%s: Got bad error: %s", test.comment, e)
 			}
 		}
