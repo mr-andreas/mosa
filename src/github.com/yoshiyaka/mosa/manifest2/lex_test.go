@@ -77,6 +77,35 @@ var lexTests = []struct {
 	{
 		`
 		class Test {
+			$prop = [ 'x', 1, [ 'y', ], ]
+		}
+		`,
+
+		&File{
+			Classes: []Class{
+				{
+					Name: "Test",
+					Defs: []Def{
+						{
+							Name: Variable("$prop"),
+							Val: Array{
+								Value("x"),
+								Value(1),
+								Array{
+									Value("y"),
+								},
+							},
+						},
+					},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
 			package { 'pkg-name':
 			}
 		}

@@ -104,6 +104,7 @@ value:
 scalar:
 	QUOTED_STRING	{ $$ = SawQuotedString($1);	}
 	| VARIABLE		{ $$ = SawVariable($1);		}
+	| INT			{ $$ = SawInt($1);			}
 
 reference:
 	STRING '[' scalar ']' { $$ = SawReference($1, $3); }

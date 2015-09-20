@@ -195,6 +195,11 @@ func SawQuotedString(val *C.char) goHandle {
 	return ht.Add(QuotedString(C.GoString(val)))
 }
 
+//export SawInt
+func SawInt(val int) goHandle {
+	return ht.Add(val)
+}
+
 //export SawVariable
 func SawVariable(name *C.char) goHandle {
 	return ht.Add(Variable(C.GoString(name)))
