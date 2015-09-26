@@ -114,6 +114,18 @@ func resolveVariables(c *Class) (Class, error) {
 				VariableName: def.VariableName,
 				Val:          val,
 			}
+		case Array:
+			val, err := resolveArray(
+				def.Val.(Array), def.LineNum, varsByName,
+			)
+			if err != nil {
+				return retClass, err
+			}
+			newDefs[i] = VariableDef{
+				LineNum:      def.LineNum,
+				VariableName: def.VariableName,
+				Val:          val,
+			}
 		default:
 			newDefs[i] = def
 		}
@@ -194,6 +206,12 @@ func resolveVariable(v VariableName, lineNum int, varsByName map[VariableName]Va
 	)
 }
 
+func resolveArray(a Array, lineNum int, varsByName map[VariableName]VariableDef) (Array, error) {
+	return resolveArrayRecursive(
+		a, lineNum, nil, varsByName, map[VariableName]bool{},
+	)
+}
+
 // Recursively resolves a variable's actual value.
 //
 // chain will keep the chain used to define the variable, for instance if
@@ -220,7 +238,19 @@ func resolveVariableRecursive(lookingFor VariableName, lineNum int, chain []*Var
 
 	if _, isVar := foundVar.Val.(VariableName); !isVar {
 		// This is an actual value
-		return foundVar.Val, nil
+		if array, isArray := foundVar.Val.(Array); isArray {
+			// The value pointed to is an array. Resolve all values in the array
+			// aswell.
+			seenNamesCopy := map[VariableName]bool{}
+			for key, val := range seenNames {
+				seenNamesCopy[key] = val
+			}
+			return resolveArrayRecursive(
+				array, lineNum, chain, varsByName, seenNamesCopy,
+			)
+		} else {
+			return foundVar.Val, nil
+		}
 	}
 
 	if _, seen := seenNames[lookingFor]; seen {
@@ -246,4 +276,30 @@ func resolveVariableRecursive(lookingFor VariableName, lineNum int, chain []*Var
 		foundVar.Val.(VariableName), foundVar.LineNum, append(chain, &foundVar),
 		varsByName, seenNames,
 	)
+}
+
+func resolveArrayRecursive(a Array, lineNum int, chain []*VariableDef, varsByName map[VariableName]VariableDef, seenNames map[VariableName]bool) (Array, error) {
+	newArray := make(Array, len(a))
+
+	for i, val := range a {
+		if varName, isVar := val.(VariableName); isVar {
+			// This array entry is a variable name, resolve it.
+			var err error
+			seenNamesCopy := map[VariableName]bool{}
+			for key, val := range seenNames {
+				seenNamesCopy[key] = val
+			}
+
+			newArray[i], err = resolveVariableRecursive(
+				varName, lineNum, chain, varsByName, seenNamesCopy,
+			)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			newArray[i] = val
+		}
+	}
+
+	return newArray, nil
 }

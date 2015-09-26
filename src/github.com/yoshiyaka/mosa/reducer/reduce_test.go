@@ -111,7 +111,7 @@ var resolveVariablesTest = []struct {
 		`class C {
 			$foo = 'foo'
 			$bar = [ $foo, 1, 'z', ]
-			$baz = [ 'baz', $foo, ]
+			$baz = [ 'baz', $bar, ]
 		}`,
 		`class C {
 			$foo = 'foo'
