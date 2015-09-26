@@ -77,40 +77,40 @@ func Reduce(ast *File) []*common.Step {
 func resolveVariables(c *Class) (Class, error) {
 	retClass := *c
 
-	varsByName := map[VariableName]*Def{}
-	for _, def := range c.Defs {
-		if _, exists := varsByName[def.Name]; exists {
+	varsByName := map[VariableName]*VariableDef{}
+	for _, def := range c.VariableDefs {
+		if _, exists := varsByName[def.VariableName]; exists {
 			return retClass, &Err{
 				Line:       def.LineNum,
 				Type:       ErrorTypeMultipleDefinition,
-				SymbolName: string(def.Name),
+				SymbolName: string(def.VariableName),
 			}
 		}
 
-		varsByName[def.Name] = &def
+		varsByName[def.VariableName] = &def
 	}
 
-	newDefs := make([]Def, len(c.Defs))
-	for i, def := range c.Defs {
+	newDefs := make([]VariableDef, len(c.VariableDefs))
+	for i, def := range c.VariableDefs {
 		switch def.Val.(type) {
 		case VariableName:
 			varName := def.Val.(VariableName)
 			val, err := resolveVariable(
-				&def, []*Def{&def}, varsByName, map[VariableName]bool{},
+				&def, []*VariableDef{&def}, varsByName, map[VariableName]bool{},
 			)
 			if err != nil {
 				return retClass, err
 			}
-			newDefs[i] = Def{
-				Name: VariableName(varName),
-				Val:  val,
+			newDefs[i] = VariableDef{
+				VariableName: VariableName(varName),
+				Val:          val,
 			}
 		default:
 			newDefs[i] = def
 		}
 	}
 
-	retClass.Defs = newDefs
+	retClass.VariableDefs = newDefs
 
 	//	newDecls := make([]Declaration, len(c.Declarations))
 	//	for i, decl := range c.Declarations {
@@ -134,7 +134,7 @@ func resolveVariables(c *Class) (Class, error) {
 //
 // varsByName should contain a map of all top level variable definitions seen in
 // the class.
-func resolveDeclaration(decl *Declaration, varsByName map[VariableName]*Def) (Declaration, error) {
+func resolveDeclaration(decl *Declaration, varsByName map[VariableName]*VariableDef) (Declaration, error) {
 	ret := *decl
 
 	//	if variable, ok := decl.Scalar.(Variable); ok {
@@ -164,30 +164,30 @@ func resolveDeclaration(decl *Declaration, varsByName map[VariableName]*Def) (De
 //
 // seenNames is keeps track of all variables already seen during the current
 // recursion. Used to detect cyclic dependencies.
-func resolveVariable(varDef *Def, chain []*Def, varsByName map[VariableName]*Def, seenNames map[VariableName]bool) (Value, error) {
-	seenNames[varDef.Name] = true
+func resolveVariable(varDef *VariableDef, chain []*VariableDef, varsByName map[VariableName]*VariableDef, seenNames map[VariableName]bool) (Value, error) {
+	seenNames[varDef.VariableName] = true
 
 	foundVar, found := varsByName[varDef.Val.(VariableName)]
 	if !found {
 		return nil, &Err{
 			Line:       varDef.LineNum,
 			Type:       ErrorTypeUnresolvableVariable,
-			SymbolName: string(varDef.Name),
+			SymbolName: string(varDef.VariableName),
 		}
 	}
 
 	if _, seen := seenNames[varDef.Val.(VariableName)]; seen {
 		cycle := make([]string, len(chain)+1)
 		for i, def := range chain {
-			cycle[i] = string(def.Name)
+			cycle[i] = string(def.VariableName)
 		}
-		cycle[len(cycle)-1] = string(varDef.Name)
+		cycle[len(cycle)-1] = string(varDef.VariableName)
 
 		return nil, &CyclicError{
 			Err: Err{
 				Line:       chain[0].LineNum,
 				Type:       ErrorTypeCyclicVariable,
-				SymbolName: string(chain[0].Name),
+				SymbolName: string(chain[0].VariableName),
 			},
 			Cycle: cycle,
 		}

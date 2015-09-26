@@ -19,7 +19,7 @@ var lexTests = []struct {
 				{
 					LineNum:      1,
 					Name:         "Test",
-					Defs:         []Def{},
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
 			},
@@ -38,13 +38,13 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
-					Defs:         []Def{},
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
 				{
 					LineNum:      4,
 					Name:         "Bar",
-					Defs:         []Def{},
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
 			},
@@ -63,11 +63,11 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					Defs: []Def{
+					VariableDefs: []VariableDef{
 						{
-							LineNum: 3,
-							Name:    VariableName("$prop"),
-							Val:     Value("x"),
+							LineNum:      3,
+							VariableName: VariableName("$prop"),
+							Val:          Value("x"),
 						},
 					},
 					Declarations: []Declaration{},
@@ -88,10 +88,10 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					Defs: []Def{
+					VariableDefs: []VariableDef{
 						{
-							LineNum: 3,
-							Name:    VariableName("$prop"),
+							LineNum:      3,
+							VariableName: VariableName("$prop"),
 							Val: Array{
 								Value("x"),
 								Value(1),
@@ -118,9 +118,9 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					LineNum: 2,
-					Name:    "Test",
-					Defs:    []Def{},
+					LineNum:      2,
+					Name:         "Test",
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
 							LineNum: 3,
@@ -146,9 +146,9 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					LineNum: 2,
-					Name:    "Test",
-					Defs:    []Def{},
+					LineNum:      2,
+					Name:         "Test",
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
 							LineNum: 3,
@@ -185,17 +185,17 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					Defs: []Def{
+					VariableDefs: []VariableDef{
 						{
-							LineNum: 3,
-							Name:    "$foo",
-							Val:     "bar",
+							LineNum:      3,
+							VariableName: "$foo",
+							Val:          "bar",
 						},
 
 						{
-							LineNum: 4,
-							Name:    "$baz",
-							Val:     "$foo",
+							LineNum:      4,
+							VariableName: "$baz",
+							Val:          "$foo",
 						},
 					},
 					Declarations: []Declaration{},
@@ -204,11 +204,11 @@ var lexTests = []struct {
 				{
 					LineNum: 7,
 					Name:    "Class2",
-					Defs: []Def{
+					VariableDefs: []VariableDef{
 						{
-							LineNum: 8,
-							Name:    "$good",
-							Val:     "text",
+							LineNum:      8,
+							VariableName: "$good",
+							Val:          "text",
 						},
 					},
 					Declarations: []Declaration{},
@@ -229,9 +229,9 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					LineNum: 2,
-					Name:    "Test",
-					Defs:    []Def{},
+					LineNum:      2,
+					Name:         "Test",
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
 							LineNum: 3,
@@ -263,9 +263,9 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					LineNum: 2,
-					Name:    "Test",
-					Defs:    []Def{},
+					LineNum:      2,
+					Name:         "Test",
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
 							LineNum: 3,
@@ -306,9 +306,9 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					LineNum: 2,
-					Name:    "Test",
-					Defs:    []Def{},
+					LineNum:      2,
+					Name:         "Test",
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
 							LineNum: 3,
@@ -356,36 +356,36 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Arrays",
-					Defs: []Def{
+					VariableDefs: []VariableDef{
 						{
-							LineNum: 3,
-							Name:    "$a1",
-							Val:     Array{},
+							LineNum:      3,
+							VariableName: "$a1",
+							Val:          Array{},
 						},
 						{
-							LineNum: 4,
-							Name:    "$a2",
-							Val:     Array{"foo"},
+							LineNum:      4,
+							VariableName: "$a2",
+							Val:          Array{"foo"},
 						},
 						{
-							LineNum: 5,
-							Name:    "$a3",
-							Val:     Array{"foo", "bar"},
+							LineNum:      5,
+							VariableName: "$a3",
+							Val:          Array{"foo", "bar"},
 						},
 						{
-							LineNum: 6,
-							Name:    "$a4",
-							Val:     Array{VariableName("$a1")},
+							LineNum:      6,
+							VariableName: "$a4",
+							Val:          Array{VariableName("$a1")},
 						},
 						{
-							LineNum: 7,
-							Name:    "$a5",
-							Val:     Array{VariableName("$a1"), VariableName("$a2")},
+							LineNum:      7,
+							VariableName: "$a5",
+							Val:          Array{VariableName("$a1"), VariableName("$a2")},
 						},
 						{
-							LineNum: 8,
-							Name:    "$a6",
-							Val:     Array{VariableName("$a1"), "foo"},
+							LineNum:      8,
+							VariableName: "$a6",
+							Val:          Array{VariableName("$a1"), "foo"},
 						},
 					},
 					Declarations: []Declaration{},
@@ -409,11 +409,11 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					Defs: []Def{
+					VariableDefs: []VariableDef{
 						{
-							LineNum: 3,
-							Name:    "$webserver",
-							Val:     "nginx",
+							LineNum:      3,
+							VariableName: "$webserver",
+							Val:          "nginx",
 						},
 					},
 					Declarations: []Declaration{
@@ -461,11 +461,11 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					Defs: []Def{
+					VariableDefs: []VariableDef{
 						{
-							LineNum: 3,
-							Name:    VariableName("$webserver"),
-							Val:     "nginx",
+							LineNum:      3,
+							VariableName: VariableName("$webserver"),
+							Val:          "nginx",
 						},
 					},
 					Declarations: []Declaration{
@@ -533,9 +533,9 @@ var lexTests = []struct {
 		&File{
 			Classes: []Class{
 				{
-					LineNum: 2,
-					Name:    "Deps",
-					Defs:    []Def{},
+					LineNum:      2,
+					Name:         "Deps",
+					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
 							LineNum: 3,

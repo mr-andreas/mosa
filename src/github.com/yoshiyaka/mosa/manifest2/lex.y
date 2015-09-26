@@ -80,7 +80,7 @@ def:
 	variable_def | declaration;
 	
 variable_def:
-	VARIABLENAME '=' value { $$ = SawDef(@1.first_line, $1, $3);	}
+	VARIABLENAME '=' value { $$ = SawVariableDef(@1.first_line, $1, $3);	}
 
 declaration:
 	STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
