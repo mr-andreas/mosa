@@ -112,7 +112,26 @@ func resolveVariables(c *Class) (Class, error) {
 
 	retClass.Defs = newDefs
 
+	newDecls := make([]Declaration, len(c.Declarations))
+	for i, decl := range c.Declarations {
+
+	}
+
 	return retClass, nil
+}
+
+func resolveDeclaration(decl *Declaration, varsByName map[Variable]*Def) (Declaration, error) {
+	ret := *decl
+
+	if variable, ok := decl.Scalar.(Variable); ok {
+		if v, err := resolveVariable(variable, nil, varsByName, nil); err != nil {
+			return ret, err
+		} else {
+			ret.Scalar = v
+		}
+	}
+
+	return ret, nil
 }
 
 func resolveVariable(varDef *Def, chain []*Def, varsByName map[Variable]*Def, seenNames map[Variable]bool) (Value, error) {
