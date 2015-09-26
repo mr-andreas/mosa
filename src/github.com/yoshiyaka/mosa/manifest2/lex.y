@@ -39,7 +39,7 @@ void yyerror(const char *s);
 %token <ival> INT
 %token <fval> FLOAT
 %token <sval> STRING
-%token <sval> VARIABLE
+%token <sval> VARIABLENAME
 %token CLASS
 %token ARROW
 %token <sval> QUOTED_STRING
@@ -80,7 +80,7 @@ def:
 	variable_def | declaration;
 	
 variable_def:
-	VARIABLE '=' value { $$ = SawDef(@1.first_line, $1, $3);	}
+	VARIABLENAME '=' value { $$ = SawDef(@1.first_line, $1, $3);	}
 
 declaration:
 	STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
@@ -101,7 +101,7 @@ value:
 
 scalar:
 	QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
-	| VARIABLE		{ $$ = SawVariable(@1.first_line, $1);		}
+	| VARIABLENAME	{ $$ = SawVariableName(@1.first_line, $1);		}
 	| INT			{ $$ = SawInt(@1.first_line, $1);			}
 
 reference:

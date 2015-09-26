@@ -58,7 +58,7 @@ func (c *Class) String() string {
 
 type Def struct {
 	LineNum int
-	Name    Variable
+	Name    VariableName
 	Val     Value
 }
 
@@ -67,7 +67,7 @@ func (d *Def) String() string {
 }
 
 type QuotedString string
-type Variable string
+type VariableName string
 
 // A used type, for instance package { 'nginx': ensure => 'latest' }
 type Declaration struct {
@@ -193,7 +193,7 @@ func NewClass(lineNum C.int, identifier *C.char, defsAndDeclsHandle goHandle) go
 func SawDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 	return ht.Add(Def{
 		int(lineNum),
-		Variable(C.GoString(varName)),
+		VariableName(C.GoString(varName)),
 		ht.Get(val),
 	})
 }
@@ -208,9 +208,9 @@ func SawInt(lineNum C.int, val int) goHandle {
 	return ht.Add(val)
 }
 
-//export SawVariable
-func SawVariable(lineNum C.int, name *C.char) goHandle {
-	return ht.Add(Variable(C.GoString(name)))
+//export SawVariableName
+func SawVariableName(lineNum C.int, name *C.char) goHandle {
+	return ht.Add(VariableName(C.GoString(name)))
 }
 
 //export SawDeclaration

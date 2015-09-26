@@ -20,7 +20,7 @@ class			{ return CLASS; }
 =>				{ return ARROW; }
 \$[a-zA-Z0-9]+   {
   yylval.sval = strdup(yytext);
-  return VARIABLE;
+  return VARIABLENAME;
 }
 [a-zA-Z0-9]+   {
   // we have to copy because we can't rely on yytext not changing underneath us:

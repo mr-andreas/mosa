@@ -66,7 +66,7 @@ var lexTests = []struct {
 					Defs: []Def{
 						{
 							LineNum: 3,
-							Name:    Variable("$prop"),
+							Name:    VariableName("$prop"),
 							Val:     Value("x"),
 						},
 					},
@@ -91,7 +91,7 @@ var lexTests = []struct {
 					Defs: []Def{
 						{
 							LineNum: 3,
-							Name:    Variable("$prop"),
+							Name:    VariableName("$prop"),
 							Val: Array{
 								Value("x"),
 								Value(1),
@@ -375,17 +375,17 @@ var lexTests = []struct {
 						{
 							LineNum: 6,
 							Name:    "$a4",
-							Val:     Array{Variable("$a1")},
+							Val:     Array{VariableName("$a1")},
 						},
 						{
 							LineNum: 7,
 							Name:    "$a5",
-							Val:     Array{Variable("$a1"), Variable("$a2")},
+							Val:     Array{VariableName("$a1"), VariableName("$a2")},
 						},
 						{
 							LineNum: 8,
 							Name:    "$a6",
-							Val:     Array{Variable("$a1"), "foo"},
+							Val:     Array{VariableName("$a1"), "foo"},
 						},
 					},
 					Declarations: []Declaration{},
@@ -464,7 +464,7 @@ var lexTests = []struct {
 					Defs: []Def{
 						{
 							LineNum: 3,
-							Name:    Variable("$webserver"),
+							Name:    VariableName("$webserver"),
 							Val:     "nginx",
 						},
 					},
@@ -472,7 +472,7 @@ var lexTests = []struct {
 						{
 							LineNum: 5,
 							Type:    "package",
-							Scalar:  Variable("$webserver"),
+							Scalar:  VariableName("$webserver"),
 							Props: []Prop{
 								{
 									LineNum: 6,
@@ -492,7 +492,7 @@ var lexTests = []struct {
 									Value: Reference{
 										LineNum: 10,
 										Type:    "package",
-										Scalar:  Variable("$webserver"),
+										Scalar:  VariableName("$webserver"),
 									},
 								},
 							},

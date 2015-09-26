@@ -77,7 +77,7 @@ func Reduce(ast *File) []*common.Step {
 func resolveVariables(c *Class) (Class, error) {
 	retClass := *c
 
-	varsByName := map[Variable]*Def{}
+	varsByName := map[VariableName]*Def{}
 	for _, def := range c.Defs {
 		if _, exists := varsByName[def.Name]; exists {
 			return retClass, &Err{
@@ -93,16 +93,16 @@ func resolveVariables(c *Class) (Class, error) {
 	newDefs := make([]Def, len(c.Defs))
 	for i, def := range c.Defs {
 		switch def.Val.(type) {
-		case Variable:
-			varName := def.Val.(Variable)
+		case VariableName:
+			varName := def.Val.(VariableName)
 			val, err := resolveVariable(
-				&def, []*Def{&def}, varsByName, map[Variable]bool{},
+				&def, []*Def{&def}, varsByName, map[VariableName]bool{},
 			)
 			if err != nil {
 				return retClass, err
 			}
 			newDefs[i] = Def{
-				Name: Variable(varName),
+				Name: VariableName(varName),
 				Val:  val,
 			}
 		default:
@@ -134,7 +134,7 @@ func resolveVariables(c *Class) (Class, error) {
 //
 // varsByName should contain a map of all top level variable definitions seen in
 // the class.
-func resolveDeclaration(decl *Declaration, varsByName map[Variable]*Def) (Declaration, error) {
+func resolveDeclaration(decl *Declaration, varsByName map[VariableName]*Def) (Declaration, error) {
 	ret := *decl
 
 	//	if variable, ok := decl.Scalar.(Variable); ok {
@@ -164,10 +164,10 @@ func resolveDeclaration(decl *Declaration, varsByName map[Variable]*Def) (Declar
 //
 // seenNames is keeps track of all variables already seen during the current
 // recursion. Used to detect cyclic dependencies.
-func resolveVariable(varDef *Def, chain []*Def, varsByName map[Variable]*Def, seenNames map[Variable]bool) (Value, error) {
+func resolveVariable(varDef *Def, chain []*Def, varsByName map[VariableName]*Def, seenNames map[VariableName]bool) (Value, error) {
 	seenNames[varDef.Name] = true
 
-	foundVar, found := varsByName[varDef.Val.(Variable)]
+	foundVar, found := varsByName[varDef.Val.(VariableName)]
 	if !found {
 		return nil, &Err{
 			Line:       varDef.LineNum,
@@ -176,7 +176,7 @@ func resolveVariable(varDef *Def, chain []*Def, varsByName map[Variable]*Def, se
 		}
 	}
 
-	if _, seen := seenNames[varDef.Val.(Variable)]; seen {
+	if _, seen := seenNames[varDef.Val.(VariableName)]; seen {
 		cycle := make([]string, len(chain)+1)
 		for i, def := range chain {
 			cycle[i] = string(def.Name)
@@ -193,7 +193,7 @@ func resolveVariable(varDef *Def, chain []*Def, varsByName map[Variable]*Def, se
 		}
 	}
 
-	if _, isVar := foundVar.Val.(Variable); isVar {
+	if _, isVar := foundVar.Val.(VariableName); isVar {
 		return resolveVariable(foundVar, append(chain, varDef), varsByName, seenNames)
 	} else {
 		// This is an actual value
