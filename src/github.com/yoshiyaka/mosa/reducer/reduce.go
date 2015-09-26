@@ -112,28 +112,58 @@ func resolveVariables(c *Class) (Class, error) {
 
 	retClass.Defs = newDefs
 
-	newDecls := make([]Declaration, len(c.Declarations))
-	for i, decl := range c.Declarations {
+	//	newDecls := make([]Declaration, len(c.Declarations))
+	//	for i, decl := range c.Declarations {
 
-	}
+	//	}
 
 	return retClass, nil
 }
 
+// Resolves all variables used in a declaration. For instance
+//  package { $webserver:
+//  	ensure => present,
+//  	workers => $workers,
+//  }
+// Would be resolved into
+//  package { 'nginx':
+//  	ensure => present,
+//  	workers => 5,
+//  }
+// when $webserver = 'nginx' and $workers = 5 are defined in the class.
+//
+// varsByName should contain a map of all top level variable definitions seen in
+// the class.
 func resolveDeclaration(decl *Declaration, varsByName map[Variable]*Def) (Declaration, error) {
 	ret := *decl
 
-	if variable, ok := decl.Scalar.(Variable); ok {
-		if v, err := resolveVariable(variable, nil, varsByName, nil); err != nil {
-			return ret, err
-		} else {
-			ret.Scalar = v
-		}
-	}
+	//	if variable, ok := decl.Scalar.(Variable); ok {
+	//		// The current value points to a variable, for instance foo => $bar.
+	//		// Resolve it.
+	//		if v, err := resolveVariable(variable, nil, varsByName, nil); err != nil {
+	//			return ret, err
+	//		} else {
+	//			ret.Scalar = v
+	//		}
+	//	}
 
 	return ret, nil
 }
 
+// Recursively resolves a variable's actual value.
+//
+// chain will keep the chain used to define the variable, for instance if
+// a manifest looks like
+//  $foo = $bar
+//  $bar = 3
+// chain will contain [ $foo, $bar ]. This is used when printing errors about
+// cyclic dependencies.
+//
+// varsByName should contain a map of all top level variable definitions seen in
+// the class.
+//
+// seenNames is keeps track of all variables already seen during the current
+// recursion. Used to detect cyclic dependencies.
 func resolveVariable(varDef *Def, chain []*Def, varsByName map[Variable]*Def, seenNames map[Variable]bool) (Value, error) {
 	seenNames[varDef.Name] = true
 
