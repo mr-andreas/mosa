@@ -69,6 +69,20 @@ var resolveVariablesTest = []struct {
 	{
 		`class C {
   			$foo = 'bar'
+
+			package { 'baz': name => $foo, }
+		}`,
+
+		`class C {
+  			$foo = 'bar'
+
+			package { 'baz': name => 'bar', }
+		}`,
+	},
+
+	{
+		`class C {
+  			$foo = 'bar'
  			$baz = $foo
 
 			package { $baz: name => $baz, }
@@ -78,7 +92,7 @@ var resolveVariablesTest = []struct {
   			$foo = 'bar'
 			$baz = 'bar'
 
-			package { 'bar': name => $bar, }
+			package { 'bar': name => 'bar', }
 		}`,
 	},
 
@@ -113,7 +127,7 @@ var resolveVariablesTest = []struct {
 		}
 		class B {
 			$foo = 'B'
-			$bar = $foo		
+			$bar = $foo
 		}`,
 		`class A {
 			$foo = 'A'
@@ -143,8 +157,16 @@ func TestResolveVariable(t *testing.T) {
 			t.Fatal(realErr)
 		}
 
-		if !reflect.DeepEqual(expectedFile, realFile) {
-			t.Error(realFile.String())
+		if reducedFile, err := Reduce(realFile); err != nil {
+			t.Log(test.inputManifest)
+			t.Fatal(err)
+		} else if !reflect.DeepEqual(expectedFile, &reducedFile) {
+			//			t.Logf("%#v", expectedFile)
+			//			t.Logf("%#v", &reducedFile)
+			t.Error(
+				"Got bad manifest, expected", expectedFile.String(),
+				"got", reducedFile.String(),
+			)
 		}
 	}
 }
