@@ -22,6 +22,10 @@ var (
 	lastFile *File
 )
 
+type stringable interface {
+	String() string
+}
+
 type File struct {
 	Classes []Class
 }
@@ -63,11 +67,27 @@ type VariableDef struct {
 }
 
 func (d *VariableDef) String() string {
-	return fmt.Sprintf("%s = %s", d.VariableName, d.Val)
+	return fmt.Sprintf("%s = %s", d.VariableName, valToStr(d.Val))
+}
+
+func valToStr(i interface{}) string {
+	switch i.(type) {
+	case int, int64:
+		return fmt.Sprintf("%d", i)
+	case stringable:
+		return i.(stringable).String()
+	default:
+		return i.(string)
+	}
 }
 
 type QuotedString string
+
+func (qs QuotedString) String() string { return fmt.Sprintf("'%s'", string(qs)) }
+
 type VariableName string
+
+func (vn VariableName) String() string { return string(vn) }
 
 // A used type, for instance package { 'nginx': ensure => 'latest' }
 type Declaration struct {
@@ -110,6 +130,16 @@ type Value interface{}
 // An array of strings, number or references, for instance
 // [ 1, 'foo', package[$webserver], ]
 type Array []interface{}
+
+func (a Array) String() string {
+	str := "["
+	for _, val := range a {
+		str += fmt.Sprintf(" %s,", valToStr(val))
+	}
+	str += " ]"
+
+	return str
+}
 
 // A reference, for instance package['nginx'] or package[$webserver]
 type Reference struct {
