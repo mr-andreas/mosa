@@ -28,6 +28,7 @@ type stringable interface {
 
 type File struct {
 	Classes []Class
+	Defines []Define
 }
 
 func (f *File) String() string {
@@ -37,6 +38,19 @@ func (f *File) String() string {
 	}
 
 	return s
+}
+
+type DefineType int
+
+const (
+	DefineTypeSingle DefineType = iota
+	DefineTypeMultiple
+)
+
+type Define struct {
+	LineNum int
+	Name    string
+	Type    DefineType
 }
 
 type Class struct {
@@ -159,6 +173,8 @@ func NilArray(typ C.ASTTYPE) goHandle {
 		return ht.Add([]Prop{})
 	case C.ASTTYPE_ARRAY:
 		return ht.Add(Array{})
+	case C.ASTTYPE_ARRAY_INTERFACE:
+		return ht.Add([]interface{}{})
 	}
 
 	fmt.Printf("%#v\n", typ)
@@ -186,10 +202,20 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 }
 
 //export NewFile
-func NewFile(classes goHandle) goHandle {
-	lastFile = &File{
-		Classes: ht.Get(classes).([]Class),
+func NewFile(classesAndDefines goHandle) goHandle {
+	lastFile = &File{}
+
+	for _, classOrDefine := range ht.Get(classesAndDefines).([]interface{}) {
+		switch classOrDefine.(type) {
+		case Class:
+			lastFile.Classes = append(lastFile.Classes, classOrDefine.(Class))
+		case Define:
+			lastFile.Defines = append(lastFile.Defines, classOrDefine.(Define))
+		default:
+			panic("Found top-level object which is not class or define")
+		}
 	}
+
 	return ht.Add(lastFile)
 }
 
@@ -268,6 +294,25 @@ func SawReference(lineNum C.int, typ *C.char, scalar goHandle) goHandle {
 		LineNum: int(lineNum),
 		Type:    C.GoString(typ),
 		Scalar:  ht.Get(scalar),
+	})
+}
+
+//export SawDefine
+func SawDefine(lineNum C.int, modifier, name *C.char) goHandle {
+	var dt DefineType
+	switch C.GoString(modifier) {
+	case "single":
+		dt = DefineTypeSingle
+	case "multiple":
+		dt = DefineTypeMultiple
+	default:
+		return -1
+	}
+
+	return ht.Add(Define{
+		LineNum: int(lineNum),
+		Name:    C.GoString(name),
+		Type:    dt,
 	})
 }
 

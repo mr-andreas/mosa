@@ -15,6 +15,7 @@ int line_num = 1;
 
 [ \t] ;
 class			{ return CLASS; }
+define			{ return DEFINE; }
 [0-9]+\.[0-9]+	{ yylval.fval = atof(yytext); return FLOAT; }
 [0-9]+			{ yylval.ival = atoi(yytext); return INT; }
 =>				{ return ARROW; }

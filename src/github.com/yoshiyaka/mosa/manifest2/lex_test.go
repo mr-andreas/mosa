@@ -614,6 +614,21 @@ var lexTests = []struct {
 			},
 		},
 	},
+
+	{
+		`define multiple package {
+			$foo = 'x'
+		}`,
+		&File{
+			Defines: []Define{
+				{
+					Name:    "package",
+					LineNum: 1,
+					Type:    DefineTypeMultiple,
+				},
+			},
+		},
+	},
 }
 
 func TestLex(t *testing.T) {
@@ -631,6 +646,30 @@ func TestLex(t *testing.T) {
 				t.Log(string(js))
 				t.Fatal(test.manifest)
 			}
+		}
+	}
+}
+
+var badLexTests = []struct {
+	manifest string
+}{
+	{`class`},
+	{`class foo`},
+	{`class foo {`},
+	{`class foo }`},
+	{`class bar {}}`},
+	{`foo`},
+	{`define package {}`},
+	{`define foobar package {}`},
+	{`define foobar package { $x = 5 }`},
+	{`define single multiple package {}`},
+	{`define single multiple package { $x = 5 }`},
+}
+
+func TestBadLex(t *testing.T) {
+	for _, test := range badLexTests {
+		if _, err := Lex("test.manifest", strings.NewReader(test.manifest)); err == nil {
+			t.Error("Bad manifest didn't fail:", test.manifest)
 		}
 	}
 }

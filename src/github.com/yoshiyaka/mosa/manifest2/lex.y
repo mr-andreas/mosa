@@ -41,13 +41,15 @@ void yyerror(const char *s);
 %token <sval> STRING
 %token <sval> VARIABLENAME
 %token CLASS
+%token DEFINE
 %token ARROW
 %token <sval> QUOTED_STRING
 
 %type <gohandle> def
 %type <gohandle> defs
+%type <gohandle> define
 %type <gohandle> class
-%type <gohandle> classes
+%type <gohandle> classes_and_defines
 %type <gohandle> file
 %type <gohandle> declaration
 %type <gohandle> variable_def
@@ -62,18 +64,29 @@ void yyerror(const char *s);
 %%
 
 file:
-	classes			{ NewFile($1); }
+	classes_and_defines		{ NewFile($1); }
 
-classes:
-	classes class   { $$ = AppendArray($1, $2); }
-	| class			{ $$ = AppendArray(NilArray(ASTTYPE_CLASSES), $1); }
+classes_and_defines:
+	  classes_and_defines class   	{ $$ = AppendArray($1, $2); }
+	| classes_and_defines define	{ $$ = AppendArray($1, $2); }
+	| class							{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+	| define						{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+
+define:
+	DEFINE STRING     STRING '{' defs '}'	{
+		$$ = SawDefine(@1.first_line, $<sval>2, $3);
+		if($$ == -1) {
+			yyerror("Expected 'single' or 'multiple' after define");
+			YYABORT;
+		}
+	}
 
 class:
-	CLASS STRING '{' defs '}'	{ $$ = NewClass(@1.first_line, $2, $4);						}
+	  CLASS STRING '{' defs '}'	{ $$ = NewClass(@1.first_line, $2, $4);						}
 	| CLASS STRING '{' '}'		{ $$ = NewClass(@1.first_line, $2, NilArray(ASTTYPE_DEFS));	}
 
 defs:
-	defs def	{ $$ = AppendArray($1, $2);						}
+	  defs def	{ $$ = AppendArray($1, $2);						}
 	| def		{ $$ = AppendArray(NilArray(ASTTYPE_DEFS), $1);	}
 	
 def:
@@ -83,11 +96,11 @@ variable_def:
 	VARIABLENAME '=' value { $$ = SawVariableDef(@1.first_line, $1, $3);	}
 
 declaration:
-	STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
-	| STRING '{' scalar':' '}'			{ $$ = SawDeclaration(@1.first_line, $1, $3, NilArray(ASTTYPE_PROPLIST)); }
+	  STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
+	| STRING '{' scalar':' '}'				{ $$ = SawDeclaration(@1.first_line, $1, $3, NilArray(ASTTYPE_PROPLIST)); }
 
 proplist:
-	proplist prop	{ $$ = AppendArray($1, $2); }
+	  proplist prop	{ $$ = AppendArray($1, $2); }
 	| prop			{ $$ = AppendArray(NilArray(ASTTYPE_PROPLIST), $1); }
 	;
 
@@ -95,12 +108,12 @@ prop:
 	STRING ARROW value ','	{ $$ = SawProp(@1.first_line, $1, $3); }
 
 value:
-	scalar			{ $$ = $1; }
+	  scalar		{ $$ = $1; }
 	| array			{ $$ = $1; }
 	| reference		{ $$ = $1; }
 
 scalar:
-	QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
+	  QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
 	| VARIABLENAME	{ $$ = SawVariableName(@1.first_line, $1);		}
 	| INT			{ $$ = SawInt(@1.first_line, $1);			}
 
@@ -108,12 +121,12 @@ reference:
 	STRING '[' scalar ']' { $$ = SawReference(@1.first_line, $1, $3); }
 
 array:
-	'[' arrayentries ']'	{ $$ = $2; }
+	  '[' arrayentries ']'	{ $$ = $2; }
 	| '[' ']' 				{ $$ = NilArray(ASTTYPE_ARRAY); }
 
 arrayentries:
-	arrayentries value ','	{ $$ = AppendArray($1, $2); }
-	| value ','				{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY), $1); }
+	  arrayentries value ','	{ $$ = AppendArray($1, $2); }
+	| value ','					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY), $1); }
 
 %%
 
@@ -121,7 +134,7 @@ char *last_error = NULL;
 
 t_error doparse(char *file) {
 	int ret;
-	line_num = 0;
+	line_num = 1;
 	
 	memset(&yylloc, 0, sizeof(YYLTYPE));
 	yylineno = 1;
