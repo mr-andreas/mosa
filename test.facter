@@ -4,7 +4,8 @@ define multiple package($names) {
 }
 
 facter multiple package($names) {
-	$installed = exec { "dpkg -l | grep $names": }
+	$namesWithPipes = implode($names, "|")
+	$installed = exec { "dpkg -l | grep ^ii | awk '{ print $2 }' | grep -P '^$namesWithPipes$'": }
 	
 	return $names - $installed
 }
