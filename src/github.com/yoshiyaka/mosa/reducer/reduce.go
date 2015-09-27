@@ -103,8 +103,9 @@ func resolveVariables(c *Class) (Class, error) {
 	for i, def := range c.VariableDefs {
 		switch def.Val.(type) {
 		case VariableName:
-			val, err := resolveVariable(
-				def.Val.(VariableName), def.LineNum, varsByName,
+			val, err := resolveVariableRecursive(
+				def.Val.(VariableName), def.LineNum, []*VariableDef{&def},
+				varsByName, map[VariableName]bool{def.VariableName: true},
 			)
 			if err != nil {
 				return retClass, err

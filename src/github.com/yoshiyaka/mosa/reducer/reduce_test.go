@@ -306,7 +306,9 @@ func TestResolveBadVariable(t *testing.T) {
 
 			if e.Line != expE.Line || e.Type != expE.Type {
 				t.Log(test.inputManifest)
-				t.Errorf("%s: Got bad error: %s", test.comment, e)
+				t.Errorf(
+					"%s: Got bad error: %s. Expected %s", test.comment, e, expE,
+				)
 			}
 		}
 	}
