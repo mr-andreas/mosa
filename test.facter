@@ -1,0 +1,47 @@
+define multiple package($names) {
+	exec { "apt-get -y $namesStr": }
+	$namesStr = implode($names, " ")
+}
+
+facter multiple package($names) {
+	$installed = exec { "dpkg -l | grep $names": }
+	
+	return $names - $installed
+}
+
+define single file($name, $content = "") {
+	parallel
+	
+	exec { "cat > $name":
+		stdin => $content,
+	}
+}
+
+facter single file($name, $content = "") {
+	$filesize = exec { "ls -s $name": }
+	$expectedFilesize = len($content)
+	
+	$md5 = exec { "md5sum $name":
+		unless => $filesize != $expectedFilesize,
+	}
+	$contentMd5 = md5sum($content)
+	
+	return $filesize == $expectedFilesize && $md5 == $contentMd5
+}
+
+
+facter single file($name, $content = "") {
+	$filesize = exec { "ls -s $name": }
+	$expectedFilesize = len($content)
+
+	if $filesize == $expectedFilesize {
+		$md5 = exec { "md5sum $name":
+			unless => $filesize != $expectedFilesize,
+		}
+		$contentMd5 = md5sum($content)
+		
+		return $md5 == $contentMd5
+	} else {
+		return false
+	}
+}
