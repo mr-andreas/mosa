@@ -8,7 +8,7 @@ import (
 	"github.com/yoshiyaka/mosa/manifest2"
 )
 
-var resolveVariablesTest = []struct {
+var resolveClassTest = []struct {
 	inputManifest,
 	expectedManifest string
 }{
@@ -119,6 +119,43 @@ var resolveVariablesTest = []struct {
 			$baz = [ 'baz', [ 'foo', 1, 'z', ], ]
 		}`,
 	},
+}
+
+func TestResolveClass(t *testing.T) {
+	for _, test := range resolveClassTest {
+		expectedFile, err := manifest2.Lex(
+			"expected.ms", strings.NewReader(test.expectedManifest),
+		)
+		if err != nil {
+			t.Log(test.inputManifest)
+			t.Fatal(err)
+		}
+
+		realFile, realErr := manifest2.Lex(
+			"real.ms", strings.NewReader(test.inputManifest),
+		)
+		if realErr != nil {
+			t.Fatal(realErr)
+		}
+
+		if reducedClass, err := resolveClass(&realFile.Classes[0]); err != nil {
+			t.Log(test.inputManifest)
+			t.Fatal(err)
+		} else if c := expectedFile.Classes[0]; !reflect.DeepEqual(c, reducedClass) {
+			//			t.Logf("%#v", expectedFile)
+			//			t.Logf("%#v", reducedFile)
+			t.Fatal(
+				"Got bad manifest, expected", c.String(),
+				"got", reducedClass.String(),
+			)
+		}
+	}
+}
+
+var resolveFileTest = []struct {
+	inputManifest,
+	expectedManifest string
+}{
 
 	{
 		`class A {
@@ -140,8 +177,8 @@ var resolveVariablesTest = []struct {
 	},
 }
 
-func TestResolveVariable(t *testing.T) {
-	for _, test := range resolveVariablesTest {
+func TestResolveFile(t *testing.T) {
+	for _, test := range resolveFileTest {
 		expectedFile, err := manifest2.Lex(
 			"expected.ms", strings.NewReader(test.expectedManifest),
 		)
