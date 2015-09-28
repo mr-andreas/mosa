@@ -42,6 +42,7 @@ void yyerror(const char *s);
 %token <sval> VARIABLENAME
 %token CLASS
 %token DEFINE
+%token NODE
 %token ARROW
 %token <sval> QUOTED_STRING
 
@@ -49,7 +50,8 @@ void yyerror(const char *s);
 %type <gohandle> defs
 %type <gohandle> define
 %type <gohandle> class
-%type <gohandle> classes_and_defines
+%type <gohandle> node
+%type <gohandle> file_body
 %type <gohandle> file
 %type <gohandle> declaration
 %type <gohandle> variable_def
@@ -64,17 +66,23 @@ void yyerror(const char *s);
 %%
 
 file:
-	classes_and_defines		{ NewFile($1); }
+	file_body				{ NewFile($1); }
+	| /* Empty manifest */	{ NewFile(NilArray(ASTTYPE_ARRAY_INTERFACE)); }
 
-classes_and_defines:
-	  classes_and_defines class   	{ $$ = AppendArray($1, $2); }
-	| classes_and_defines define	{ $$ = AppendArray($1, $2); }
-	| class							{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
-	| define						{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+file_body:
+	  file_body class   	{ $$ = AppendArray($1, $2); }
+	| file_body define		{ $$ = AppendArray($1, $2); }
+	| file_body node		{ $$ = AppendArray($1, $2); }
+	| class					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+	| define				{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+	| node					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+
+node:
+	NODE QUOTED_STRING '{' defs '}' { $$ = SawNode(@1.first_line, $2, $4); }
 
 define:
-	DEFINE STRING     STRING '{' defs '}'	{
-		$$ = SawDefine(@1.first_line, $<sval>2, $3);
+	DEFINE STRING STRING '{' defs '}'	{
+		$$ = SawDefine(@1.first_line, $2, $3);
 		if($$ == -1) {
 			yyerror("Expected 'single' or 'multiple' after define");
 			YYABORT;

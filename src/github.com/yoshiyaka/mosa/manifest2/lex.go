@@ -29,6 +29,7 @@ type stringable interface {
 type File struct {
 	Classes []Class
 	Defines []Define
+	Nodes   []Node
 }
 
 func (f *File) String() string {
@@ -53,11 +54,32 @@ type Define struct {
 	Type    DefineType
 }
 
+type Node struct {
+	LineNum      int
+	Name         string
+	VariableDefs []VariableDef
+	Declarations []Declaration
+}
+
 type Class struct {
 	LineNum      int
 	Name         string
 	VariableDefs []VariableDef
 	Declarations []Declaration
+}
+
+func (n *Node) String() string {
+	defs := ""
+	decls := ""
+	for _, def := range n.VariableDefs {
+		defs += fmt.Sprintf("\t%s\n", def.String())
+	}
+
+	for _, decl := range n.Declarations {
+		decls += fmt.Sprintf("\t%s\n", decl.String())
+	}
+
+	return fmt.Sprintf("node '%s' {\n%s\n%s\n}\n", n.Name, defs, decls)
 }
 
 func (c *Class) String() string {
@@ -211,6 +233,8 @@ func NewFile(classesAndDefines goHandle) goHandle {
 			lastFile.Classes = append(lastFile.Classes, classOrDefine.(Class))
 		case Define:
 			lastFile.Defines = append(lastFile.Defines, classOrDefine.(Define))
+		case Node:
+			lastFile.Nodes = append(lastFile.Nodes, classOrDefine.(Node))
 		default:
 			panic("Found top-level object which is not class or define")
 		}
@@ -240,6 +264,32 @@ func NewClass(lineNum C.int, identifier *C.char, defsAndDeclsHandle goHandle) go
 	return ht.Add(Class{
 		LineNum:      int(lineNum),
 		Name:         C.GoString(identifier),
+		VariableDefs: defs,
+		Declarations: decls,
+	})
+}
+
+//export SawNode
+func SawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle {
+	defsAndDecls := ht.Get(defsAndDeclsHandle).([]interface{})
+
+	defs := []VariableDef{}
+	decls := []Declaration{}
+
+	for _, val := range defsAndDecls {
+		switch val.(type) {
+		case VariableDef:
+			defs = append(defs, val.(VariableDef))
+		case Declaration:
+			decls = append(decls, val.(Declaration))
+		default:
+			panic("Value is neither def nor decl")
+		}
+	}
+
+	return ht.Add(Node{
+		LineNum:      int(lineNum),
+		Name:         C.GoString(name),
 		VariableDefs: defs,
 		Declarations: decls,
 	})

@@ -629,6 +629,65 @@ var lexTests = []struct {
 			},
 		},
 	},
+
+	{
+		`node 'localhost' {
+			$foo = 'x'
+		}`,
+		&File{
+			Nodes: []Node{
+				{
+					Name:    "localhost",
+					LineNum: 1,
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      2,
+							VariableName: VariableName("$foo"),
+							Val:          "x",
+						},
+					},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`node 'localhost' {
+			$foo = 'x'
+			
+			decl { 'x': foo => 5, }
+		}`,
+		&File{
+			Nodes: []Node{
+				{
+					Name:    "localhost",
+					LineNum: 1,
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      2,
+							VariableName: VariableName("$foo"),
+							Val:          "x",
+						},
+					},
+					Declarations: []Declaration{
+						{
+							LineNum: 4,
+							Type:    "decl",
+							Scalar:  "x",
+							Props: []Prop{
+								{
+									LineNum: 4,
+									Name:    "foo",
+									Value:   5,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
 }
 
 func TestLex(t *testing.T) {
@@ -664,6 +723,10 @@ var badLexTests = []struct {
 	{`define foobar package { $x = 5 }`},
 	{`define single multiple package {}`},
 	{`define single multiple package { $x = 5 }`},
+	{`define multiple package {}`},
+	{`define multiple package($nonamevar) {}`},
+	{`node {}`},
+	{`node badname {}`},
 }
 
 func TestBadLex(t *testing.T) {
