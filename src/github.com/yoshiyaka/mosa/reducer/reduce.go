@@ -56,7 +56,7 @@ func Reduce(ast *File) (File, error) {
 
 	for i, class := range ast.Classes {
 		var err error
-		retFile.Classes[i], err = resolveVariables(&class)
+		retFile.Classes[i], err = resolveClass(&class)
 		if err != nil {
 			return retFile, err
 		}
@@ -83,7 +83,7 @@ func Reduce(ast *File) (File, error) {
 //
 //		package { 'bar': }
 //	}
-func resolveVariables(c *Class) (Class, error) {
+func resolveClass(c *Class) (Class, error) {
 	retClass := *c
 
 	varsByName := map[VariableName]VariableDef{}

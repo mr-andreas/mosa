@@ -274,7 +274,7 @@ func TestResolveBadVariable(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, resolveErr := resolveVariables(&ast.Classes[0])
+		_, resolveErr := resolveClass(&ast.Classes[0])
 		if resolveErr == nil {
 			t.Log(test.inputManifest)
 			t.Error("Got no error for", test.comment)
