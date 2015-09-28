@@ -57,6 +57,7 @@ type Define struct {
 type Node struct {
 	LineNum      int
 	Name         string
+	ArgDefs      []ArgDef
 	VariableDefs []VariableDef
 	Declarations []Declaration
 }
@@ -64,6 +65,7 @@ type Node struct {
 type Class struct {
 	LineNum      int
 	Name         string
+	ArgDefs      []ArgDef
 	VariableDefs []VariableDef
 	Declarations []Declaration
 }
@@ -94,6 +96,16 @@ func (c *Class) String() string {
 	}
 
 	return fmt.Sprintf("\tclass %s {\n%s\n%s\n\t}\n", c.Name, defs, decls)
+}
+
+type ArgDef struct {
+	LineNum      int
+	VariableName VariableName
+	Val          Value
+}
+
+func (d *ArgDef) String() string {
+	return fmt.Sprintf("%s = %s", d.VariableName, valToStr(d.Val))
 }
 
 type VariableDef struct {
@@ -197,6 +209,8 @@ func NilArray(typ C.ASTTYPE) goHandle {
 		return ht.Add(Array{})
 	case C.ASTTYPE_ARRAY_INTERFACE:
 		return ht.Add([]interface{}{})
+	case C.ASTTYPE_ARGDEFS:
+		return ht.Add([]ArgDef{})
 	}
 
 	fmt.Printf("%#v\n", typ)
@@ -217,6 +231,8 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 		return ht.Add(append(array.([]interface{}), ht.Get(newValue)))
 	case Array:
 		return ht.Add(append(array.(Array), ht.Get(newValue)))
+	case []ArgDef:
+		return ht.Add(append(array.([]ArgDef), ht.Get(newValue).(ArgDef)))
 	}
 
 	fmt.Printf("%#v\n", array)
@@ -244,8 +260,9 @@ func NewFile(classesAndDefines goHandle) goHandle {
 }
 
 //export NewClass
-func NewClass(lineNum C.int, identifier *C.char, defsAndDeclsHandle goHandle) goHandle {
-	defsAndDecls := ht.Get(defsAndDeclsHandle).([]interface{})
+func NewClass(lineNum C.int, identifier *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
+	argDefs := ht.Get(argDefsH).([]ArgDef)
+	defsAndDecls := ht.Get(defsAndDeclsH).([]interface{})
 
 	defs := []VariableDef{}
 	decls := []Declaration{}
@@ -264,6 +281,7 @@ func NewClass(lineNum C.int, identifier *C.char, defsAndDeclsHandle goHandle) go
 	return ht.Add(Class{
 		LineNum:      int(lineNum),
 		Name:         C.GoString(identifier),
+		ArgDefs:      argDefs,
 		VariableDefs: defs,
 		Declarations: decls,
 	})
@@ -363,6 +381,20 @@ func SawDefine(lineNum C.int, modifier, name *C.char) goHandle {
 		LineNum: int(lineNum),
 		Name:    C.GoString(name),
 		Type:    dt,
+	})
+}
+
+//export SawArgDef
+func SawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
+	v := Value(nil)
+	if val != 0 {
+		v = ht.Get(val).(Value)
+	}
+
+	return ht.Add(ArgDef{
+		LineNum:      int(lineNum),
+		VariableName: VariableName(C.GoString(varName)),
+		Val:          v,
 	})
 }
 

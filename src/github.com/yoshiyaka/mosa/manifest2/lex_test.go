@@ -19,6 +19,7 @@ var lexTests = []struct {
 				{
 					LineNum:      1,
 					Name:         "Test",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
@@ -38,12 +39,14 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
 				{
 					LineNum:      4,
 					Name:         "Bar",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
@@ -63,6 +66,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
+					ArgDefs: []ArgDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -88,6 +92,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
+					ArgDefs: []ArgDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -120,6 +125,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -148,6 +154,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -185,6 +192,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
+					ArgDefs: []ArgDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -204,6 +212,7 @@ var lexTests = []struct {
 				{
 					LineNum: 7,
 					Name:    "Class2",
+					ArgDefs: []ArgDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      8,
@@ -231,6 +240,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -265,6 +275,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -308,6 +319,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -356,6 +368,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Arrays",
+					ArgDefs: []ArgDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -409,6 +422,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
+					ArgDefs: []ArgDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -461,6 +475,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
+					ArgDefs: []ArgDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -535,6 +550,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Deps",
+					ArgDefs:      []ArgDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -684,6 +700,111 @@ var lexTests = []struct {
 							},
 						},
 					},
+				},
+			},
+		},
+	},
+
+	{
+		`class Test() {}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum:      1,
+					Name:         "Test",
+					ArgDefs:      []ArgDef{},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`class Test($foo,) {}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 1,
+					Name:    "Test",
+					ArgDefs: []ArgDef{
+						{
+							LineNum:      1,
+							VariableName: "$foo",
+							Val:          nil,
+						},
+					},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`class Test(
+		$foo, 
+		$bar,
+		) {}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 1,
+					Name:    "Test",
+					ArgDefs: []ArgDef{
+						{
+							LineNum:      2,
+							VariableName: "$foo",
+							Val:          nil,
+						},
+						{
+							LineNum:      3,
+							VariableName: "$bar",
+							Val:          nil,
+						},
+					},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`class Test($foo = 5, $bar = 'x', $baz = [ 1, 2, ], $a,) {}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 1,
+					Name:    "Test",
+					ArgDefs: []ArgDef{
+						{
+							LineNum:      1,
+							VariableName: "$foo",
+							Val:          5,
+						},
+						{
+							LineNum:      1,
+							VariableName: "$bar",
+							Val:          "x",
+						},
+						{
+							LineNum:      1,
+							VariableName: "$baz",
+							Val:          Array{1, 2},
+						},
+						{
+							LineNum:      1,
+							VariableName: "$a",
+							Val:          nil,
+						},
+					},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
 				},
 			},
 		},

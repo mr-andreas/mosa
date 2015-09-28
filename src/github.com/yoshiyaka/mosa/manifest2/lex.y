@@ -51,6 +51,9 @@ void yyerror(const char *s);
 %type <gohandle> define
 %type <gohandle> class
 %type <gohandle> node
+%type <gohandle> optional_arg_defs
+%type <gohandle> arg_defs
+%type <gohandle> arg_def
 %type <gohandle> file_body
 %type <gohandle> file
 %type <gohandle> declaration
@@ -90,8 +93,22 @@ define:
 	}
 
 class:
-	  CLASS STRING '{' defs '}'	{ $$ = NewClass(@1.first_line, $2, $4);						}
-	| CLASS STRING '{' '}'		{ $$ = NewClass(@1.first_line, $2, NilArray(ASTTYPE_DEFS));	}
+	  CLASS STRING optional_arg_defs '{' defs '}'	{ $$ = NewClass(@1.first_line, $2, $3, $5);						}
+	| CLASS STRING optional_arg_defs '{' '}'		{ $$ = NewClass(@1.first_line, $2, $3, NilArray(ASTTYPE_DEFS));	}
+
+optional_arg_defs:
+	/* empty */					{ $$ = NilArray(ASTTYPE_ARGDEFS); }
+	| '(' ')'					{ $$ = NilArray(ASTTYPE_ARGDEFS); }
+	| '(' arg_defs ')'			{ $$ = $2; }
+
+arg_defs:
+	  arg_defs arg_def			{ $$ = AppendArray($1, $2); }
+	| arg_def					{ $$ = AppendArray(NilArray(ASTTYPE_ARGDEFS), $1); }
+
+arg_def:
+	  VARIABLENAME ','				{ $$ = SawArgDef(@1.first_line, $1, 0);  }
+	| VARIABLENAME '=' scalar ','	{ $$ = SawArgDef(@1.first_line, $1, $3); }
+	| VARIABLENAME '=' array  ','	{ $$ = SawArgDef(@1.first_line, $1, $3); }
 
 defs:
 	  defs def	{ $$ = AppendArray($1, $2);						}
