@@ -7,6 +7,7 @@
 #include "types.h"
 
 extern int line_num;
+extern int level;
 extern FILE *yyin;
 extern int yylineno;
 
@@ -160,6 +161,7 @@ char *last_error = NULL;
 t_error doparse(char *file) {
 	int ret;
 	line_num = 1;
+	level = 0;
 	
 	memset(&yylloc, 0, sizeof(YYLTYPE));
 	yylineno = 1;

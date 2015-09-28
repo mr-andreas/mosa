@@ -176,6 +176,51 @@ var lexTests = []struct {
 	},
 
 	{
+		`class Test {
+			package { 'pkg':
+				class => 'foo',
+				define => 'bar',
+				node => 'baz',
+			}
+		}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum:      1,
+					Name:         "Test",
+					ArgDefs:      []ArgDef{},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{
+						{
+							LineNum: 2,
+							Type:    "package",
+							Scalar:  "pkg",
+							Props: []Prop{
+								{
+									LineNum: 3,
+									Name:    "class",
+									Value:   "foo",
+								},
+								{
+									LineNum: 4,
+									Name:    "define",
+									Value:   "bar",
+								},
+								{
+									LineNum: 5,
+									Name:    "node",
+									Value:   "baz",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+
+	{
 		`
 		class Test {
 			$foo = 'bar'
