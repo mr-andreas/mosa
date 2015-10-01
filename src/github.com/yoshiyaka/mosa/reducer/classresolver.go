@@ -8,6 +8,9 @@ import . "github.com/yoshiyaka/mosa/manifest2"
 type classResolver struct {
 	// The class we're resolving
 	original *Class
+
+	// Contains a map of all top level variable definitions seen in the class.
+	varDefsByName map[VariableName]VariableDef
 }
 
 func newClassResolver(class *Class) *classResolver {
@@ -16,13 +19,13 @@ func newClassResolver(class *Class) *classResolver {
 	}
 }
 
-func (cr *classResolver) resolveProps(props []Prop, varsByName map[VariableName]VariableDef) ([]Prop, error) {
+func (cr *classResolver) resolveProps(props []Prop) ([]Prop, error) {
 	ret := make([]Prop, len(props))
 
 	for i, prop := range props {
 		if varName, pointsToVar := prop.Value.(VariableName); pointsToVar {
 			var err error
-			prop.Value, err = cr.resolveVariable(varName, prop.LineNum, varsByName)
+			prop.Value, err = cr.resolveVariable(varName, prop.LineNum)
 			if err != nil {
 				return nil, err
 			}
@@ -35,15 +38,15 @@ func (cr *classResolver) resolveProps(props []Prop, varsByName map[VariableName]
 	return ret, nil
 }
 
-func (cr *classResolver) resolveVariable(v VariableName, lineNum int, varsByName map[VariableName]VariableDef) (Value, error) {
+func (cr *classResolver) resolveVariable(v VariableName, lineNum int) (Value, error) {
 	return cr.resolveVariableRecursive(
-		v, lineNum, nil, varsByName, map[VariableName]bool{},
+		v, lineNum, nil, map[VariableName]bool{},
 	)
 }
 
-func (cr *classResolver) resolveArray(a Array, lineNum int, varsByName map[VariableName]VariableDef) (Array, error) {
+func (cr *classResolver) resolveArray(a Array, lineNum int) (Array, error) {
 	return cr.resolveArrayRecursive(
-		a, lineNum, nil, varsByName, map[VariableName]bool{},
+		a, lineNum, nil, map[VariableName]bool{},
 	)
 }
 
@@ -56,13 +59,10 @@ func (cr *classResolver) resolveArray(a Array, lineNum int, varsByName map[Varia
 // chain will contain [ $foo, $bar ]. This is used when printing errors about
 // cyclic dependencies.
 //
-// varsByName should contain a map of all top level variable definitions seen in
-// the class.
-//
 // seenNames is keeps track of all variables already seen during the current
 // recursion. Used to detect cyclic dependencies.
-func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineNum int, chain []*VariableDef, varsByName map[VariableName]VariableDef, seenNames map[VariableName]bool) (Value, error) {
-	foundVar, found := varsByName[lookingFor]
+func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineNum int, chain []*VariableDef, seenNames map[VariableName]bool) (Value, error) {
+	foundVar, found := cr.varDefsByName[lookingFor]
 	if !found {
 		return nil, &Err{
 			Line:       lineNum,
@@ -81,7 +81,7 @@ func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineN
 				seenNamesCopy[key] = val
 			}
 			return cr.resolveArrayRecursive(
-				array, lineNum, chain, varsByName, seenNamesCopy,
+				array, lineNum, chain, seenNamesCopy,
 			)
 		} else {
 			return foundVar.Val, nil
@@ -109,11 +109,11 @@ func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineN
 
 	return cr.resolveVariableRecursive(
 		foundVar.Val.(VariableName), foundVar.LineNum, append(chain, &foundVar),
-		varsByName, seenNames,
+		seenNames,
 	)
 }
 
-func (cr *classResolver) resolveArrayRecursive(a Array, lineNum int, chain []*VariableDef, varsByName map[VariableName]VariableDef, seenNames map[VariableName]bool) (Array, error) {
+func (cr *classResolver) resolveArrayRecursive(a Array, lineNum int, chain []*VariableDef, seenNames map[VariableName]bool) (Array, error) {
 	newArray := make(Array, len(a))
 
 	for i, val := range a {
@@ -126,7 +126,7 @@ func (cr *classResolver) resolveArrayRecursive(a Array, lineNum int, chain []*Va
 			}
 
 			newArray[i], err = cr.resolveVariableRecursive(
-				varName, lineNum, chain, varsByName, seenNamesCopy,
+				varName, lineNum, chain, seenNamesCopy,
 			)
 			if err != nil {
 				return nil, err
@@ -161,9 +161,9 @@ func (cr *classResolver) Resolve() (Class, error) {
 	c := cr.original
 	retClass := *cr.original
 
-	varsByName := map[VariableName]VariableDef{}
+	cr.varDefsByName = map[VariableName]VariableDef{}
 	for _, def := range c.VariableDefs {
-		if _, exists := varsByName[def.VariableName]; exists {
+		if _, exists := cr.varDefsByName[def.VariableName]; exists {
 			return retClass, &Err{
 				Line:       def.LineNum,
 				Type:       ErrorTypeMultipleDefinition,
@@ -171,7 +171,7 @@ func (cr *classResolver) Resolve() (Class, error) {
 			}
 		}
 
-		varsByName[def.VariableName] = def
+		cr.varDefsByName[def.VariableName] = def
 	}
 
 	newDefs := make([]VariableDef, len(c.VariableDefs))
@@ -180,7 +180,7 @@ func (cr *classResolver) Resolve() (Class, error) {
 		case VariableName:
 			val, err := cr.resolveVariableRecursive(
 				def.Val.(VariableName), def.LineNum, []*VariableDef{&def},
-				varsByName, map[VariableName]bool{def.VariableName: true},
+				map[VariableName]bool{def.VariableName: true},
 			)
 			if err != nil {
 				return retClass, err
@@ -192,7 +192,7 @@ func (cr *classResolver) Resolve() (Class, error) {
 			}
 		case Array:
 			val, err := cr.resolveArray(
-				def.Val.(Array), def.LineNum, varsByName,
+				def.Val.(Array), def.LineNum,
 			)
 			if err != nil {
 				return retClass, err
@@ -212,7 +212,7 @@ func (cr *classResolver) Resolve() (Class, error) {
 	retClass.Declarations = make([]Declaration, len(c.Declarations))
 	for i, decl := range c.Declarations {
 		var err error
-		retClass.Declarations[i], err = cr.resolveDeclaration(&decl, varsByName)
+		retClass.Declarations[i], err = cr.resolveDeclaration(&decl)
 		if err != nil {
 			return retClass, err
 		}
@@ -232,16 +232,13 @@ func (cr *classResolver) Resolve() (Class, error) {
 //  	workers => 5,
 //  }
 // when $webserver = 'nginx' and $workers = 5 are defined in the class.
-//
-// varsByName should contain a map of all top level variable definitions seen in
-// the class.
-func (cr *classResolver) resolveDeclaration(decl *Declaration, varsByName map[VariableName]VariableDef) (Declaration, error) {
+func (cr *classResolver) resolveDeclaration(decl *Declaration) (Declaration, error) {
 	ret := *decl
 
 	if variable, ok := decl.Scalar.(VariableName); ok {
 		// The current value points to a variable, for instance foo => $bar.
 		// Resolve it.
-		if v, err := cr.resolveVariable(variable, decl.LineNum, varsByName); err != nil {
+		if v, err := cr.resolveVariable(variable, decl.LineNum); err != nil {
 			return ret, err
 		} else {
 			ret.Scalar = v
@@ -249,7 +246,7 @@ func (cr *classResolver) resolveDeclaration(decl *Declaration, varsByName map[Va
 	}
 
 	var err error
-	ret.Props, err = cr.resolveProps(decl.Props, varsByName)
+	ret.Props, err = cr.resolveProps(decl.Props)
 	if err != nil {
 		return ret, err
 	}
