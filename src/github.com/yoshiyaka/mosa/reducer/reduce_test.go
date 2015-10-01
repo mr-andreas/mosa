@@ -138,7 +138,8 @@ func TestResolveClass(t *testing.T) {
 			t.Fatal(realErr)
 		}
 
-		if reducedClass, err := resolveClass(&realFile.Classes[0]); err != nil {
+		resolver := newClassResolver(&realFile.Classes[0])
+		if reducedClass, err := resolver.Resolve(); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
 		} else if c := expectedFile.Classes[0]; !reflect.DeepEqual(c, reducedClass) {
@@ -311,7 +312,8 @@ func TestResolveBadVariable(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, resolveErr := resolveClass(&ast.Classes[0])
+		resolver := newClassResolver(&ast.Classes[0])
+		_, resolveErr := resolver.Resolve()
 		if resolveErr == nil {
 			t.Log(test.inputManifest)
 			t.Error("Got no error for", test.comment)
