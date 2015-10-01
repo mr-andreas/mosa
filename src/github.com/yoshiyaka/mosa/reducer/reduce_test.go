@@ -271,7 +271,7 @@ var badVariableTest = []struct {
 			$foo = $bar
 			$bar = $foo
 		}`,
-		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
+		&Err{Line: 3, Type: ErrorTypeCyclicVariable},
 	},
 
 	{
@@ -281,7 +281,7 @@ var badVariableTest = []struct {
 			$bar = $baz
 			$baz = $foo
 		}`,
-		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
+		&Err{Line: 3, Type: ErrorTypeCyclicVariable},
 	},
 
 	{

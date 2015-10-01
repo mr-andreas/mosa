@@ -196,35 +196,12 @@ func (cr *classResolver) Resolve() (Class, error) {
 	// Resolve top-level variables defined
 	newDefs := make([]VariableDef, len(c.VariableDefs))
 	for i, def := range c.VariableDefs {
-		switch def.Val.(type) {
-		case VariableName:
-			val, err := cr.resolveVariableRecursive(
-				def.Val.(VariableName), def.LineNum, []*VariableDef{&def},
-				map[VariableName]bool{def.VariableName: true},
-			)
-			if err != nil {
-				return retClass, err
-			}
-			newDefs[i] = VariableDef{
-				LineNum:      def.LineNum,
-				VariableName: def.VariableName,
-				Val:          val,
-			}
-		case Array:
-			val, err := cr.resolveArray(
-				def.Val.(Array), def.LineNum,
-			)
-			if err != nil {
-				return retClass, err
-			}
-			newDefs[i] = VariableDef{
-				LineNum:      def.LineNum,
-				VariableName: def.VariableName,
-				Val:          val,
-			}
-		default:
-			newDefs[i] = def
+		var err error
+		def.Val, err = cr.resolveValue(def.Val, def.LineNum)
+		if err != nil {
+			return retClass, err
 		}
+		newDefs[i] = def
 	}
 
 	retClass.VariableDefs = newDefs
@@ -239,6 +216,17 @@ func (cr *classResolver) Resolve() (Class, error) {
 	}
 
 	return retClass, nil
+}
+
+func (cr *classResolver) resolveValue(v Value, lineNum int) (Value, error) {
+	switch v.(type) {
+	case VariableName:
+		return cr.resolveVariable(v.(VariableName), lineNum)
+	case Array:
+		return cr.resolveArray(v.(Array), lineNum)
+	default:
+		return v, nil
+	}
 }
 
 // Resolves all variables used in a declaration. For instance
