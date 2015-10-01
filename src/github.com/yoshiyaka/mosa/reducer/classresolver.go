@@ -11,11 +11,16 @@ type classResolver struct {
 
 	// Contains a map of all top level variable definitions seen in the class.
 	varDefsByName map[VariableName]VariableDef
+
+	// When a variable is resolved, it will be removed from varDefsByName and
+	// stored here with its final value.
+	resolvedVars map[VariableName]Value
 }
 
 func newClassResolver(class *Class) *classResolver {
 	return &classResolver{
-		original: class,
+		original:     class,
+		resolvedVars: map[VariableName]Value{},
 	}
 }
 
@@ -62,6 +67,10 @@ func (cr *classResolver) resolveArray(a Array, lineNum int) (Array, error) {
 // seenNames is keeps track of all variables already seen during the current
 // recursion. Used to detect cyclic dependencies.
 func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineNum int, chain []*VariableDef, seenNames map[VariableName]bool) (Value, error) {
+	if val, found := cr.resolvedVars[lookingFor]; found {
+		return val, nil
+	}
+
 	foundVar, found := cr.varDefsByName[lookingFor]
 	if !found {
 		return nil, &Err{
@@ -80,10 +89,19 @@ func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineN
 			for key, val := range seenNames {
 				seenNamesCopy[key] = val
 			}
-			return cr.resolveArrayRecursive(
+
+			resolvedArray, err := cr.resolveArrayRecursive(
 				array, lineNum, chain, seenNamesCopy,
 			)
+			if err == nil {
+				cr.resolvedVars[lookingFor] = resolvedArray
+				delete(cr.varDefsByName, lookingFor)
+			}
+			return resolvedArray, err
 		} else {
+			cr.resolvedVars[lookingFor] = foundVar.Val
+			delete(cr.varDefsByName, lookingFor)
+
 			return foundVar.Val, nil
 		}
 	}
@@ -161,6 +179,7 @@ func (cr *classResolver) Resolve() (Class, error) {
 	c := cr.original
 	retClass := *cr.original
 
+	// Start by loading all top-level variables defined
 	cr.varDefsByName = map[VariableName]VariableDef{}
 	for _, def := range c.VariableDefs {
 		if _, exists := cr.varDefsByName[def.VariableName]; exists {
@@ -174,6 +193,7 @@ func (cr *classResolver) Resolve() (Class, error) {
 		cr.varDefsByName[def.VariableName] = def
 	}
 
+	// Resolve top-level variables defined
 	newDefs := make([]VariableDef, len(c.VariableDefs))
 	for i, def := range c.VariableDefs {
 		switch def.Val.(type) {

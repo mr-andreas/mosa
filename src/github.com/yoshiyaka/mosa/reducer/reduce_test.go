@@ -142,13 +142,22 @@ func TestResolveClass(t *testing.T) {
 		if reducedClass, err := resolver.Resolve(); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
-		} else if c := expectedFile.Classes[0]; !reflect.DeepEqual(c, reducedClass) {
-			//			t.Logf("%#v", expectedFile)
-			//			t.Logf("%#v", reducedFile)
-			t.Fatal(
-				"Got bad manifest, expected", c.String(),
-				"got", reducedClass.String(),
-			)
+		} else {
+			if c := expectedFile.Classes[0]; !reflect.DeepEqual(c, reducedClass) {
+				//			t.Logf("%#v", expectedFile)
+				//			t.Logf("%#v", reducedFile)
+				t.Fatal(
+					"Got bad manifest, expected", c.String(),
+					"got", reducedClass.String(),
+				)
+			}
+
+			if len(resolver.varDefsByName) != 0 && false {
+				t.Fatal(
+					"Not all variables were resolved in", test.inputManifest,
+					resolver.varDefsByName,
+				)
+			}
 		}
 	}
 }
