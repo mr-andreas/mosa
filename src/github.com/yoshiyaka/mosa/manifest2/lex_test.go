@@ -70,7 +70,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
-							VariableName: VariableName("$prop"),
+							VariableName: VariableName{3, "$prop"},
 							Val:          Value("x"),
 						},
 					},
@@ -241,14 +241,14 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
-							VariableName: "$foo",
+							VariableName: VariableName{3, "$foo"},
 							Val:          "bar",
 						},
 
 						{
 							LineNum:      4,
-							VariableName: "$baz",
-							Val:          "$foo",
+							VariableName: VariableName{4, "$baz"},
+							Val:          VariableName{4, "$foo"},
 						},
 					},
 					Declarations: []Declaration{},
@@ -261,7 +261,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      8,
-							VariableName: "$good",
+							VariableName: VariableName{8, "$good"},
 							Val:          "text",
 						},
 					},
@@ -422,31 +422,30 @@ var lexTests = []struct {
 						},
 						{
 							LineNum:      4,
-							VariableName: "$a2",
+							VariableName: VariableName{4, "$a2"},
 							Val:          Array{"foo"},
 						},
 						{
 							LineNum:      5,
-							VariableName: "$a3",
+							VariableName: VariableName{5, "$a3"},
 							Val:          Array{"foo", "bar"},
 						},
 						{
 							LineNum:      6,
-							VariableName: "$a4",
-							Val:          Array{VariableName("$a1")},
+							VariableName: VariableName{6, "$a4"},
+							Val:          Array{VariableName{6, "$a1"}},
 						},
 						{
 							LineNum:      7,
-							VariableName: "$a5",
-							Val:          Array{VariableName("$a1"), VariableName("$a2")},
+							VariableName: VariableName{7, "$a5"},
+							Val: Array{
+								VariableName{7, "$a1"}, VariableName{7, "$a2"},
+							},
 						},
 						{
 							LineNum:      8,
 							VariableName: VariableName{8, "$a6"},
-							Val: Array{
-								VariableName{8, "$a1"},
-								VariableName{8, "foo"},
-							},
+							Val:          Array{VariableName{8, "$a1"}, "foo"},
 						},
 					},
 					Declarations: []Declaration{},
@@ -474,7 +473,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
-							VariableName: "$webserver",
+							VariableName: VariableName{3, "$webserver"},
 							Val:          "nginx",
 						},
 					},
@@ -491,7 +490,7 @@ var lexTests = []struct {
 										Reference{
 											LineNum: 5,
 											Type:    "package",
-											Scalar:  "$webserver",
+											Scalar:  VariableName{5, "$webserver"},
 										},
 									},
 								},
@@ -527,7 +526,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
-							VariableName: VariableName("$webserver"),
+							VariableName: VariableName{3, "$webserver"},
 							Val:          "nginx",
 						},
 					},
@@ -706,7 +705,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      2,
-							VariableName: VariableName("$foo"),
+							VariableName: VariableName{2, "$foo"},
 							Val:          "x",
 						},
 					},
@@ -730,7 +729,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      2,
-							VariableName: VariableName("$foo"),
+							VariableName: VariableName{2, "$foo"},
 							Val:          "x",
 						},
 					},
@@ -837,7 +836,7 @@ var lexTests = []struct {
 						},
 						{
 							LineNum:      1,
-							VariableName: "$bar",
+							VariableName: VariableName{1, "$bar"},
 							Val:          "x",
 						},
 						{

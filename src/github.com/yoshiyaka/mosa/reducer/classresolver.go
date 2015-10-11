@@ -1,8 +1,6 @@
 package reducer
 
 import (
-	"fmt"
-
 	. "github.com/yoshiyaka/mosa/manifest2"
 )
 
