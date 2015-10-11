@@ -166,6 +166,30 @@ var resolveFileTest = []struct {
 	inputManifest,
 	expectedManifest string
 }{
+	{
+		`class A{}`,
+		`class A{}`,
+	},
+
+	{
+		`
+		class A{}
+		class B{}`,
+		`
+		class A{}
+		class B{}`,
+	},
+
+	{
+		`class A {
+			$foo = 'A'
+			$bar = $foo
+		}`,
+		`class A {
+			$foo = 'A'
+			$bar = 'A'
+		}`,
+	},
 
 	{
 		`class A {
@@ -208,11 +232,11 @@ func TestResolveFile(t *testing.T) {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(expectedFile, &reducedFile) {
-			//			t.Logf("%#v", expectedFile)
-			//			t.Logf("%#v", &reducedFile)
-			t.Error(
-				"Got bad manifest, expected", expectedFile.String(),
-				"got", reducedFile.String(),
+			t.Logf("%#v", expectedFile)
+			t.Logf("%#v", &reducedFile)
+			t.Fatalf(
+				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
+				expectedFile.String(), reducedFile.String(),
 			)
 		}
 	}

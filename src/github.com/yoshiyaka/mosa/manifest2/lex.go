@@ -133,9 +133,12 @@ type QuotedString string
 
 func (qs QuotedString) String() string { return fmt.Sprintf("'%s'", string(qs)) }
 
-type VariableName string
+type VariableName struct {
+	LineNum int
+	Str     string
+}
 
-func (vn VariableName) String() string { return string(vn) }
+func (vn VariableName) String() string { return vn.Str }
 
 // A used type, for instance package { 'nginx': ensure => 'latest' }
 type Declaration struct {
@@ -317,7 +320,7 @@ func SawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle 
 func SawVariableDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 	return ht.Add(VariableDef{
 		int(lineNum),
-		VariableName(C.GoString(varName)),
+		VariableName{int(lineNum), C.GoString(varName)},
 		ht.Get(val),
 	})
 }
@@ -334,7 +337,7 @@ func SawInt(lineNum C.int, val int) goHandle {
 
 //export SawVariableName
 func SawVariableName(lineNum C.int, name *C.char) goHandle {
-	return ht.Add(VariableName(C.GoString(name)))
+	return ht.Add(VariableName{int(lineNum), C.GoString(name)})
 }
 
 //export SawDeclaration
@@ -393,7 +396,7 @@ func SawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 
 	return ht.Add(ArgDef{
 		LineNum:      int(lineNum),
-		VariableName: VariableName(C.GoString(varName)),
+		VariableName: VariableName{int(lineNum), C.GoString(varName)},
 		Val:          v,
 	})
 }

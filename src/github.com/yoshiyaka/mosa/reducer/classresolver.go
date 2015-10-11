@@ -1,6 +1,10 @@
 package reducer
 
-import . "github.com/yoshiyaka/mosa/manifest2"
+import (
+	"fmt"
+
+	. "github.com/yoshiyaka/mosa/manifest2"
+)
 
 // Resolves variable references in a class. The object holds the internal state
 // of all variables used during the resolving, and should only be used once for
@@ -10,17 +14,17 @@ type classResolver struct {
 	original *Class
 
 	// Contains a map of all top level variable definitions seen in the class.
-	varDefsByName map[VariableName]VariableDef
+	varDefsByName map[string]VariableDef
 
 	// When a variable is resolved, it will be removed from varDefsByName and
 	// stored here with its final value.
-	resolvedVars map[VariableName]Value
+	resolvedVars map[string]Value
 }
 
 func newClassResolver(class *Class) *classResolver {
 	return &classResolver{
 		original:     class,
-		resolvedVars: map[VariableName]Value{},
+		resolvedVars: map[string]Value{},
 	}
 }
 
@@ -67,16 +71,16 @@ func (cr *classResolver) resolveArray(a Array, lineNum int) (Array, error) {
 // seenNames is keeps track of all variables already seen during the current
 // recursion. Used to detect cyclic dependencies.
 func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineNum int, chain []*VariableDef, seenNames map[VariableName]bool) (Value, error) {
-	if val, found := cr.resolvedVars[lookingFor]; found {
+	if val, found := cr.resolvedVars[lookingFor.Str]; found {
 		return val, nil
 	}
 
-	foundVar, found := cr.varDefsByName[lookingFor]
+	foundVar, found := cr.varDefsByName[lookingFor.Str]
 	if !found {
 		return nil, &Err{
 			Line:       lineNum,
 			Type:       ErrorTypeUnresolvableVariable,
-			SymbolName: string(lookingFor),
+			SymbolName: string(lookingFor.String()),
 		}
 	}
 
@@ -94,13 +98,13 @@ func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineN
 				array, lineNum, chain, seenNamesCopy,
 			)
 			if err == nil {
-				cr.resolvedVars[lookingFor] = resolvedArray
-				delete(cr.varDefsByName, lookingFor)
+				cr.resolvedVars[lookingFor.Str] = resolvedArray
+				delete(cr.varDefsByName, lookingFor.Str)
 			}
 			return resolvedArray, err
 		} else {
-			cr.resolvedVars[lookingFor] = foundVar.Val
-			delete(cr.varDefsByName, lookingFor)
+			cr.resolvedVars[lookingFor.Str] = foundVar.Val
+			delete(cr.varDefsByName, lookingFor.Str)
 
 			return foundVar.Val, nil
 		}
@@ -109,15 +113,15 @@ func (cr *classResolver) resolveVariableRecursive(lookingFor VariableName, lineN
 	if _, seen := seenNames[lookingFor]; seen {
 		cycle := make([]string, len(chain)+1)
 		for i, def := range chain {
-			cycle[i] = string(def.VariableName)
+			cycle[i] = string(def.VariableName.Str)
 		}
-		cycle[len(cycle)-1] = string(lookingFor)
+		cycle[len(cycle)-1] = string(lookingFor.Str)
 
 		return nil, &CyclicError{
 			Err: Err{
 				Line:       chain[0].LineNum,
 				Type:       ErrorTypeCyclicVariable,
-				SymbolName: string(chain[0].VariableName),
+				SymbolName: string(chain[0].VariableName.Str),
 			},
 			Cycle: cycle,
 		}
@@ -180,17 +184,17 @@ func (cr *classResolver) Resolve() (Class, error) {
 	retClass := *cr.original
 
 	// Start by loading all top-level variables defined
-	cr.varDefsByName = map[VariableName]VariableDef{}
+	cr.varDefsByName = map[string]VariableDef{}
 	for _, def := range c.VariableDefs {
-		if _, exists := cr.varDefsByName[def.VariableName]; exists {
+		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
 			return retClass, &Err{
 				Line:       def.LineNum,
 				Type:       ErrorTypeMultipleDefinition,
-				SymbolName: string(def.VariableName),
+				SymbolName: string(def.VariableName.Str),
 			}
 		}
 
-		cr.varDefsByName[def.VariableName] = def
+		cr.varDefsByName[def.VariableName.Str] = def
 	}
 
 	// Resolve top-level variables defined

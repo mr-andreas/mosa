@@ -96,7 +96,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
-							VariableName: VariableName("$prop"),
+							VariableName: VariableName{3, "$prop"},
 							Val: Array{
 								Value("x"),
 								Value(1),
@@ -417,7 +417,7 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
-							VariableName: "$a1",
+							VariableName: VariableName{3, "$a1"},
 							Val:          Array{},
 						},
 						{
@@ -442,8 +442,11 @@ var lexTests = []struct {
 						},
 						{
 							LineNum:      8,
-							VariableName: "$a6",
-							Val:          Array{VariableName("$a1"), "foo"},
+							VariableName: VariableName{8, "$a6"},
+							Val: Array{
+								VariableName{8, "$a1"},
+								VariableName{8, "foo"},
+							},
 						},
 					},
 					Declarations: []Declaration{},
@@ -532,7 +535,7 @@ var lexTests = []struct {
 						{
 							LineNum: 5,
 							Type:    "package",
-							Scalar:  VariableName("$webserver"),
+							Scalar:  VariableName{5, "$webserver"},
 							Props: []Prop{
 								{
 									LineNum: 6,
@@ -552,7 +555,7 @@ var lexTests = []struct {
 									Value: Reference{
 										LineNum: 10,
 										Type:    "package",
-										Scalar:  VariableName("$webserver"),
+										Scalar:  VariableName{10, "$webserver"},
 									},
 								},
 							},
@@ -777,8 +780,8 @@ var lexTests = []struct {
 					ArgDefs: []ArgDef{
 						{
 							LineNum:      1,
-							VariableName: "$foo",
 							Val:          nil,
+							VariableName: VariableName{1, "$foo"},
 						},
 					},
 					VariableDefs: []VariableDef{},
@@ -802,12 +805,12 @@ var lexTests = []struct {
 					ArgDefs: []ArgDef{
 						{
 							LineNum:      2,
-							VariableName: "$foo",
+							VariableName: VariableName{2, "$foo"},
 							Val:          nil,
 						},
 						{
 							LineNum:      3,
-							VariableName: "$bar",
+							VariableName: VariableName{3, "$bar"},
 							Val:          nil,
 						},
 					},
@@ -829,7 +832,7 @@ var lexTests = []struct {
 					ArgDefs: []ArgDef{
 						{
 							LineNum:      1,
-							VariableName: "$foo",
+							VariableName: VariableName{1, "$foo"},
 							Val:          5,
 						},
 						{
@@ -839,12 +842,12 @@ var lexTests = []struct {
 						},
 						{
 							LineNum:      1,
-							VariableName: "$baz",
+							VariableName: VariableName{1, "$baz"},
 							Val:          Array{1, 2},
 						},
 						{
 							LineNum:      1,
-							VariableName: "$a",
+							VariableName: VariableName{1, "$a"},
 							Val:          nil,
 						},
 					},
