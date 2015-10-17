@@ -744,6 +744,20 @@ var lexTests = []struct {
 	},
 
 	{
+		`node 'localhost' {}`,
+		&File{
+			Nodes: []Node{
+				{
+					Name:         "localhost",
+					LineNum:      1,
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
 		`node 'localhost' {
 			$foo = 'x'
 			

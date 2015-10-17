@@ -82,7 +82,8 @@ file_body:
 	| node					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
 
 node:
-	NODE QUOTED_STRING '{' defs '}' { $$ = SawNode(@1.first_line, $2, $4); }
+	  NODE QUOTED_STRING '{' defs '}' { $$ = SawNode(@1.first_line, $2, $4); }
+	| NODE QUOTED_STRING '{' '}' { $$ = SawNode(@1.first_line, $2, NilArray(ASTTYPE_DEFS)); }
 
 define:
 	DEFINE STRING STRING '{' defs '}'	{
