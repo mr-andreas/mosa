@@ -68,7 +68,7 @@ func (r *resolver) populateClassesByName() error {
 	for i, class := range r.ast.Classes {
 		if existingClass, exists := r.classesByName[class.Name]; exists {
 			return fmt.Errorf(
-				"Can't redfined class '%s' at %s:%d which is already defined at %s:%d",
+				"Can't redefine class '%s' at %s:%d which is already defined at %s:%d",
 				class.Name,
 				class.Filename, class.LineNum,
 				existingClass.Filename, existingClass.LineNum,
@@ -83,21 +83,45 @@ func (r *resolver) populateClassesByName() error {
 
 func (r *resolver) resolveNode(node *Node) error {
 	castedClass := Class(*node)
-	nodeResolver := newClassResolver(&castedClass)
-	if newClass, err := nodeResolver.Resolve(); err != nil {
+	return r.realizeClassesRecursive(&castedClass)
+}
+
+func (r *resolver) realizeClassesRecursive(c *Class) error {
+	classResolver := newClassResolver(c)
+	if newClass, err := classResolver.Resolve(); err != nil {
 		return err
 	} else {
 		for i, decl := range newClass.Declarations {
-			if name, ok := decl.Scalar.(QuotedString); ok {
+			if name, ok := decl.Scalar.(QuotedString); !ok {
+				return fmt.Errorf(
+					"Can't realize declaration of type %s with non-string name at %s:%d",
+					decl.Type, c.Filename, decl.LineNum,
+				)
+			} else {
 				if r.realizedDeclarations[decl.Type] == nil {
 					r.realizedDeclarations[decl.Type] = map[string]*Declaration{}
 				}
-				r.realizedDeclarations[decl.Type][name.String()] = &newClass.Declarations[i]
-			} else {
-				return fmt.Errorf(
-					"Can't realize declaration of type %s with non-string name at %s:%d",
-					decl.Type, node.Filename, decl.LineNum,
-				)
+
+				if decl.Type == "class" {
+					if nestedClass, ok := r.classesByName[string(name)]; !ok {
+						return fmt.Errorf(
+							"Reference to undefined class '%s' at %s:%d",
+							string(name), c.Filename, decl.LineNum,
+						)
+					} else if _, defined := r.realizedClasses[string(name)]; defined {
+						return fmt.Errorf(
+							"Class %s realized twice at %s:%d",
+							string(name), c.Filename, decl.LineNum,
+						)
+					} else {
+						r.realizedClasses[string(name)] = nestedClass
+						if err := r.realizeClassesRecursive(nestedClass); err != nil {
+							return err
+						}
+					}
+				} else {
+					r.realizedDeclarations[decl.Type][string(name)] = &newClass.Declarations[i]
+				}
 			}
 		}
 	}

@@ -513,7 +513,44 @@ var badDefsTest = []struct {
 		class A {}
 		class A {}
 		`,
-		`Can't redfined class 'A' at real.ms:4 which is already defined at real.ms:3`,
+		`Can't redefine class 'A' at real.ms:4 which is already defined at real.ms:3`,
+	},
+
+	{
+		`
+		// Reference to undefined class in node
+		node 'x' {
+			class { 'Undefined': }
+		}
+		`,
+		`Reference to undefined class 'Undefined' at real.ms:4`,
+	},
+
+	{
+		`
+		// Reference to undefined class in class
+		node 'x' {
+			class { 'A': }
+		}
+		class A {
+			class { 'Undefined': }
+		}
+		`,
+		`Reference to undefined class 'Undefined' at real.ms:7`,
+	},
+
+	{
+		`
+		// Reference to undefined class in class by var
+		node 'x' {
+			class { 'A': }
+		}
+		class A {
+			$var = 'VarValue'
+			class { $var: }
+		}
+		`,
+		`Reference to undefined class 'VarValue' at real.ms:8`,
 	},
 
 	{
