@@ -404,13 +404,13 @@ var resolveFileTest = []struct {
 				b_var => 'foo',
 			}
 		}
-		class A($subclass, $b_var) {
+		class A($subclass, $b_var,) {
 			decl { 'a_decl': }
 			class { $subclass:
 				var => $b_var,
 			}
 		}
-		class B($var) {
+		class B($var,) {
 			decl { 'b_decl':
 				var => $var,
 			}
@@ -599,6 +599,7 @@ func TestResolveBadVariable(t *testing.T) {
 			"err.ms", strings.NewReader(test.inputManifest),
 		)
 		if err != nil {
+			t.Log(test.inputManifest)
 			t.Fatal(err)
 		}
 
@@ -614,6 +615,7 @@ func TestResolveBadVariable(t *testing.T) {
 			if ce, ok := resolveErr.(*CyclicError); ok {
 				e = &ce.Err
 			} else {
+				t.Log(test.inputManifest)
 				e = resolveErr.(*Err)
 			}
 
@@ -769,7 +771,7 @@ var badDefsTest = []struct {
 			class { 'A': }
 		}
 		`,
-		`An error`,
+		`Class A realized twice at real.ms:12. Previously realized at real.ms:4`,
 	},
 
 	{

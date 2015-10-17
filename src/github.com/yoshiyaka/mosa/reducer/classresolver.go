@@ -61,16 +61,8 @@ func (cr *classResolver) resolve() (Class, error) {
 
 	// Start by loading all top-level variables defined
 	cr.varDefsByName = map[string]VariableDef{}
-	for _, def := range c.ArgDefs {
-		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
-			return retClass, &Err{
-				Line:       def.LineNum,
-				Type:       ErrorTypeMultipleDefinition,
-				SymbolName: string(def.VariableName.Str),
-			}
-		}
-
-		cr.varDefsByName[def.VariableName.Str] = def
+	if err := cr.setVarsFromArgs(); err != nil {
+		return retClass, err
 	}
 	for _, def := range c.VariableDefs {
 		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
@@ -82,16 +74,6 @@ func (cr *classResolver) resolve() (Class, error) {
 		}
 
 		cr.varDefsByName[def.VariableName.Str] = def
-	}
-
-	// Make sure all required variables are set
-	for _, arg := range cr.original.ArgDefs {
-		if def, exists := cr.varDefsByName[arg.VariableName.Str]; !exists || def.Val == nil {
-			return retClass, fmt.Errorf(
-				"Required argument '%s' not supplied at %s:%d",
-				arg.VariableName.Str[1:], cr.realizedInFile, cr.realizedAtLine,
-			)
-		}
 	}
 
 	// Resolve top-level variables defined
@@ -117,6 +99,39 @@ func (cr *classResolver) resolve() (Class, error) {
 	}
 
 	return retClass, nil
+}
+
+func (cr *classResolver) setVarsFromArgs() error {
+	argsByName := map[string]*Prop{}
+	for i, arg := range cr.args {
+		argsByName[arg.Name] = &cr.args[i]
+	}
+
+	for _, def := range cr.original.ArgDefs {
+		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
+			return &Err{
+				Line:       def.LineNum,
+				Type:       ErrorTypeMultipleDefinition,
+				SymbolName: string(def.VariableName.Str),
+			}
+		}
+
+		if arg, hasArg := argsByName[def.VariableName.Str[1:]]; hasArg {
+			// Pass the argument value
+			def.Val = arg.Value
+		}
+
+		if def.Val == nil {
+			return fmt.Errorf(
+				"Required argument '%s' not supplied at %s:%d",
+				def.VariableName.Str[1:], cr.realizedInFile, cr.realizedAtLine,
+			)
+		}
+
+		cr.varDefsByName[def.VariableName.Str] = def
+	}
+
+	return nil
 }
 
 func (cr *classResolver) resolveProps(props []Prop) ([]Prop, error) {
