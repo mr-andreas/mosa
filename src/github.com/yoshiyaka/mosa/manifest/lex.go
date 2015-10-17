@@ -161,7 +161,7 @@ func (d *Declaration) String() string {
 		props += fmt.Sprintf("\t\t\t%s\n", prop.String())
 	}
 
-	return fmt.Sprintf("\t\t%s { %s:\n%s\n\t\t}\n", d.Type, d.Scalar, props)
+	return fmt.Sprintf("%s { %s:\n%s\n\t\t}\n", d.Type, d.Scalar, props)
 }
 
 // A property in declaration, for instance ensure => 'latest'
@@ -197,6 +197,10 @@ type Reference struct {
 	LineNum int
 	Type    string
 	Scalar  Value
+}
+
+func (r Reference) String() string {
+	return fmt.Sprintf("%s[%s]", r.Type, r.Scalar)
 }
 
 //export NilArray

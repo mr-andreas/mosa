@@ -1,20 +1,32 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"os"
 
 	"github.com/yoshiyaka/mosa/manifest"
 )
 
 func main() {
-	manifest.Lex("-", os.Stdin)
-	return
+	fName := "../testdata/manifest.ms"
+	flag.Parse()
+	if args := flag.CommandLine.Args(); len(args) == 1 {
+		fName = args[0]
+	}
 
-	mfst, mfstErr := os.Open("../testdata/manifest.yaml")
+	file, fileErr := os.Open(fName)
+	if fileErr != nil {
+		panic(fileErr)
+	}
+	defer file.Close()
+
+	mfst, mfstErr := manifest.Lex(fName, file)
 	if mfstErr != nil {
 		panic(mfstErr)
 	}
-	defer mfst.Close()
+
+	fmt.Println(mfst)
 
 	//	steps, stepsErr := manifest.Load(mfst)
 	//	if stepsErr != nil {
