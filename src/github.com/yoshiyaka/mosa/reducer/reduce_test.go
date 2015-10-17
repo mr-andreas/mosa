@@ -231,9 +231,9 @@ func TestResolveFile(t *testing.T) {
 		if reducedFile, err := Reduce(realFile); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
-		} else if !reflect.DeepEqual(expectedFile, &reducedFile) {
+		} else if !reflect.DeepEqual(expectedFile, reducedFile) {
 			t.Logf("%#v", expectedFile)
-			t.Logf("%#v", &reducedFile)
+			t.Logf("%#v", reducedFile)
 			t.Fatalf(
 				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
 				expectedFile.String(), reducedFile.String(),
