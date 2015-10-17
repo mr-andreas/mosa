@@ -11,6 +11,9 @@ type classResolver struct {
 	// The class we're resolving
 	original *Class
 
+	// Args to resolve the class with
+	args []Prop
+
 	// Contains a map of all top level variable definitions seen in the class.
 	varDefsByName map[string]VariableDef
 
@@ -19,9 +22,10 @@ type classResolver struct {
 	resolvedVars map[string]Value
 }
 
-func newClassResolver(class *Class) *classResolver {
+func newClassResolver(class *Class, withArgs []Prop) *classResolver {
 	return &classResolver{
 		original:     class,
+		args:         withArgs,
 		resolvedVars: map[string]Value{},
 	}
 }
@@ -177,12 +181,23 @@ func (cr *classResolver) resolveArrayRecursive(a Array, lineNum int, chain []*Va
 //
 //		package { 'bar': }
 //	}
-func (cr *classResolver) Resolve() (Class, error) {
+func (cr *classResolver) resolve() (Class, error) {
 	c := cr.original
 	retClass := *cr.original
 
 	// Start by loading all top-level variables defined
 	cr.varDefsByName = map[string]VariableDef{}
+	//	for _, def := range c.ArgDefs {
+	//		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
+	//			return retClass, &Err{
+	//				Line:       def.LineNum,
+	//				Type:       ErrorTypeMultipleDefinition,
+	//				SymbolName: string(def.VariableName.Str),
+	//			}
+	//		}
+
+	//		cr.varDefsByName[def.VariableName.Str] = def
+	//	}
 	for _, def := range c.VariableDefs {
 		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
 			return retClass, &Err{

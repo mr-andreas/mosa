@@ -83,12 +83,12 @@ func (r *resolver) populateClassesByName() error {
 
 func (r *resolver) resolveNode(node *Node) error {
 	castedClass := Class(*node)
-	return r.realizeClassesRecursive(&castedClass)
+	return r.realizeClassesRecursive(&castedClass, nil)
 }
 
-func (r *resolver) realizeClassesRecursive(c *Class) error {
-	classResolver := newClassResolver(c)
-	if newClass, err := classResolver.Resolve(); err != nil {
+func (r *resolver) realizeClassesRecursive(c *Class, args []Prop) error {
+	classResolver := newClassResolver(c, args)
+	if newClass, err := classResolver.resolve(); err != nil {
 		return err
 	} else {
 		for i, decl := range newClass.Declarations {
@@ -115,7 +115,7 @@ func (r *resolver) realizeClassesRecursive(c *Class) error {
 						)
 					} else {
 						r.realizedClasses[string(name)] = nestedClass
-						if err := r.realizeClassesRecursive(nestedClass); err != nil {
+						if err := r.realizeClassesRecursive(nestedClass, decl.Props); err != nil {
 							return err
 						}
 					}

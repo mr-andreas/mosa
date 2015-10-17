@@ -139,8 +139,8 @@ func TestResolveClass(t *testing.T) {
 			t.Fatal(realErr)
 		}
 
-		resolver := newClassResolver(&realFile.Classes[0])
-		if reducedClass, err := resolver.Resolve(); err != nil {
+		resolver := newClassResolver(&realFile.Classes[0], nil)
+		if reducedClass, err := resolver.resolve(); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
 		} else {
@@ -451,6 +451,34 @@ var badVariableTest = []struct {
 		}`,
 		&Err{Line: 3, Type: ErrorTypeMultipleDefinition},
 	},
+
+	{
+		"Multiple definitions of the same name in header, no value",
+		`class C($foo, $foo,) {}`,
+		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
+	},
+
+	{
+		"Multiple definitions of the same name in header, with value",
+		`class C($foo = 4, $foo = 5,) {}`,
+		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
+	},
+
+	{
+		"Variable definition of same name in header and body",
+		`class C($foo,) {
+			$foo = 4
+		}`,
+		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
+	},
+
+	{
+		"Variable definition of same name in header (with value) and body",
+		`class C($foo = 5,) {
+			$foo = 4
+		}`,
+		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
+	},
 }
 
 func TestResolveBadVariable(t *testing.T) {
@@ -462,8 +490,8 @@ func TestResolveBadVariable(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		resolver := newClassResolver(&ast.Classes[0])
-		_, resolveErr := resolver.Resolve()
+		resolver := newClassResolver(&ast.Classes[0], nil)
+		_, resolveErr := resolver.resolve()
 		if resolveErr == nil {
 			t.Log(test.inputManifest)
 			t.Error("Got no error for", test.comment)
@@ -654,6 +682,28 @@ var badDefsTest = []struct {
 			$array = []
 			decl { $array: }
 		}
+		`,
+		`An error`,
+	},
+
+	{
+		`
+		// Realizing class with an undefined parameter
+		node 'n' {
+			class { 'A': undefined => 5, }
+		}
+		class A {}
+		`,
+		`An error`,
+	},
+
+	{
+		`
+		// Realizing class without supplying a required parameter
+		node 'n' {
+			class { 'A': }
+		}
+		class A($required) {}
 		`,
 		`An error`,
 	},
