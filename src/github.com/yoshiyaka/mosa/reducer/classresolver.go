@@ -22,13 +22,18 @@ type classResolver struct {
 	// When a variable is resolved, it will be removed from varDefsByName and
 	// stored here with its final value.
 	resolvedVars map[string]Value
+
+	realizedInFile string
+	realizedAtLine int
 }
 
-func newClassResolver(class *Class, withArgs []Prop) *classResolver {
+func newClassResolver(class *Class, withArgs []Prop, realizedIn string, at int) *classResolver {
 	return &classResolver{
-		original:     class,
-		args:         withArgs,
-		resolvedVars: map[string]Value{},
+		original:       class,
+		args:           withArgs,
+		resolvedVars:   map[string]Value{},
+		realizedInFile: realizedIn,
+		realizedAtLine: at,
 	}
 }
 
@@ -77,6 +82,16 @@ func (cr *classResolver) resolve() (Class, error) {
 		}
 
 		cr.varDefsByName[def.VariableName.Str] = def
+	}
+
+	// Make sure all required variables are set
+	for _, arg := range cr.original.ArgDefs {
+		if def, exists := cr.varDefsByName[arg.VariableName.Str]; !exists || def.Val == nil {
+			return retClass, fmt.Errorf(
+				"Required argument '%s' not supplied at %s:%d",
+				arg.VariableName.Str[1:], cr.realizedInFile, cr.realizedAtLine,
+			)
+		}
 	}
 
 	// Resolve top-level variables defined

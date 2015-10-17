@@ -6,6 +6,18 @@ import (
 	. "github.com/yoshiyaka/mosa/manifest"
 )
 
+type realizedDeclaration struct {
+	d    *Declaration
+	file string
+	line int
+}
+
+type realizedClass struct {
+	c    *Class
+	file string
+	line int
+}
+
 // Resolves a whole manifest
 type resolver struct {
 	ast *File
@@ -13,7 +25,7 @@ type resolver struct {
 	classesByName map[string]*Class
 
 	// All realized declarations, mapped by type and name
-	realizedDeclarations map[string]map[string]*Declaration
+	realizedDeclarations map[string]map[string]realizedDeclaration
 
 	// Allows us to fetch all realized declarations in the order they were
 	// defined. Not strictly necessary since the language is declarative, but it
@@ -21,7 +33,7 @@ type resolver struct {
 	realizedDecalarationsInOrder []Declaration
 
 	// All realized classes, mapped by name
-	realizedClasses map[string]*Class
+	realizedClasses map[string]realizedClass
 }
 
 func newResolver(ast *File) *resolver {
@@ -35,8 +47,8 @@ func (r *resolver) resolve() ([]Declaration, error) {
 		return nil, err
 	}
 
-	r.realizedClasses = map[string]*Class{}
-	r.realizedDeclarations = map[string]map[string]*Declaration{}
+	r.realizedClasses = map[string]realizedClass{}
+	r.realizedDeclarations = map[string]map[string]realizedDeclaration{}
 	for _, node := range r.ast.Nodes {
 		if err := r.resolveNode(&node); err != nil {
 			return nil, err
@@ -81,11 +93,11 @@ func (r *resolver) populateClassesByName() error {
 
 func (r *resolver) resolveNode(node *Node) error {
 	castedClass := Class(*node)
-	return r.realizeClassesRecursive(&castedClass, nil)
+	return r.realizeClassesRecursive(&castedClass, nil, "", 0)
 }
 
-func (r *resolver) realizeClassesRecursive(c *Class, args []Prop) error {
-	classResolver := newClassResolver(c, args)
+func (r *resolver) realizeClassesRecursive(c *Class, args []Prop, file string, line int) error {
+	classResolver := newClassResolver(c, args, file, line)
 	if newClass, err := classResolver.resolve(); err != nil {
 		return err
 	} else {
@@ -97,7 +109,7 @@ func (r *resolver) realizeClassesRecursive(c *Class, args []Prop) error {
 				)
 			} else {
 				if r.realizedDeclarations[decl.Type] == nil {
-					r.realizedDeclarations[decl.Type] = map[string]*Declaration{}
+					r.realizedDeclarations[decl.Type] = map[string]realizedDeclaration{}
 				}
 
 				if decl.Type == "class" {
@@ -106,19 +118,28 @@ func (r *resolver) realizeClassesRecursive(c *Class, args []Prop) error {
 							"Reference to undefined class '%s' at %s:%d",
 							string(name), c.Filename, decl.LineNum,
 						)
-					} else if _, defined := r.realizedClasses[string(name)]; defined {
+					} else if oldDef, defined := r.realizedClasses[string(name)]; defined {
 						return fmt.Errorf(
-							"Class %s realized twice at %s:%d",
+							"Class %s realized twice at %s:%d. Previously realized at %s:%d",
 							string(name), c.Filename, decl.LineNum,
+							oldDef.file, oldDef.line,
 						)
 					} else {
-						r.realizedClasses[string(name)] = nestedClass
-						if err := r.realizeClassesRecursive(nestedClass, decl.Props); err != nil {
+						r.realizedClasses[string(name)] = realizedClass{
+							c:    nestedClass,
+							file: c.Filename,
+							line: decl.LineNum,
+						}
+						if err := r.realizeClassesRecursive(nestedClass, decl.Props, c.Filename, decl.LineNum); err != nil {
 							return err
 						}
 					}
 				} else {
-					r.realizedDeclarations[decl.Type][string(name)] = &newClass.Declarations[i]
+					r.realizedDeclarations[decl.Type][string(name)] = realizedDeclaration{
+						d:    &newClass.Declarations[i],
+						file: c.Filename,
+						line: decl.LineNum,
+					}
 					r.realizedDecalarationsInOrder = append(
 						r.realizedDecalarationsInOrder, newClass.Declarations[i],
 					)

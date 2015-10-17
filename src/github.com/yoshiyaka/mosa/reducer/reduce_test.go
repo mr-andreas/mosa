@@ -176,7 +176,9 @@ func TestResolveClass(t *testing.T) {
 			t.Fatal(realErr)
 		}
 
-		resolver := newClassResolver(&realFile.Classes[0], nil)
+		resolver := newClassResolver(
+			&realFile.Classes[0], nil, "real.ms", realFile.Classes[0].LineNum,
+		)
 		if reducedClass, err := resolver.resolve(); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
@@ -600,7 +602,9 @@ func TestResolveBadVariable(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		resolver := newClassResolver(&ast.Classes[0], nil)
+		resolver := newClassResolver(
+			&ast.Classes[0], nil, "err.ms", ast.Classes[0].LineNum,
+		)
 		_, resolveErr := resolver.resolve()
 		if resolveErr == nil {
 			t.Log(test.inputManifest)
@@ -700,7 +704,7 @@ var badDefsTest = []struct {
 		}
 		class A {}
 		`,
-		`Can't realize class 'A' multiple times at real.ms:5, first defined at real.ms:4`,
+		`Class A realized twice at real.ms:5. Previously realized at real.ms:4`,
 	},
 
 	{
@@ -731,7 +735,7 @@ var badDefsTest = []struct {
 			class { 'A': }
 		}
 		`,
-		`An error`,
+		`Class A realized twice at real.ms:7. Previously realized at real.ms:4`,
 	},
 
 	{
@@ -747,7 +751,7 @@ var badDefsTest = []struct {
 			class { 'A': }
 		}
 		`,
-		`An error`,
+		`Class A realized twice at real.ms:10. Previously realized at real.ms:4`,
 	},
 
 	{
@@ -779,7 +783,7 @@ var badDefsTest = []struct {
 			decl { $number: }
 		}
 		`,
-		`An error`,
+		`Can't realize declaration of type decl with non-string name at real.ms:8`,
 	},
 
 	{
@@ -793,7 +797,7 @@ var badDefsTest = []struct {
 			decl { $array: }
 		}
 		`,
-		`An error`,
+		`Can't realize declaration of type decl with non-string name at real.ms:8`,
 	},
 
 	{
@@ -815,7 +819,7 @@ var badDefsTest = []struct {
 		}
 		class A($required,) {}
 		`,
-		`An error`,
+		`Required argument 'required' not supplied at real.ms:4`,
 	},
 
 	{
