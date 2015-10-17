@@ -49,12 +49,14 @@ const (
 )
 
 type Define struct {
-	LineNum int
-	Name    string
-	Type    DefineType
+	Filename string
+	LineNum  int
+	Name     string
+	Type     DefineType
 }
 
 type Node struct {
+	Filename     string
 	LineNum      int
 	Name         string
 	ArgDefs      []ArgDef
@@ -63,6 +65,7 @@ type Node struct {
 }
 
 type Class struct {
+	Filename     string
 	LineNum      int
 	Name         string
 	ArgDefs      []ArgDef
@@ -289,6 +292,7 @@ func NewClass(lineNum C.int, identifier *C.char, argDefsH, defsAndDeclsH goHandl
 	}
 
 	return ht.Add(Class{
+		Filename:     curFilename,
 		LineNum:      int(lineNum),
 		Name:         C.GoString(identifier),
 		ArgDefs:      argDefs,
@@ -316,6 +320,7 @@ func SawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle 
 	}
 
 	return ht.Add(Node{
+		Filename:     curFilename,
 		LineNum:      int(lineNum),
 		Name:         C.GoString(name),
 		VariableDefs: defs,
@@ -388,9 +393,10 @@ func SawDefine(lineNum C.int, modifier, name *C.char) goHandle {
 	}
 
 	return ht.Add(Define{
-		LineNum: int(lineNum),
-		Name:    C.GoString(name),
-		Type:    dt,
+		Filename: curFilename,
+		LineNum:  int(lineNum),
+		Name:     C.GoString(name),
+		Type:     dt,
 	})
 }
 
@@ -408,7 +414,12 @@ func SawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 	})
 }
 
+var curFilename string
+
+// Please note that as of current, Lex() is /NOT/ reentrant.
 func Lex(filename string, r io.Reader) (*File, error) {
+	curFilename = filename
+
 	buf, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err

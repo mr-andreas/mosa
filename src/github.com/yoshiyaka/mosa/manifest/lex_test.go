@@ -902,6 +902,16 @@ var lexTests = []struct {
 
 func TestLex(t *testing.T) {
 	for _, test := range lexTests {
+		for i, _ := range test.ast.Classes {
+			test.ast.Classes[i].Filename = "test.manifest"
+		}
+		for i, _ := range test.ast.Defines {
+			test.ast.Defines[i].Filename = "test.manifest"
+		}
+		for i, _ := range test.ast.Nodes {
+			test.ast.Nodes[i].Filename = "test.manifest"
+		}
+
 		if file, err := Lex("test.manifest", strings.NewReader(test.manifest)); err != nil {
 			t.Log(test.manifest)
 			t.Error(err)
