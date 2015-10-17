@@ -74,8 +74,19 @@ func (cr *classResolver) resolveReference(r Reference) (Reference, error) {
 		return r, nil
 	case VariableName:
 		var err error
-		r.Scalar, err = cr.resolveVariable(r.Scalar.(VariableName), r.LineNum)
-		return r, err
+		varName := r.Scalar.(VariableName)
+		r.Scalar, err = cr.resolveVariable(varName, r.LineNum)
+		if err != nil {
+			return r, err
+		} else if _, isString := r.Scalar.(QuotedString); !isString {
+			return r, fmt.Errorf(
+				"Reference keys must be strings at %s:%d - the value of %s is not.",
+				cr.original.Filename, r.LineNum, varName.Str,
+			)
+		} else {
+			return r, nil
+		}
+
 	default:
 		return r, fmt.Errorf(
 			"Reference keys must be strings at %s:%d",

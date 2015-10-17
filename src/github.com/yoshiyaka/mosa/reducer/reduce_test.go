@@ -813,7 +813,7 @@ var badDefsTest = []struct {
 		node 'n' {
 			class { 'A': }
 		}
-		class A($required) {}
+		class A($required,) {}
 		`,
 		`An error`,
 	},
@@ -831,7 +831,7 @@ var badDefsTest = []struct {
 			}
 		}
 		`,
-		`An error`,
+		`Reference keys must be strings at real.ms:9 - the value of $array is not.`,
 	},
 }
 
@@ -846,11 +846,11 @@ func TestBadDefs(t *testing.T) {
 		}
 
 		if _, err := Reduce(realFile); err == nil {
-			t.Log(realFile)
+			t.Log(test.manifest)
 			t.Error("Got no error for bad file")
 		} else if err.Error() != test.expectedErr {
 			t.Log(test.manifest)
-			t.Fatal("Got bad error:", err)
+			t.Error("Got bad error:", err)
 		}
 	}
 }
