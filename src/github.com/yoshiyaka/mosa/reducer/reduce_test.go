@@ -144,9 +144,11 @@ func TestResolveClass(t *testing.T) {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
 		} else {
-			if c := expectedFile.Classes[0]; !reflect.DeepEqual(c, reducedClass) {
-				//			t.Logf("%#v", expectedFile)
-				//			t.Logf("%#v", reducedFile)
+			c := expectedFile.Classes[0]
+			c.Filename = "real.ms"
+			if !reflect.DeepEqual(c, reducedClass) {
+				t.Logf("%#v", c)
+				t.Logf("%#v", reducedClass)
 				t.Fatal(
 					"Got bad manifest, expected", c.String(),
 					"got", reducedClass.String(),
@@ -279,6 +281,36 @@ var resolveFileTest = []struct {
 		`,
 
 		`package { 'foo': from => 'A', }`,
+	},
+
+	{
+		`
+		// Nested cyclic realization
+		node 'n' {
+			class { 'A': 
+				subclass => 'B',
+				b_var => 'foo',
+			}
+		}
+		class A($subclass, $b_var) {
+			decl { 'a_decl': }
+			class { $subclass:
+				var => $b_var,
+			}
+		}
+		class B($var) {
+			decl { 'b_decl':
+				var => $var,
+			}
+		}
+		`,
+
+		`
+		decl { 'a_decl': }
+		decl { 'b_decl':
+			var => 'foo',
+		}
+		`,
 	},
 }
 
@@ -512,6 +544,81 @@ var badDefsTest = []struct {
 		`,
 
 		`A nice error`,
+	},
+
+	{
+		`
+		// Cyclic realization
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			class { 'A': }
+		}
+		`,
+		`An error`,
+	},
+
+	{
+		`
+		// Nested cyclic realization
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			class { 'B': }
+		}
+		class B {
+			class { 'A': }
+		}
+		`,
+		`An error`,
+	},
+
+	{
+		`
+		// Nested cyclic realization with variables
+		node 'n' {
+			class { 'A':
+				subclass => 'B',
+			}
+		}
+		class A($subclass,) {
+			class { $subclass: }
+		}
+		class B {
+			class { 'A': }
+		}
+		`,
+		`An error`,
+	},
+
+	{
+		`
+		// Realizing a declaration with a non-string (number) name
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			$number = 5
+			decl { $number: }
+		}
+		`,
+		`An error`,
+	},
+
+	{
+		`
+		// Realizing a declaration with a non-string (array) name
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			$array = []
+			decl { $array: }
+		}
+		`,
+		`An error`,
 	},
 }
 

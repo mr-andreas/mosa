@@ -55,14 +55,7 @@ type Define struct {
 	Type     DefineType
 }
 
-type Node struct {
-	Filename     string
-	LineNum      int
-	Name         string
-	ArgDefs      []ArgDef
-	VariableDefs []VariableDef
-	Declarations []Declaration
-}
+type Node Class
 
 type Class struct {
 	Filename     string

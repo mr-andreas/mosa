@@ -52,7 +52,14 @@ func (r *resolver) resolve() ([]Declaration, error) {
 
 	//	return &retFile, nil
 
-	return nil, nil
+	realized := make([]Declaration, 0)
+	for _, decls := range r.realizedDeclarations {
+		for _, decl := range decls {
+			realized = append(realized, *decl)
+		}
+	}
+
+	return realized, nil
 }
 
 func (r *resolver) populateClassesByName() error {
@@ -75,6 +82,25 @@ func (r *resolver) populateClassesByName() error {
 }
 
 func (r *resolver) resolveNode(node *Node) error {
+	castedClass := Class(*node)
+	nodeResolver := newClassResolver(&castedClass)
+	if newClass, err := nodeResolver.Resolve(); err != nil {
+		return err
+	} else {
+		for i, decl := range newClass.Declarations {
+			if name, ok := decl.Scalar.(QuotedString); ok {
+				if r.realizedDeclarations[decl.Type] == nil {
+					r.realizedDeclarations[decl.Type] = map[string]*Declaration{}
+				}
+				r.realizedDeclarations[decl.Type][name.String()] = &newClass.Declarations[i]
+			} else {
+				return fmt.Errorf(
+					"Can't realize declaration of type %s with non-string name at %s:%d",
+					decl.Type, node.Filename, decl.LineNum,
+				)
+			}
+		}
+	}
 
 	return nil
 }

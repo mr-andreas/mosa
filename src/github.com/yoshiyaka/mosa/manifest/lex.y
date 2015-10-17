@@ -65,6 +65,7 @@ void yyerror(const char *s);
 %type <gohandle> arrayentries
 %type <gohandle> array
 %type <gohandle> scalar
+%type <gohandle> string_or_var
 %type <gohandle> reference
 
 %%
@@ -123,8 +124,8 @@ variable_def:
 	VARIABLENAME '=' value { $$ = SawVariableDef(@1.first_line, $1, $3);	}
 
 declaration:
-	  STRING '{' scalar ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
-	| STRING '{' scalar':' '}'				{ $$ = SawDeclaration(@1.first_line, $1, $3, NilArray(ASTTYPE_PROPLIST)); }
+	  STRING '{' string_or_var ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
+	| STRING '{' string_or_var ':' '}'			{ $$ = SawDeclaration(@1.first_line, $1, $3, NilArray(ASTTYPE_PROPLIST)); }
 
 proplist:
 	  proplist prop	{ $$ = AppendArray($1, $2); }
@@ -141,8 +142,12 @@ value:
 
 scalar:
 	  QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
-	| VARIABLENAME	{ $$ = SawVariableName(@1.first_line, $1);		}
+	| VARIABLENAME	{ $$ = SawVariableName(@1.first_line, $1);	}
 	| INT			{ $$ = SawInt(@1.first_line, $1);			}
+
+string_or_var:
+	  QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
+	| VARIABLENAME	{ $$ = SawVariableName(@1.first_line, $1);	}
 
 reference:
 	STRING '[' scalar ']' { $$ = SawReference(@1.first_line, $1, $3); }
