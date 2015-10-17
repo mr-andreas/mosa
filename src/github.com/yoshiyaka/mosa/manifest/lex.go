@@ -62,7 +62,7 @@ type Class struct {
 	Filename     string
 	LineNum      int
 	Name         string
-	ArgDefs      []ArgDef
+	ArgDefs      []VariableDef
 	VariableDefs []VariableDef
 	Declarations []Declaration
 }
@@ -71,7 +71,7 @@ type Class struct {
 // taken into consideration.
 func (c *Class) Equals(c2 *Class) bool {
 	return c.Name == c2.Name &&
-		ArgDefsEquals(c.ArgDefs, c2.ArgDefs) &&
+		VariableDefsEquals(c.ArgDefs, c2.ArgDefs) &&
 		VariableDefsEquals(c.VariableDefs, c2.VariableDefs) &&
 		DeclarationsEquals(c.Declarations, c2.Declarations)
 }
@@ -102,35 +102,6 @@ func (c *Class) String() string {
 	}
 
 	return fmt.Sprintf("\tclass %s {\n%s\n%s\n\t}\n", c.Name, defs, decls)
-}
-
-type ArgDef struct {
-	LineNum      int
-	VariableName VariableName
-	Val          Value
-}
-
-func (a *ArgDef) Equals(a2 *ArgDef) bool {
-	return ValueEquals(a.Val, a2.Val)
-}
-
-func (d *ArgDef) String() string {
-	return fmt.Sprintf("%s = %s", d.VariableName, valToStr(d.Val))
-}
-
-// Returns whether the arg lists are equals. Order is important.
-func ArgDefsEquals(a1, a2 []ArgDef) bool {
-	if len(a1) != len(a2) {
-		return false
-	}
-
-	for i, arg := range a1 {
-		if !arg.Equals(&a2[i]) {
-			return false
-		}
-	}
-
-	return true
 }
 
 type VariableDef struct {
@@ -308,7 +279,7 @@ func NilArray(typ C.ASTTYPE) goHandle {
 	case C.ASTTYPE_ARRAY_INTERFACE:
 		return ht.Add([]interface{}{})
 	case C.ASTTYPE_ARGDEFS:
-		return ht.Add([]ArgDef{})
+		return ht.Add([]VariableDef{})
 	}
 
 	fmt.Printf("%#v\n", typ)
@@ -329,8 +300,6 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 		return ht.Add(append(array.([]interface{}), ht.Get(newValue)))
 	case Array:
 		return ht.Add(append(array.(Array), ht.Get(newValue)))
-	case []ArgDef:
-		return ht.Add(append(array.([]ArgDef), ht.Get(newValue).(ArgDef)))
 	}
 
 	fmt.Printf("%#v\n", array)
@@ -359,7 +328,7 @@ func NewFile(classesAndDefines goHandle) goHandle {
 
 //export NewClass
 func NewClass(lineNum C.int, identifier *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
-	argDefs := ht.Get(argDefsH).([]ArgDef)
+	argDefs := ht.Get(argDefsH).([]VariableDef)
 	defsAndDecls := ht.Get(defsAndDeclsH).([]interface{})
 
 	defs := []VariableDef{}
@@ -492,7 +461,7 @@ func SawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 		v = ht.Get(val).(Value)
 	}
 
-	return ht.Add(ArgDef{
+	return ht.Add(VariableDef{
 		LineNum:      int(lineNum),
 		VariableName: VariableName{int(lineNum), C.GoString(varName)},
 		Val:          v,

@@ -19,7 +19,7 @@ var lexTests = []struct {
 				{
 					LineNum:      1,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
@@ -39,14 +39,14 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
 				{
 					LineNum:      4,
 					Name:         "Bar",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
@@ -66,7 +66,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -92,7 +92,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -126,7 +126,7 @@ var lexTests = []struct {
 				{
 					LineNum: 3,
 					Name:    "Test",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      4,
@@ -153,7 +153,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -182,7 +182,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -217,7 +217,7 @@ var lexTests = []struct {
 				{
 					LineNum:      1,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -265,7 +265,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -285,7 +285,7 @@ var lexTests = []struct {
 				{
 					LineNum: 7,
 					Name:    "Class2",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      8,
@@ -313,7 +313,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -348,7 +348,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -392,7 +392,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -441,7 +441,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Arrays",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -497,7 +497,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -550,7 +550,7 @@ var lexTests = []struct {
 				{
 					LineNum: 2,
 					Name:    "Test",
-					ArgDefs: []ArgDef{},
+					ArgDefs: []VariableDef{},
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
@@ -625,7 +625,7 @@ var lexTests = []struct {
 				{
 					LineNum:      2,
 					Name:         "Deps",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{
 						{
@@ -802,7 +802,7 @@ var lexTests = []struct {
 				{
 					LineNum:      1,
 					Name:         "Test",
-					ArgDefs:      []ArgDef{},
+					ArgDefs:      []VariableDef{},
 					VariableDefs: []VariableDef{},
 					Declarations: []Declaration{},
 				},
@@ -818,7 +818,7 @@ var lexTests = []struct {
 				{
 					LineNum: 1,
 					Name:    "Test",
-					ArgDefs: []ArgDef{
+					ArgDefs: []VariableDef{
 						{
 							LineNum:      1,
 							Val:          nil,
@@ -843,7 +843,7 @@ var lexTests = []struct {
 				{
 					LineNum: 1,
 					Name:    "Test",
-					ArgDefs: []ArgDef{
+					ArgDefs: []VariableDef{
 						{
 							LineNum:      2,
 							VariableName: VariableName{2, "$foo"},
@@ -870,7 +870,7 @@ var lexTests = []struct {
 				{
 					LineNum: 1,
 					Name:    "Test",
-					ArgDefs: []ArgDef{
+					ArgDefs: []VariableDef{
 						{
 							LineNum:      1,
 							VariableName: VariableName{1, "$foo"},
