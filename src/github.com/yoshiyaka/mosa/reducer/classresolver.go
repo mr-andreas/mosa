@@ -32,6 +32,78 @@ func newClassResolver(class *Class, withArgs []Prop) *classResolver {
 	}
 }
 
+// Resolves all variables in the class and converts them to values. For
+// instance, consider the following manifest:
+//
+//  class C {
+//  	$foo = 'bar'
+// 		$baz = $foo
+//
+//		package { $baz: }
+//	}
+//
+// After this function is run, the class would be returned as:
+//
+//  class C {
+//  	$foo = 'bar'
+// 		$baz = 'bar'
+//
+//		package { 'bar': }
+//	}
+func (cr *classResolver) resolve() (Class, error) {
+	c := cr.original
+	retClass := *cr.original
+
+	// Start by loading all top-level variables defined
+	cr.varDefsByName = map[string]VariableDef{}
+	for _, def := range c.ArgDefs {
+		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
+			return retClass, &Err{
+				Line:       def.LineNum,
+				Type:       ErrorTypeMultipleDefinition,
+				SymbolName: string(def.VariableName.Str),
+			}
+		}
+
+		cr.varDefsByName[def.VariableName.Str] = def
+	}
+	for _, def := range c.VariableDefs {
+		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
+			return retClass, &Err{
+				Line:       def.LineNum,
+				Type:       ErrorTypeMultipleDefinition,
+				SymbolName: string(def.VariableName.Str),
+			}
+		}
+
+		cr.varDefsByName[def.VariableName.Str] = def
+	}
+
+	// Resolve top-level variables defined
+	newDefs := make([]VariableDef, len(c.VariableDefs))
+	for i, def := range c.VariableDefs {
+		var err error
+		def.Val, err = cr.resolveValue(def.Val, def.LineNum)
+		if err != nil {
+			return retClass, err
+		}
+		newDefs[i] = def
+	}
+
+	retClass.VariableDefs = newDefs
+
+	retClass.Declarations = make([]Declaration, len(c.Declarations))
+	for i, decl := range c.Declarations {
+		var err error
+		retClass.Declarations[i], err = cr.resolveDeclaration(&decl)
+		if err != nil {
+			return retClass, err
+		}
+	}
+
+	return retClass, nil
+}
+
 func (cr *classResolver) resolveProps(props []Prop) ([]Prop, error) {
 	ret := make([]Prop, len(props))
 
@@ -199,78 +271,6 @@ func (cr *classResolver) resolveArrayRecursive(a Array, lineNum int, chain []*Va
 	}
 
 	return newArray, nil
-}
-
-// Resolves all variables in the class and converts them to values. For
-// instance, consider the following manifest:
-//
-//  class C {
-//  	$foo = 'bar'
-// 		$baz = $foo
-//
-//		package { $baz: }
-//	}
-//
-// After this function is run, the class would be returned as:
-//
-//  class C {
-//  	$foo = 'bar'
-// 		$baz = 'bar'
-//
-//		package { 'bar': }
-//	}
-func (cr *classResolver) resolve() (Class, error) {
-	c := cr.original
-	retClass := *cr.original
-
-	// Start by loading all top-level variables defined
-	cr.varDefsByName = map[string]VariableDef{}
-	for _, def := range c.ArgDefs {
-		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
-			return retClass, &Err{
-				Line:       def.LineNum,
-				Type:       ErrorTypeMultipleDefinition,
-				SymbolName: string(def.VariableName.Str),
-			}
-		}
-
-		cr.varDefsByName[def.VariableName.Str] = def
-	}
-	for _, def := range c.VariableDefs {
-		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
-			return retClass, &Err{
-				Line:       def.LineNum,
-				Type:       ErrorTypeMultipleDefinition,
-				SymbolName: string(def.VariableName.Str),
-			}
-		}
-
-		cr.varDefsByName[def.VariableName.Str] = def
-	}
-
-	// Resolve top-level variables defined
-	newDefs := make([]VariableDef, len(c.VariableDefs))
-	for i, def := range c.VariableDefs {
-		var err error
-		def.Val, err = cr.resolveValue(def.Val, def.LineNum)
-		if err != nil {
-			return retClass, err
-		}
-		newDefs[i] = def
-	}
-
-	retClass.VariableDefs = newDefs
-
-	retClass.Declarations = make([]Declaration, len(c.Declarations))
-	for i, decl := range c.Declarations {
-		var err error
-		retClass.Declarations[i], err = cr.resolveDeclaration(&decl)
-		if err != nil {
-			return retClass, err
-		}
-	}
-
-	return retClass, nil
 }
 
 func (cr *classResolver) resolveValue(v Value, lineNum int) (Value, error) {
