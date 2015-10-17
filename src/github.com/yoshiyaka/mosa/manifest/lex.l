@@ -15,7 +15,8 @@ int level = 0;
 
 %%
 
-[ \t] ;
+[ \t]  ;
+\/\/.* ;
 <INITIAL>class	{ return CLASS; }
 <INITIAL>define	{ return DEFINE; }
 <INITIAL>node	{ return NODE; }

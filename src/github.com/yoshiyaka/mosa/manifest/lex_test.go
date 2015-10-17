@@ -114,6 +114,34 @@ var lexTests = []struct {
 
 	{
 		`
+		// Comment
+		class Test { // Another comment
+			$prop = 'x' // Comment here
+			// And another comment
+		}
+		`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 3,
+					Name:    "Test",
+					ArgDefs: []ArgDef{},
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      4,
+							VariableName: VariableName{4, "$prop"},
+							Val:          Value("x"),
+						},
+					},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`
 		class Test {
 			package { 'pkg-name':
 			}
