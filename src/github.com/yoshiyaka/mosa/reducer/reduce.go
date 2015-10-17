@@ -49,19 +49,61 @@ func (ce *CyclicError) Error() string {
 	return msg
 }
 
-// Resolves all variables and references in the specified manifest.
-func Reduce(ast *File) (*File, error) {
-	retFile := *ast
-	retFile.Classes = make([]Class, len(ast.Classes))
-
-	for i, class := range ast.Classes {
-		var err error
-		resolver := newClassResolver(&class)
-		retFile.Classes[i], err = resolver.Resolve()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &retFile, nil
+// Reduces the whole manifest to a number of concrete declarations. All
+// parameters in the returned decalartions will be concrete values. For
+// instance, if called with the following manifest:
+//
+//  node 'localhost' {
+//  	class { 'Webserver':
+//  		docroot => '/home/www',
+//  	}
+//  }
+//
+//  class Webserver(
+//  	$docroot = '/var/www',
+//  	$workers = 8,
+//  ){
+//  	$server = 'nginx'
+//
+//  	package { $server: ensure => installed }
+//
+//  	file { '/etc/nginx/conf.d/workers.conf':
+//  		ensure => 'present',
+//  		content => "workers = $workers",
+//  		depends => package[$server],
+//  	}
+//
+//  	file { $docroot: ensure => 'directory', }
+//
+//  	service { $server:
+//  		ensure => 'running',
+//  		depends => [
+//  			file['/etc/nginx/conf.d/workers.conf'],
+//  			package[$server],
+//  		],
+//  	}
+//  }
+// The following declarations would be returned. Note that all variables are
+// gone:
+//  package { 'nginx': ensure => installed }
+//
+//  file { '/etc/nginx/conf.d/workers.conf':
+//  	ensure => 'present',
+//  	content => "workers = 8",
+//  	depends => package['nginx'],
+//  }
+//
+//  file { '/home/www': ensure => 'directory', }
+//
+//  service { 'nginx':
+//  	ensure => 'running',
+//  	depends => [
+//  		file['/etc/nginx/conf.d/workers.conf'],
+//  		package['nginx'],
+//  	],
+//  }
+//
+func Reduce(ast *File) ([]Declaration, error) {
+	r := newResolver(ast)
+	return r.resolve()
 }

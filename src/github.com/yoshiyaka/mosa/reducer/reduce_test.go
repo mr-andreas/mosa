@@ -1,6 +1,7 @@
 package reducer
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -167,57 +168,136 @@ var resolveFileTest = []struct {
 	expectedManifest string
 }{
 	{
-		`class A{}`,
-		`class A{}`,
+		`
+		node 'x' {}
+		class A{}`,
+		``,
 	},
 
 	{
 		`
-		class A{}
-		class B{}`,
+		node 'x' {
+			class { 'A': }
+		}
+		
+		class A {
+			$foo = 'A'
+			$bar = $foo
+			file { $bar: }
+		}`,
+		`file { 'A': }`,
+	},
+
+	{
 		`
-		class A{}
-		class B{}`,
-	},
-
-	{
-		`class A {
+		node 'x' {
+			class { 'A': }
+			class { 'B': }
+		}
+		
+		class A {
 			$foo = 'A'
 			$bar = $foo
-		}`,
-		`class A {
-			$foo = 'A'
-			$bar = 'A'
-		}`,
-	},
-
-	{
-		`class A {
-			$foo = 'A'
-			$bar = $foo
+			file { $bar: }
 		}
 		class B {
 			$foo = 'B'
 			$bar = $foo
+			file { $bar: }
 		}`,
-		`class A {
-			$foo = 'A'
-			$bar = 'A'
+		`
+		file { 'A': }
+		file { 'B': }
+		`,
+	},
+
+	{
+		`
+		node 'localhost' {
+			class { 'Webserver':
+				docroot => '/home/www',
+			}
+		}
+		
+		class Webserver(
+			$docroot = '/var/www',
+			$workers = 8,
+		){
+			$server = 'nginx'
+			
+			package { $server: ensure => installed }
+			
+			file { '/etc/nginx/conf.d/workers.conf':
+				ensure => 'present',
+				content => $workers,
+				depends => package[$server],
+			}
+			
+			file { $docroot: ensure => 'directory', }
+			
+			service { $server:
+				ensure => 'running',
+				depends => [
+					file['/etc/nginx/conf.d/workers.conf'],
+					package[$server],
+				],
+			}
+		}`,
+		`
+		package { 'nginx': ensure => installed }
+
+		file { '/etc/nginx/conf.d/workers.conf':
+			ensure => 'present',
+			content => 8,
+			depends => package['nginx'],
+		}
+		
+		file { '/home/www': ensure => 'directory', }
+		
+		service { 'nginx':
+			ensure => 'running',
+			depends => [
+				file['/etc/nginx/conf.d/workers.conf'],
+				package['nginx'],
+			],
+		}`,
+	},
+
+	{
+		`
+		// Defining the same package multiple times is okay, as long as only one
+		// of the declarations is realized.
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			package { 'foo': from => 'A', }
 		}
 		class B {
-			$foo = 'B'
-			$bar = 'B'
-		}`,
+			package { 'foo': from => 'B', }
+		}
+		`,
+
+		`package { 'foo': from => 'A', }`,
 	},
 }
 
 func TestResolveFile(t *testing.T) {
 	for _, test := range resolveFileTest {
+		expectedWrapper := fmt.Sprintf(`
+			node 'x' {
+				class { '__X': }
+			}
+			class __X {
+				%s
+			}
+			`, test.expectedManifest,
+		)
 		expectedFile, err := manifest.Lex(
-			"expected.ms", strings.NewReader(test.expectedManifest),
+			"expected.ms", strings.NewReader(expectedWrapper),
 		)
 		if err != nil {
-			t.Log(test.inputManifest)
+			t.Log(expectedWrapper)
 			t.Fatal(err)
 		}
 
@@ -225,18 +305,23 @@ func TestResolveFile(t *testing.T) {
 			"real.ms", strings.NewReader(test.inputManifest),
 		)
 		if realErr != nil {
+			t.Log(test.inputManifest)
 			t.Fatal(realErr)
 		}
 
-		if reducedFile, err := Reduce(realFile); err != nil {
+		if reducedDecls, err := Reduce(realFile); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
-		} else if !reflect.DeepEqual(expectedFile, reducedFile) {
-			t.Logf("%#v", expectedFile)
-			t.Logf("%#v", reducedFile)
+		} else if decls := expectedFile.Classes[0].Declarations; !reflect.DeepEqual(decls, reducedDecls) {
+			t.Logf("%#v", decls)
+			t.Logf("%#v", reducedDecls)
+
+			declsClass := &manifest.Class{Declarations: decls}
+			reducedDeclsClass := &manifest.Class{Declarations: reducedDecls}
+
 			t.Fatalf(
 				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
-				expectedFile.String(), reducedFile.String(),
+				declsClass.String(), reducedDeclsClass.String(),
 			)
 		}
 	}
@@ -382,6 +467,70 @@ func TestResolveBadVariable(t *testing.T) {
 					"%s: Got bad error: %s. Expected %s", test.comment, e, expE,
 				)
 			}
+		}
+	}
+}
+
+var badDefsTest = []struct {
+	manifest    string
+	expectedErr string
+}{
+	{
+		`
+		// Multiple classes with the same name
+		class A {}
+		class A {}
+		`,
+		`Can't redfined class 'A' at real.ms:4 which is already defined at real.ms:3`,
+	},
+
+	{
+		`
+		// Multiple realization of the same class
+		node 'x' {
+			class { 'A': }
+			class { 'A': }
+		}
+		class A {}
+		`,
+		`Can't realize class 'A' multiple times at real.ms:5, first defined at real.ms:4`,
+	},
+
+	{
+		`
+		// Multiple realization of the same declaration
+		node 'n' {
+			class { 'A': }
+			class { 'B': }
+		}
+		class A {
+			package { 'foo': from => 'A', }
+		}
+		class B {
+			package { 'foo': from => 'B', }
+		}
+		`,
+
+		`A nice error`,
+	},
+}
+
+func TestBadDefs(t *testing.T) {
+	for _, test := range badDefsTest {
+		realFile, realErr := manifest.Lex(
+			"real.ms", strings.NewReader(test.manifest),
+		)
+		if realErr != nil {
+			t.Log(test.manifest)
+			t.Fatal(realErr)
+		}
+
+		if _, err := Reduce(realFile); err == nil {
+			t.Log(realFile)
+			t.Error("Got no error for bad file")
+		} else if err.Error() != test.expectedErr {
+			t.Log(test.manifest)
+			t.Fatal("Got bad error:", err)
 		}
 	}
 }
