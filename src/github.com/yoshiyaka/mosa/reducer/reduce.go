@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/yoshiyaka/mosa/manifest2"
+	. "github.com/yoshiyaka/mosa/manifest"
 )
 
 type ErrorType int

@@ -1,7 +1,7 @@
 package reducer
 
 import (
-	. "github.com/yoshiyaka/mosa/manifest2"
+	. "github.com/yoshiyaka/mosa/manifest"
 )
 
 // Resolves variable references in a class. The object holds the internal state

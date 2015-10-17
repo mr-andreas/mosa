@@ -1,4 +1,4 @@
-LEX_DIR = src/github.com/yoshiyaka/mosa/manifest2
+LEX_DIR = src/github.com/yoshiyaka/mosa/manifest
 # BIN = src/github.com/yoshiyaka/mosa/mosa/mosa
 
 bin/mosa: $(wildcard *go) lex

@@ -1,4 +1,4 @@
-package manifest2
+package manifest
 
 // #cgo LDFLAGS: -lfl
 // typedef struct {

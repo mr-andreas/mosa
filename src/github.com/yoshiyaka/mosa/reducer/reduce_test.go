@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yoshiyaka/mosa/manifest2"
+	"github.com/yoshiyaka/mosa/manifest"
 )
 
 var resolveClassTest = []struct {
@@ -123,7 +123,7 @@ var resolveClassTest = []struct {
 
 func TestResolveClass(t *testing.T) {
 	for _, test := range resolveClassTest {
-		expectedFile, err := manifest2.Lex(
+		expectedFile, err := manifest.Lex(
 			"expected.ms", strings.NewReader(test.expectedManifest),
 		)
 		if err != nil {
@@ -131,7 +131,7 @@ func TestResolveClass(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		realFile, realErr := manifest2.Lex(
+		realFile, realErr := manifest.Lex(
 			"real.ms", strings.NewReader(test.inputManifest),
 		)
 		if realErr != nil {
@@ -213,7 +213,7 @@ var resolveFileTest = []struct {
 
 func TestResolveFile(t *testing.T) {
 	for _, test := range resolveFileTest {
-		expectedFile, err := manifest2.Lex(
+		expectedFile, err := manifest.Lex(
 			"expected.ms", strings.NewReader(test.expectedManifest),
 		)
 		if err != nil {
@@ -221,7 +221,7 @@ func TestResolveFile(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		realFile, realErr := manifest2.Lex(
+		realFile, realErr := manifest.Lex(
 			"real.ms", strings.NewReader(test.inputManifest),
 		)
 		if realErr != nil {
@@ -338,7 +338,7 @@ var badVariableTest = []struct {
 
 func TestResolveBadVariable(t *testing.T) {
 	for _, test := range badVariableTest {
-		ast, err := manifest2.Lex(
+		ast, err := manifest.Lex(
 			"err.ms", strings.NewReader(test.inputManifest),
 		)
 		if err != nil {
