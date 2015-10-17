@@ -249,6 +249,12 @@ func ValueEquals(v1, v2 Value) bool {
 		} else {
 			return false
 		}
+	case Array:
+		if a2, ok := v2.(Array); ok {
+			return ArrayEquals(v1.(Array), a2)
+		} else {
+			return false
+		}
 	default:
 		return reflect.DeepEqual(v1, v2)
 	}
@@ -257,6 +263,20 @@ func ValueEquals(v1, v2 Value) bool {
 // An array of strings, number or references, for instance
 // [ 1, 'foo', package[$webserver], ]
 type Array []interface{}
+
+func ArrayEquals(a1, a2 Array) bool {
+	if len(a1) != len(a2) {
+		return false
+	}
+
+	for i, _ := range a1 {
+		if !ValueEquals(a1[i], a2[i]) {
+			return false
+		}
+	}
+
+	return true
+}
 
 func (a Array) String() string {
 	str := "["

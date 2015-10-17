@@ -15,6 +15,11 @@ type resolver struct {
 	// All realized declarations, mapped by type and name
 	realizedDeclarations map[string]map[string]*Declaration
 
+	// Allows us to fetch all realized declarations in the order they were
+	// defined. Not strictly necessary since the language is declarative, but it
+	// makes unit testing a whole lot easier.
+	realizedDecalarationsInOrder []Declaration
+
 	// All realized classes, mapped by name
 	realizedClasses map[string]*Class
 }
@@ -52,14 +57,7 @@ func (r *resolver) resolve() ([]Declaration, error) {
 
 	//	return &retFile, nil
 
-	realized := make([]Declaration, 0)
-	for _, decls := range r.realizedDeclarations {
-		for _, decl := range decls {
-			realized = append(realized, *decl)
-		}
-	}
-
-	return realized, nil
+	return r.realizedDecalarationsInOrder, nil
 }
 
 func (r *resolver) populateClassesByName() error {
@@ -121,6 +119,9 @@ func (r *resolver) realizeClassesRecursive(c *Class, args []Prop) error {
 					}
 				} else {
 					r.realizedDeclarations[decl.Type][string(name)] = &newClass.Declarations[i]
+					r.realizedDecalarationsInOrder = append(
+						r.realizedDecalarationsInOrder, newClass.Declarations[i],
+					)
 				}
 			}
 		}

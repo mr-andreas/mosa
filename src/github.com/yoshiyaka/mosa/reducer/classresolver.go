@@ -45,17 +45,13 @@ func (cr *classResolver) resolveProps(props []Prop) ([]Prop, error) {
 			ret[i] = prop
 		} else {
 			var err error
-			fmt.Printf("prop.Value before %#v\n", prop.Value)
 			prop.Value, err = cr.resolveValue(prop.Value, prop.LineNum)
 			if err != nil {
 				return nil, err
 			}
 			ret[i] = prop
-			fmt.Printf("prop.Value after  %#v\n", ret[i].Value)
 		}
 	}
-
-	fmt.Println("ALL PROPS RESOLVED", ret)
 
 	return ret, nil
 }
@@ -77,10 +73,8 @@ func (cr *classResolver) resolveReference(r Reference) (Reference, error) {
 	case QuotedString:
 		return r, nil
 	case VariableName:
-		fmt.Println("OMG VARIABLE", r.Scalar)
 		var err error
 		r.Scalar, err = cr.resolveVariable(r.Scalar.(VariableName), r.LineNum)
-		fmt.Println("RESOLVED", r)
 		return r, err
 	default:
 		return r, fmt.Errorf(
@@ -185,7 +179,11 @@ func (cr *classResolver) resolveArrayRecursive(a Array, lineNum int, chain []*Va
 				return nil, err
 			}
 		} else {
-			newArray[i] = val
+			var err error
+			newArray[i], err = cr.resolveValue(val, lineNum)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -271,12 +269,7 @@ func (cr *classResolver) resolveValue(v Value, lineNum int) (Value, error) {
 	case Array:
 		return cr.resolveArray(v.(Array), lineNum)
 	case Reference:
-		fmt.Printf("Will RESOLVE REFFF %#v\n", v)
-		fmt.Printf("Will RESOLVE REFFF %#v\n", v.(Reference).Scalar)
-		val, err := cr.resolveReference(v.(Reference))
-		fmt.Printf("Did  RESOLVE REFFF %#v\n", val)
-		fmt.Printf("Did  RESOLVE REFFF %#v\n", val.Scalar)
-		return val, err
+		return cr.resolveReference(v.(Reference))
 	default:
 		return v, nil
 	}
@@ -307,12 +300,10 @@ func (cr *classResolver) resolveDeclaration(decl *Declaration) (Declaration, err
 	}
 
 	var err error
-	fmt.Println("Resolve props for", decl.String())
 	ret.Props, err = cr.resolveProps(decl.Props)
 	if err != nil {
 		return ret, err
 	}
-	fmt.Println("Did Resolve props for", ret.String())
 
 	return ret, nil
 }

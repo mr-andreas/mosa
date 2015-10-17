@@ -120,6 +120,43 @@ var resolveClassTest = []struct {
 			$baz = [ 'baz', [ 'foo', 1, 'z', ], ]
 		}`,
 	},
+
+	{
+		`class C {
+			$foo = 'foo'
+			bar { 'baz':
+				val => ref[$foo],
+			}
+		}`,
+		`class C {
+			$foo = 'foo'
+			bar { 'baz':
+				val => ref['foo'],
+			}
+		}`,
+	},
+
+	{
+		`class C {
+			$foo = 'foo'
+			$ref = [ ref[$foo], ]
+		}`,
+		`class C {
+			$foo = 'foo'
+			$ref = [ ref['foo'], ]
+		}`,
+	},
+
+	{
+		`class C {
+			$foo = 'foo'
+			$ref = [ [ ref[$foo], ], ]
+		}`,
+		`class C {
+			$foo = 'foo'
+			$ref = [ [ ref['foo'], ], ]
+		}`,
+	},
 }
 
 func TestResolveClass(t *testing.T) {
