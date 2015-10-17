@@ -119,6 +119,7 @@ func (cr *classResolver) setVarsFromArgs() error {
 		if arg, hasArg := argsByName[def.VariableName.Str[1:]]; hasArg {
 			// Pass the argument value
 			def.Val = arg.Value
+			delete(argsByName, arg.Name)
 		}
 
 		if def.Val == nil {
@@ -129,6 +130,16 @@ func (cr *classResolver) setVarsFromArgs() error {
 		}
 
 		cr.varDefsByName[def.VariableName.Str] = def
+	}
+
+	// Make sure no args which doesn't exist in the class was passed to it.
+	if len(argsByName) > 0 {
+		for _, arg := range argsByName {
+			return fmt.Errorf(
+				"Unsupported argument '%s' sent to class at %s:%d",
+				arg.Name, cr.realizedInFile, arg.LineNum,
+			)
+		}
 	}
 
 	return nil

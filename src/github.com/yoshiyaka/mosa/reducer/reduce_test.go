@@ -791,11 +791,13 @@ var badDefsTest = []struct {
 		`
 		// Realizing class with an undefined parameter
 		node 'n' {
-			class { 'A': undefined => 5, }
+			class { 'A':
+				undefined => 5,
+			}
 		}
 		class A {}
 		`,
-		`An error`,
+		`Unsupported argument 'undefined' sent to class at real.ms:5`,
 	},
 
 	{
