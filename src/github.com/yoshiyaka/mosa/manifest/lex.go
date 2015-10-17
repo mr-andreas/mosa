@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"reflect"
 )
 
 var (
@@ -66,6 +67,15 @@ type Class struct {
 	Declarations []Declaration
 }
 
+// Returns whether the classes are equal. Line numbers and filenames are not
+// taken into consideration.
+func (c *Class) Equals(c2 *Class) bool {
+	return c.Name == c2.Name &&
+		ArgDefsEquals(c.ArgDefs, c2.ArgDefs) &&
+		VariableDefsEquals(c.VariableDefs, c2.VariableDefs) &&
+		DeclarationsEquals(c.Declarations, c2.Declarations)
+}
+
 func (n *Node) String() string {
 	defs := ""
 	decls := ""
@@ -100,14 +110,52 @@ type ArgDef struct {
 	Val          Value
 }
 
+func (a *ArgDef) Equals(a2 *ArgDef) bool {
+	return ValueEquals(a.Val, a2.Val)
+}
+
 func (d *ArgDef) String() string {
 	return fmt.Sprintf("%s = %s", d.VariableName, valToStr(d.Val))
+}
+
+// Returns whether the arg lists are equals. Order is important.
+func ArgDefsEquals(a1, a2 []ArgDef) bool {
+	if len(a1) != len(a2) {
+		return false
+	}
+
+	for i, arg := range a1 {
+		if !arg.Equals(&a2[i]) {
+			return false
+		}
+	}
+
+	return true
 }
 
 type VariableDef struct {
 	LineNum      int
 	VariableName VariableName
 	Val          Value
+}
+
+func (v *VariableDef) Equals(v2 *VariableDef) bool {
+	return ValueEquals(v.Val, v2.Val)
+}
+
+// Returns whether the variable def lists are equals. Order is important.
+func VariableDefsEquals(v1, v2 []VariableDef) bool {
+	if len(v1) != len(v2) {
+		return false
+	}
+
+	for i, arg := range v1 {
+		if !arg.Equals(&v2[i]) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (d *VariableDef) String() string {
@@ -151,6 +199,27 @@ type Declaration struct {
 	Props []Prop
 }
 
+func (d *Declaration) Equals(d2 *Declaration) bool {
+	return d.Type == d2.Type &&
+		ValueEquals(d.Scalar, d2.Scalar) &&
+		PropsEquals(d.Props, d2.Props)
+}
+
+// Returns whether the declaration lists are equal. Order is important.
+func DeclarationsEquals(d1, d2 []Declaration) bool {
+	if len(d1) != len(d2) {
+		return false
+	}
+
+	for i, decl := range d1 {
+		if !decl.Equals(&d2[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (d *Declaration) String() string {
 	props := ""
 	for _, prop := range d.Props {
@@ -170,12 +239,35 @@ type Prop struct {
 	Value   Value
 }
 
+func (p *Prop) Equals(p2 *Prop) bool {
+	return ValueEquals(p.Value, p2.Value)
+}
+
+// Returns whether the props lists are equal. Order is important.
+func PropsEquals(p1, p2 []Prop) bool {
+	if len(p1) != len(p2) {
+		return false
+	}
+
+	for i, prop := range p1 {
+		if !prop.Equals(&p2[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (p *Prop) String() string {
 	return fmt.Sprintf("%s => %s", p.Name, p.Value)
 }
 
 // A value, for instance 1, 'foo', $bar or [ 1, 'five', ]
 type Value interface{}
+
+func ValueEquals(v1, v2 Value) bool {
+	return reflect.DeepEqual(v1, v2)
+}
 
 // An array of strings, number or references, for instance
 // [ 1, 'foo', package[$webserver], ]

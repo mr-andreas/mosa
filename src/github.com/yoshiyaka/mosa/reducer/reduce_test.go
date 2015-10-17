@@ -227,7 +227,7 @@ var resolveFileTest = []struct {
 		){
 			$server = 'nginx'
 			
-			package { $server: ensure => installed }
+			package { $server: ensure => 'installed', }
 			
 			file { '/etc/nginx/conf.d/workers.conf':
 				ensure => 'present',
@@ -246,7 +246,7 @@ var resolveFileTest = []struct {
 			}
 		}`,
 		`
-		package { 'nginx': ensure => installed }
+		package { 'nginx': ensure => 'installed', }
 
 		file { '/etc/nginx/conf.d/workers.conf':
 			ensure => 'present',
@@ -344,7 +344,7 @@ func TestResolveFile(t *testing.T) {
 		if reducedDecls, err := Reduce(realFile); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
-		} else if decls := expectedFile.Classes[0].Declarations; !reflect.DeepEqual(decls, reducedDecls) {
+		} else if decls := expectedFile.Classes[0].Declarations; !manifest.DeclarationsEquals(decls, reducedDecls) {
 			t.Logf("%#v", decls)
 			t.Logf("%#v", reducedDecls)
 
