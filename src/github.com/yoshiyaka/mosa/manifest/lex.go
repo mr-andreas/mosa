@@ -230,7 +230,11 @@ func PropsEquals(p1, p2 []Prop) bool {
 }
 
 func (p *Prop) String() string {
-	return fmt.Sprintf("%s => %s", p.Name, p.Value)
+	if intVal, ok := p.Value.(int); ok {
+		return fmt.Sprintf("%s => %d", p.Name, intVal)
+	} else {
+		return fmt.Sprintf("%s => %s", p.Name, p.Value)
+	}
 }
 
 // A value, for instance 1, 'foo', $bar or [ 1, 'five', ]
