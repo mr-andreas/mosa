@@ -722,7 +722,7 @@ var badDefsTest = []struct {
 		}
 		`,
 
-		`A nice error`,
+		`Declaration package[foo] realized twice at real.ms:11. Previously realized at real.ms:8`,
 	},
 
 	{

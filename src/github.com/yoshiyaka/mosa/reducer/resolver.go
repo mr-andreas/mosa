@@ -135,14 +135,22 @@ func (r *resolver) realizeClassesRecursive(c *Class, args []Prop, file string, l
 						}
 					}
 				} else {
-					r.realizedDeclarations[decl.Type][string(name)] = realizedDeclaration{
-						d:    &newClass.Declarations[i],
-						file: c.Filename,
-						line: decl.LineNum,
+					if oldDef, ok := r.realizedDeclarations[decl.Type][string(name)]; ok {
+						return fmt.Errorf(
+							"Declaration %s[%s] realized twice at %s:%d. Previously realized at %s:%d",
+							decl.Type, string(name), c.Filename, decl.LineNum,
+							oldDef.file, oldDef.line,
+						)
+					} else {
+						r.realizedDeclarations[decl.Type][string(name)] = realizedDeclaration{
+							d:    &newClass.Declarations[i],
+							file: c.Filename,
+							line: decl.LineNum,
+						}
+						r.realizedDecalarationsInOrder = append(
+							r.realizedDecalarationsInOrder, newClass.Declarations[i],
+						)
 					}
-					r.realizedDecalarationsInOrder = append(
-						r.realizedDecalarationsInOrder, newClass.Declarations[i],
-					)
 				}
 			}
 		}
