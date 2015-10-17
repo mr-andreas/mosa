@@ -1,6 +1,8 @@
 package reducer
 
 import (
+	"fmt"
+
 	. "github.com/yoshiyaka/mosa/manifest"
 )
 
@@ -42,9 +44,18 @@ func (cr *classResolver) resolveProps(props []Prop) ([]Prop, error) {
 			}
 			ret[i] = prop
 		} else {
+			var err error
+			fmt.Printf("prop.Value before %#v\n", prop.Value)
+			prop.Value, err = cr.resolveValue(prop.Value, prop.LineNum)
+			if err != nil {
+				return nil, err
+			}
 			ret[i] = prop
+			fmt.Printf("prop.Value after  %#v\n", ret[i].Value)
 		}
 	}
+
+	fmt.Println("ALL PROPS RESOLVED", ret)
 
 	return ret, nil
 }
@@ -59,6 +70,24 @@ func (cr *classResolver) resolveArray(a Array, lineNum int) (Array, error) {
 	return cr.resolveArrayRecursive(
 		a, lineNum, nil, map[VariableName]bool{},
 	)
+}
+
+func (cr *classResolver) resolveReference(r Reference) (Reference, error) {
+	switch r.Scalar.(type) {
+	case QuotedString:
+		return r, nil
+	case VariableName:
+		fmt.Println("OMG VARIABLE", r.Scalar)
+		var err error
+		r.Scalar, err = cr.resolveVariable(r.Scalar.(VariableName), r.LineNum)
+		fmt.Println("RESOLVED", r)
+		return r, err
+	default:
+		return r, fmt.Errorf(
+			"Reference keys must be strings at %s:%d",
+			cr.original.Filename, r.LineNum,
+		)
+	}
 }
 
 // Recursively resolves a variable's actual value.
@@ -187,17 +216,17 @@ func (cr *classResolver) resolve() (Class, error) {
 
 	// Start by loading all top-level variables defined
 	cr.varDefsByName = map[string]VariableDef{}
-	//	for _, def := range c.ArgDefs {
-	//		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
-	//			return retClass, &Err{
-	//				Line:       def.LineNum,
-	//				Type:       ErrorTypeMultipleDefinition,
-	//				SymbolName: string(def.VariableName.Str),
-	//			}
-	//		}
+	for _, def := range c.ArgDefs {
+		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
+			return retClass, &Err{
+				Line:       def.LineNum,
+				Type:       ErrorTypeMultipleDefinition,
+				SymbolName: string(def.VariableName.Str),
+			}
+		}
 
-	//		cr.varDefsByName[def.VariableName.Str] = def
-	//	}
+		cr.varDefsByName[def.VariableName.Str] = def
+	}
 	for _, def := range c.VariableDefs {
 		if _, exists := cr.varDefsByName[def.VariableName.Str]; exists {
 			return retClass, &Err{
@@ -241,6 +270,13 @@ func (cr *classResolver) resolveValue(v Value, lineNum int) (Value, error) {
 		return cr.resolveVariable(v.(VariableName), lineNum)
 	case Array:
 		return cr.resolveArray(v.(Array), lineNum)
+	case Reference:
+		fmt.Printf("Will RESOLVE REFFF %#v\n", v)
+		fmt.Printf("Will RESOLVE REFFF %#v\n", v.(Reference).Scalar)
+		val, err := cr.resolveReference(v.(Reference))
+		fmt.Printf("Did  RESOLVE REFFF %#v\n", val)
+		fmt.Printf("Did  RESOLVE REFFF %#v\n", val.Scalar)
+		return val, err
 	default:
 		return v, nil
 	}
@@ -271,10 +307,12 @@ func (cr *classResolver) resolveDeclaration(decl *Declaration) (Declaration, err
 	}
 
 	var err error
+	fmt.Println("Resolve props for", decl.String())
 	ret.Props, err = cr.resolveProps(decl.Props)
 	if err != nil {
 		return ret, err
 	}
+	fmt.Println("Did Resolve props for", ret.String())
 
 	return ret, nil
 }

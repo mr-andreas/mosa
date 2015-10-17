@@ -194,6 +194,79 @@ var resolveFileTest = []struct {
 		`
 		node 'x' {
 			class { 'A': }
+		}
+		
+		class A {
+			$foo = 'fooVal'
+			file { 'filename':
+				value => $foo,
+			}
+		}`,
+		`file { 'filename':
+			value => 'fooVal',
+		}`,
+	},
+
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
+		
+		class A {
+			$fooArray = [ $bar, ]
+			$bar = 'barVal'
+			file { 'filename':
+				value => $fooArray,
+			}
+		}`,
+		`file { 'filename':
+			value => [ 'barVal', ],
+		}`,
+	},
+
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
+		
+		class A {
+			$fileVar = 'f1'
+			file { $fileVar: }
+			file { 'f2':
+				depends => file[$fileVar],
+			}
+		}`,
+		`
+		file { 'f1': }
+		file { 'f2': depends => file['f1'], }
+		`,
+	},
+
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
+		
+		class A {
+			$fileVar = 'f1'
+			file { $fileVar: }
+			file { 'f2':
+				depends => [ file[$fileVar], ],
+			}
+		}`,
+		`
+		file { 'f1': }
+		file { 'f2': depends => [ file['f1'], ], }
+		`,
+	},
+
+	{
+		`
+		node 'x' {
+			class { 'A': }
 			class { 'B': }
 		}
 		
@@ -455,13 +528,13 @@ var badVariableTest = []struct {
 	{
 		"Multiple definitions of the same name in header, no value",
 		`class C($foo, $foo,) {}`,
-		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
+		&Err{Line: 1, Type: ErrorTypeMultipleDefinition},
 	},
 
 	{
 		"Multiple definitions of the same name in header, with value",
 		`class C($foo = 4, $foo = 5,) {}`,
-		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
+		&Err{Line: 1, Type: ErrorTypeMultipleDefinition},
 	},
 
 	{
@@ -704,6 +777,22 @@ var badDefsTest = []struct {
 			class { 'A': }
 		}
 		class A($required) {}
+		`,
+		`An error`,
+	},
+
+	{
+		`
+		// A reference with an array value
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			$array = []
+			file { 'x':
+				ref => file[$array],
+			}
+		}
 		`,
 		`An error`,
 	},

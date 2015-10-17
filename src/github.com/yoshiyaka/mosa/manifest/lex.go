@@ -241,7 +241,17 @@ func (p *Prop) String() string {
 type Value interface{}
 
 func ValueEquals(v1, v2 Value) bool {
-	return reflect.DeepEqual(v1, v2)
+	switch v1.(type) {
+	case Reference:
+		if ref2, ok := v2.(Reference); ok {
+			v1ref := v1.(Reference)
+			return ref2.Equals(&v1ref)
+		} else {
+			return false
+		}
+	default:
+		return reflect.DeepEqual(v1, v2)
+	}
 }
 
 // An array of strings, number or references, for instance
@@ -267,6 +277,10 @@ type Reference struct {
 
 func (r Reference) String() string {
 	return fmt.Sprintf("%s[%s]", r.Type, r.Scalar)
+}
+
+func (r *Reference) Equals(r2 *Reference) bool {
+	return ValueEquals(r.Scalar, r2.Scalar)
 }
 
 //export NilArray
