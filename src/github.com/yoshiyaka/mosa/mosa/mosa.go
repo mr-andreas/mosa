@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/yoshiyaka/mosa/manifest"
+	"github.com/yoshiyaka/mosa/reducer"
 )
 
 func main() {
@@ -26,7 +27,12 @@ func main() {
 		panic(mfstErr)
 	}
 
-	fmt.Println(mfst)
+	reduced, reducedErr := reducer.Reduce(mfst)
+	if reducedErr != nil {
+		panic(reducedErr)
+	}
+
+	fmt.Println(reduced)
 
 	//	steps, stepsErr := manifest.Load(mfst)
 	//	if stepsErr != nil {

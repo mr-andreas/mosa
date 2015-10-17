@@ -158,10 +158,13 @@ type Declaration struct {
 func (d *Declaration) String() string {
 	props := ""
 	for _, prop := range d.Props {
-		props += fmt.Sprintf("\t\t\t%s\n", prop.String())
+		props += fmt.Sprintf("\n\t\t\t%s,", prop.String())
+	}
+	if len(d.Props) > 0 {
+		props += "\n\t\t"
 	}
 
-	return fmt.Sprintf("%s { %s:\n%s\n\t\t}\n", d.Type, d.Scalar, props)
+	return fmt.Sprintf("%s { %s: %s}\n", d.Type, d.Scalar, props)
 }
 
 // A property in declaration, for instance ensure => 'latest'

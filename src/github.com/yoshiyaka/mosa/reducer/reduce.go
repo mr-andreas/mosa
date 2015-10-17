@@ -50,7 +50,7 @@ func (ce *CyclicError) Error() string {
 }
 
 // Resolves all variables and references in the specified manifest.
-func Reduce(ast *File) (File, error) {
+func Reduce(ast *File) (*File, error) {
 	retFile := *ast
 	retFile.Classes = make([]Class, len(ast.Classes))
 
@@ -59,9 +59,9 @@ func Reduce(ast *File) (File, error) {
 		resolver := newClassResolver(&class)
 		retFile.Classes[i], err = resolver.Resolve()
 		if err != nil {
-			return retFile, err
+			return nil, err
 		}
 	}
 
-	return retFile, nil
+	return &retFile, nil
 }
