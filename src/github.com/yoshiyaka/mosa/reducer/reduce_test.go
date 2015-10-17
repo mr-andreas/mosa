@@ -565,27 +565,12 @@ var badVariableTest = []struct {
 	},
 
 	{
-		"Multiple definitions of the same name in header, no value",
-		`class C($foo, $foo,) {}`,
-		&Err{Line: 1, Type: ErrorTypeMultipleDefinition},
-	},
-
-	{
-		"Multiple definitions of the same name in header, with value",
+		"Multiple definitions of the same name in header",
 		`class C($foo = 4, $foo = 5,) {}`,
 		&Err{Line: 1, Type: ErrorTypeMultipleDefinition},
 	},
-
 	{
 		"Variable definition of same name in header and body",
-		`class C($foo,) {
-			$foo = 4
-		}`,
-		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
-	},
-
-	{
-		"Variable definition of same name in header (with value) and body",
 		`class C($foo = 5,) {
 			$foo = 4
 		}`,
