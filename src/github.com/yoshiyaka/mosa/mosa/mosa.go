@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
+	"github.com/yoshiyaka/mosa/executor"
 	"github.com/yoshiyaka/mosa/manifest"
+	"github.com/yoshiyaka/mosa/planner"
 	"github.com/yoshiyaka/mosa/reducer"
+	"github.com/yoshiyaka/mosa/stepconverter"
 )
 
 func main() {
@@ -32,23 +34,21 @@ func main() {
 		panic(reducedErr)
 	}
 
-	fmt.Println(reduced)
+	steps, stepsErr := stepconverter.Convert(reduced)
+	if stepsErr != nil {
+		panic(stepsErr)
+	}
 
-	//	steps, stepsErr := manifest.Load(mfst)
-	//	if stepsErr != nil {
-	//		panic(stepsErr)
-	//	}
+	planner := planner.New()
+	plan, planErr := planner.Plan(steps)
+	if planErr != nil {
+		panic(planErr)
+	}
 
-	//	planner := planner.New()
-	//	plan, planErr := planner.Plan(steps)
-	//	if planErr != nil {
-	//		panic(planErr)
-	//	}
-
-	//	exc := executor.DryRun()
-	//	if err := executor.ExecutePlan(plan, exc); err != nil {
-	//		panic(err)
-	//	}
+	exc := executor.DryRun()
+	if err := executor.ExecutePlan(plan, exc); err != nil {
+		panic(err)
+	}
 
 	//	realExc, realExcErr := executor.New("../script")
 	//	if realExcErr != nil {

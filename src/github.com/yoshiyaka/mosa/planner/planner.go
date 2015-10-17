@@ -45,14 +45,14 @@ func New() *Planner {
 }
 
 // If an error is returned, it will always be a *Error
-func (p *Planner) Plan(steps []*common.Step) (*common.Plan, error) {
+func (p *Planner) Plan(steps []common.Step) (*common.Plan, error) {
 	stepsByType, extractErr := p.extractSteps(steps)
 	if extractErr != nil {
 		return nil, extractErr
 	}
 
 	for _, step := range steps {
-		if recursionErr := p.stepIsRecursive(stepsByType, nil, step); recursionErr != nil {
+		if recursionErr := p.stepIsRecursive(stepsByType, nil, &step); recursionErr != nil {
 			return nil, recursionErr
 		}
 	}
@@ -63,7 +63,7 @@ func (p *Planner) Plan(steps []*common.Step) (*common.Plan, error) {
 
 	stepsLeft := make([]common.Step, len(steps))
 	for i, step := range steps {
-		stepsLeft[i] = *step
+		stepsLeft[i] = step
 	}
 
 	for len(stepsLeft) > 0 {
@@ -78,7 +78,7 @@ func (p *Planner) Plan(steps []*common.Step) (*common.Plan, error) {
 
 // Groups all step by type and returns them. On duplicate definitions, an error
 // is returned.
-func (p *Planner) extractSteps(steps []*common.Step) (map[string]map[string]*common.Step, error) {
+func (p *Planner) extractSteps(steps []common.Step) (map[string]map[string]*common.Step, error) {
 	stepsByType := map[string]map[string]*common.Step{}
 
 	for _, step := range steps {
@@ -89,11 +89,12 @@ func (p *Planner) extractSteps(steps []*common.Step) (map[string]map[string]*com
 		if _, stepExists := stepsByType[step.Type][step.Item]; stepExists {
 			return nil, &Error{
 				GeneralError: ErrDuplicateDefinition,
-				Step:         step,
+				Step:         &step,
 			}
 		}
 
-		stepsByType[step.Type][step.Item] = step
+		stepCopy := step
+		stepsByType[step.Type][step.Item] = &stepCopy
 	}
 
 	//	js, _ := json.MarshalIndent(stepsByType, "", "  ")

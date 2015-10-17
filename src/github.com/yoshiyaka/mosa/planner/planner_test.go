@@ -9,15 +9,15 @@ import (
 
 type badPlanTest struct {
 	comment       string
-	steps         []*common.Step
+	steps         []common.Step
 	expectedError error
 }
 
 var badPlans = []badPlanTest{
 	{
 		"Recursive steps",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 				Depends: map[string][]string{
@@ -25,7 +25,7 @@ var badPlans = []badPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg2",
 				Depends: map[string][]string{
@@ -38,8 +38,8 @@ var badPlans = []badPlanTest{
 
 	{
 		"Missing dependency",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 				Depends: map[string][]string{
@@ -52,13 +52,13 @@ var badPlans = []badPlanTest{
 
 	{
 		"Duplicate steps",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 			},
@@ -68,8 +68,8 @@ var badPlans = []badPlanTest{
 
 	{
 		"Deep recursive steps",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 				Depends: map[string][]string{
@@ -78,7 +78,7 @@ var badPlans = []badPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg2",
 				Depends: map[string][]string{
@@ -86,7 +86,7 @@ var badPlans = []badPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "file",
 				Item: "file1",
 				Depends: map[string][]string{
@@ -94,7 +94,7 @@ var badPlans = []badPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "file",
 				Item: "file2",
 				Depends: map[string][]string{
@@ -102,13 +102,13 @@ var badPlans = []badPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type:    "shell",
 				Item:    "cmd1",
 				Depends: nil,
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "shell",
 				Item: "cmd2",
 				Depends: map[string][]string{
@@ -141,7 +141,7 @@ func TestBadPlan(t *testing.T) {
 
 type goodPlanTest struct {
 	comment      string
-	steps        []*common.Step
+	steps        []common.Step
 	expectedPlan []map[string][]string
 }
 
@@ -154,8 +154,8 @@ var goodPlanTests = []goodPlanTest{
 
 	{
 		"Simple plan",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 			},
@@ -169,12 +169,12 @@ var goodPlanTests = []goodPlanTest{
 
 	{
 		"Simple plan with multiple packages",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 			},
-			&common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg2",
 			},
@@ -188,12 +188,12 @@ var goodPlanTests = []goodPlanTest{
 
 	{
 		"Simple plan with multiple types",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 			},
-			&common.Step{
+			common.Step{
 				Type: "file",
 				Item: "file1",
 			},
@@ -208,12 +208,12 @@ var goodPlanTests = []goodPlanTest{
 
 	{
 		"Simple two-stage",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 			},
-			&common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg2",
 				Depends: map[string][]string{
@@ -233,19 +233,19 @@ var goodPlanTests = []goodPlanTest{
 
 	{
 		"Simple two-stage with multiple types",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 			},
-			&common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg2",
 				Depends: map[string][]string{
 					"deb": {"pkg1"},
 				},
 			},
-			&common.Step{
+			common.Step{
 				Type: "file",
 				Item: "file1",
 			},
@@ -263,8 +263,8 @@ var goodPlanTests = []goodPlanTest{
 
 	{
 		"Complex plan",
-		[]*common.Step{
-			&common.Step{
+		[]common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg1",
 				Depends: map[string][]string{
@@ -273,7 +273,7 @@ var goodPlanTests = []goodPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "deb",
 				Item: "pkg2",
 				Depends: map[string][]string{
@@ -281,7 +281,7 @@ var goodPlanTests = []goodPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "file",
 				Item: "file1",
 				Depends: map[string][]string{
@@ -289,7 +289,7 @@ var goodPlanTests = []goodPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "file",
 				Item: "file2",
 				Depends: map[string][]string{
@@ -297,7 +297,7 @@ var goodPlanTests = []goodPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type: "shell",
 				Item: "cmd1",
 				Depends: map[string][]string{
@@ -305,7 +305,7 @@ var goodPlanTests = []goodPlanTest{
 				},
 			},
 
-			&common.Step{
+			common.Step{
 				Type:    "shell",
 				Item:    "cmd2",
 				Depends: nil,
@@ -340,7 +340,7 @@ func TestGoodPlan(t *testing.T) {
 			t.Fatal(stepsErr)
 		}
 
-		expectedPlan := common.Plan{
+		expectedPlan := &common.Plan{
 			Stages: []*common.Stage{},
 		}
 		for _, goodStage := range goodPlan.expectedPlan {
@@ -364,7 +364,9 @@ func TestGoodPlan(t *testing.T) {
 		} else {
 			if !common.EqualsAsJSON(expectedPlan, plan) {
 				js, _ := json.MarshalIndent(plan, "", "  ")
-				t.Errorf("For %s: got bad plan %s %s", goodPlan.comment, plan, string(js))
+				t.Logf("%#v", expectedPlan)
+				t.Logf("%#v", plan)
+				t.Fatalf("For %s: got bad plan %s %s", goodPlan.comment, plan, string(js))
 			}
 		}
 	}

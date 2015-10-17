@@ -39,8 +39,30 @@ var convertTests = []struct {
 		}`,
 		[]Step{
 			Step{
+				Type:    "package",
+				Item:    "foo",
+				Args:    map[string]interface{}{},
+				Depends: nil,
+			},
+		},
+	},
+
+	{
+		`
+		node 'x' { class { 'A': } }
+		class A {
+			package { 'foo':
+				ensure => 'latest',
+			}
+		}`,
+		[]Step{
+			Step{
 				Type: "package",
 				Item: "foo",
+				Args: map[string]interface{}{
+					"ensure": manifest.QuotedString("latest"),
+				},
+				Depends: nil,
 			},
 		},
 	},
@@ -59,9 +81,11 @@ var convertTests = []struct {
 		}`,
 		[]Step{
 			Step{
-				Type:    "package",
-				Item:    "foo",
-				Args:    map[string]interface{}{"ensure": "latest"},
+				Type: "package",
+				Item: "foo",
+				Args: map[string]interface{}{
+					"ensure": manifest.QuotedString("latest"),
+				},
 				Depends: map[string][]string{"file": []string{"undefined"}},
 			},
 		},
@@ -71,7 +95,7 @@ var convertTests = []struct {
 		`
 		node 'x' { class { 'A': } }
 		class A {
-			$content = 'string conent'
+			$content = 'string content'
 			
 			package { 'foo':
 				ensure => 'latest',
@@ -92,7 +116,9 @@ var convertTests = []struct {
 			Step{
 				Type: "package",
 				Item: "foo",
-				Args: map[string]interface{}{"ensure": "latest"},
+				Args: map[string]interface{}{
+					"ensure": manifest.QuotedString("latest"),
+				},
 				Depends: map[string][]string{
 					"file": []string{"undefined", "anotherfile"},
 				},
@@ -101,8 +127,8 @@ var convertTests = []struct {
 				Type: "file",
 				Item: "anotherfile",
 				Args: map[string]interface{}{
-					"ensure":  "present",
-					"content": "string content",
+					"ensure":  manifest.QuotedString("present"),
+					"content": manifest.QuotedString("string content"),
 				},
 				Depends: map[string][]string{"file": []string{"undefined"}},
 			},
@@ -125,7 +151,85 @@ func TestConvert(t *testing.T) {
 		if steps, err := Convert(reduced); err != nil {
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(steps, test.expectedSteps) {
+			t.Logf("%#v", test.expectedSteps)
+			t.Logf("%#v", steps)
 			t.Error("For", test.manifest, "got bad steps:", steps)
+		}
+	}
+}
+
+var invalidManifests = []struct {
+	manifest string
+	err      string
+}{
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
+		class A {
+			file { 'foo':
+				depends => 'bar',
+			}
+		}
+		`,
+		`Good error here`,
+	},
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
+		class A {
+			file { 'foo':
+				depends => [
+					file['bar'],
+					'not_a_reference',
+				],
+			}
+		}
+		`,
+		`Good error here`,
+	},
+
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
+		class A {
+			file { 'foo':
+				depends => [
+					file['bar'],
+					[ file['baz'] ], // Too nested reference
+				],
+			}
+		}
+		`,
+		`Good error here`,
+	},
+}
+
+func TestConvertInvalidManifests(t *testing.T) {
+	for _, test := range invalidManifests {
+		ast, astErr := manifest.Lex("test.ms", strings.NewReader(test.manifest))
+		if astErr != nil {
+			t.Log(test.manifest)
+			t.Fatal(astErr)
+		}
+
+		reduced, reducedErr := reducer.Reduce(ast)
+		if reducedErr != nil {
+			t.Log(test.manifest)
+			t.Fatal(reducedErr)
+		}
+
+		if _, err := Convert(reduced); err == nil {
+			t.Log(test.manifest)
+			t.Error("Got no error")
+		} else if err.Error() != test.err {
+			t.Log(test.manifest)
+			t.Error("Got bad error:", err.Error())
 		}
 	}
 }
