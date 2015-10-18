@@ -1,5 +1,5 @@
-/lex.tab.c
-/lex.tab.h
+/parser.tab.c
+/parser.tab.h
 /lex.yy.c
 
 /cprog

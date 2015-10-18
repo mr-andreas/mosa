@@ -1,14 +1,14 @@
-all: lex.yy.c lex.tab.c
+all: lex.yy.c parser.tab.c
 .PHONY: all
 
 lex.yy.c: lex.l
 	flex -o lex.yy.c lex.l 
 
-lex.tab.h lex.tab.c: lex.y
-	bison -d lex.y -o lex.tab.c
+parser.tab.h parser.tab.c: parser.y
+	bison -d parser.y -o parser.tab.c
 
 clean:
-	rm -rf lex.yy.c lex.tab.c lex.tab.h cprog _obj
+	rm -rf lex.yy.c parser.tab.c parser.tab.h cprog _obj
 
 cgo: lex.go
 	go tool cgo lex.go

@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 
-#include "lex.tab.h"  // to get the token types that we return
+#include "parser.tab.h"  // to get the token types that we return
 
 #define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
 
