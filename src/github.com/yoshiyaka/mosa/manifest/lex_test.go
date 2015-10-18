@@ -707,7 +707,7 @@ var lexTests = []struct {
 	},
 
 	{
-		`define multiple package {
+		`define multiple package($name,) {
 			$foo = 'x'
 		}`,
 		&File{
@@ -715,7 +715,22 @@ var lexTests = []struct {
 				{
 					Name:    "package",
 					LineNum: 1,
-					Type:    DefineTypeMultiple,
+					ArgDefs: []VariableDef{
+						{
+							LineNum:      1,
+							Val:          nil,
+							VariableName: VariableName{1, "$name"},
+						},
+					},
+					Type: DefineTypeMultiple,
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      2,
+							VariableName: VariableName{2, "$foo"},
+							Val:          "x",
+						},
+					},
+					Declarations: []Declaration{},
 				},
 			},
 		},

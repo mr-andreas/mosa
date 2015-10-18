@@ -50,10 +50,13 @@ const (
 )
 
 type Define struct {
-	Filename string
-	LineNum  int
-	Name     string
-	Type     DefineType
+	Filename     string
+	LineNum      int
+	Name         string
+	ArgDefs      []VariableDef
+	VariableDefs []VariableDef
+	Declarations []Declaration
+	Type         DefineType
 }
 
 type Node Class
@@ -473,7 +476,7 @@ func SawReference(lineNum C.int, typ *C.char, scalar goHandle) goHandle {
 }
 
 //export SawDefine
-func SawDefine(lineNum C.int, modifier, name *C.char) goHandle {
+func SawDefine(lineNum C.int, modifier, name *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
 	var dt DefineType
 	switch C.GoString(modifier) {
 	case "single":
@@ -484,11 +487,31 @@ func SawDefine(lineNum C.int, modifier, name *C.char) goHandle {
 		return -1
 	}
 
+	argDefs := ht.Get(argDefsH).([]VariableDef)
+	defsAndDecls := ht.Get(defsAndDeclsH).([]interface{})
+
+	defs := []VariableDef{}
+	decls := []Declaration{}
+
+	for _, val := range defsAndDecls {
+		switch val.(type) {
+		case VariableDef:
+			defs = append(defs, val.(VariableDef))
+		case Declaration:
+			decls = append(decls, val.(Declaration))
+		default:
+			panic("Value is neither def nor decl")
+		}
+	}
+
 	return ht.Add(Define{
-		Filename: curFilename,
-		LineNum:  int(lineNum),
-		Name:     C.GoString(name),
-		Type:     dt,
+		Filename:     curFilename,
+		LineNum:      int(lineNum),
+		Name:         C.GoString(name),
+		ArgDefs:      argDefs,
+		VariableDefs: defs,
+		Declarations: decls,
+		Type:         dt,
 	})
 }
 

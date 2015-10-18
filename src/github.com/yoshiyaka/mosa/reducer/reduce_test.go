@@ -826,6 +826,30 @@ var badDefsTest = []struct {
 		`,
 		`Reference keys must be strings at real.ms:9 - the value of $array is not.`,
 	},
+
+	{
+		`
+		// Reference to undefined type
+		node 'n' {
+			myType { 'A': }
+		}
+		`,
+		`Error here`,
+	},
+
+	{
+		`
+		// Nested multiple definition of the same type
+		node 'n' {
+			testtype { 'bar': }
+			exec { 'bar': }
+		}
+		define single testtype($name,) {
+			exec { $name: }
+		}
+		`,
+		`Error here`,
+	},
 }
 
 func TestBadDefs(t *testing.T) {

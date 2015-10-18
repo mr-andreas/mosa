@@ -87,8 +87,8 @@ node:
 	| NODE QUOTED_STRING '{' '}' { $$ = SawNode(@1.first_line, $2, NilArray(ASTTYPE_DEFS)); }
 
 define:
-	DEFINE STRING STRING '{' defs '}'	{
-		$$ = SawDefine(@1.first_line, $2, $3);
+	DEFINE STRING STRING '(' arg_defs ')' '{' defs '}'	{
+		$$ = SawDefine(@1.first_line, $2, $3, $5, $8);
 		if($$ == -1) {
 			yyerror("Expected 'single' or 'multiple' after define");
 			YYABORT;
