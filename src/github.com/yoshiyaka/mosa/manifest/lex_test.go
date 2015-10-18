@@ -737,6 +737,28 @@ var lexTests = []struct {
 	},
 
 	{
+		`define multiple package($name,) {}`,
+		&File{
+			Defines: []Define{
+				{
+					Name:    "package",
+					LineNum: 1,
+					ArgDefs: []VariableDef{
+						{
+							LineNum:      1,
+							Val:          nil,
+							VariableName: VariableName{1, "$name"},
+						},
+					},
+					Type:         DefineTypeMultiple,
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
 		`node 'localhost' {
 			$foo = 'x'
 		}`,

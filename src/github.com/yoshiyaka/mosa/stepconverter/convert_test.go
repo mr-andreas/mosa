@@ -201,7 +201,7 @@ var invalidManifests = []struct {
 			file { 'foo':
 				depends => [
 					file['bar'],
-					[ file['baz'] ], // Too nested reference
+					[ file['baz'], ], // Too nested reference
 				],
 			}
 		}

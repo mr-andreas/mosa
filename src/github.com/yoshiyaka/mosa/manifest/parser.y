@@ -50,9 +50,11 @@ void yyerror(const char *s);
 %type <gohandle> def
 %type <gohandle> defs
 %type <gohandle> define
+%type <gohandle> define_body
 %type <gohandle> class
 %type <gohandle> node
 %type <gohandle> optional_arg_defs
+%type <gohandle> define_arg_defs
 %type <gohandle> arg_defs
 %type <gohandle> arg_def
 %type <gohandle> file_body
@@ -87,13 +89,21 @@ node:
 	| NODE QUOTED_STRING '{' '}' { $$ = SawNode(@1.first_line, $2, NilArray(ASTTYPE_DEFS)); }
 
 define:
-	DEFINE STRING STRING '(' arg_defs ')' '{' defs '}'	{
-		$$ = SawDefine(@1.first_line, $2, $3, $5, $8);
+	DEFINE STRING STRING define_arg_defs define_body {
+		$$ = SawDefine(@1.first_line, $2, $3, $4, $5);
 		if($$ == -1) {
 			yyerror("Expected 'single' or 'multiple' after define");
 			YYABORT;
 		}
 	}
+
+define_arg_defs:
+	  '(' ')'			{ $$ = NilArray(ASTTYPE_ARGDEFS); }
+	| '(' arg_defs ')'	{ $$ = $2; }
+
+define_body:
+	  '{' '}'		{ $$ = NilArray(ASTTYPE_DEFS); }
+	| '{' defs '}'	{ $$ = $2; }
 
 class:
 	  CLASS STRING optional_arg_defs '{' defs '}'	{ $$ = NewClass(@1.first_line, $2, $3, $5);						}

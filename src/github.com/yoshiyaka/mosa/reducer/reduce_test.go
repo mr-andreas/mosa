@@ -850,6 +850,22 @@ var badDefsTest = []struct {
 		`,
 		`Error here`,
 	},
+
+	{
+		`
+		// Single define without name parameter
+		define single testtype($names,) {}
+		`,
+		`Error here`,
+	},
+
+	{
+		`
+		// Multiple define without names parameter
+		define multiple testtype($name,) {}
+		`,
+		`Error here`,
+	},
 }
 
 func TestBadDefs(t *testing.T) {
