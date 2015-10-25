@@ -707,7 +707,7 @@ var lexTests = []struct {
 	},
 
 	{
-		`define multiple package($name,) {
+		`define multiple package($names,) {
 			$foo = 'x'
 		}`,
 		&File{
@@ -719,7 +719,7 @@ var lexTests = []struct {
 						{
 							LineNum:      1,
 							Val:          nil,
-							VariableName: VariableName{1, "$name"},
+							VariableName: VariableName{1, "$names"},
 						},
 					},
 					Type: DefineTypeMultiple,
@@ -737,7 +737,7 @@ var lexTests = []struct {
 	},
 
 	{
-		`define multiple package($name,) {}`,
+		`define multiple package($names,) {}`,
 		&File{
 			Defines: []Define{
 				{
@@ -747,7 +747,7 @@ var lexTests = []struct {
 						{
 							LineNum:      1,
 							Val:          nil,
-							VariableName: VariableName{1, "$name"},
+							VariableName: VariableName{1, "$names"},
 						},
 					},
 					Type:         DefineTypeMultiple,
@@ -990,6 +990,55 @@ func TestBadLex(t *testing.T) {
 	for _, test := range badLexTests {
 		if _, err := Lex("test.manifest", strings.NewReader(test.manifest)); err == nil {
 			t.Error("Bad manifest didn't fail:", test.manifest)
+		}
+	}
+}
+
+var badLexWithGoodGrammarTest = []struct {
+	manifest string
+	err      string
+}{
+	{
+		``,
+		`apa`,
+	},
+
+	{
+		`
+		// Single define without name parameter
+		
+		define
+		 single 
+		
+		testtype
+		(
+		$names
+		,
+		) 
+		{
+			
+		}
+		`,
+		`Error here`,
+	},
+
+	{
+		`
+		// Multiple define without names parameter
+		define multiple testtype($name,) {}
+		`,
+		`Error here`,
+	},
+}
+
+func TestBadLexWithGoodGrammar(t *testing.T) {
+	for _, test := range badLexWithGoodGrammarTest {
+		if _, err := Lex("test.ms", strings.NewReader(test.manifest)); err == nil {
+			t.Log(test.manifest)
+			t.Error("Bad manifest didn't fail")
+		} else if err.Error() != test.err {
+			t.Log(test.manifest)
+			t.Error("Got bad error:", err.Error())
 		}
 	}
 }
