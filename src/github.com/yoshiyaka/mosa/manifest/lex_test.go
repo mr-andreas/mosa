@@ -999,25 +999,9 @@ var badLexWithGoodGrammarTest = []struct {
 	err      string
 }{
 	{
-		``,
-		`apa`,
-	},
-
-	{
 		`
 		// Single define without name parameter
-		
-		define
-		 single 
-		
-		testtype
-		(
-		$names
-		,
-		) 
-		{
-			
-		}
+		define single testtype($names,){}
 		`,
 		`Error here`,
 	},
@@ -1039,6 +1023,31 @@ func TestBadLexWithGoodGrammar(t *testing.T) {
 		} else if err.Error() != test.err {
 			t.Log(test.manifest)
 			t.Error("Got bad error:", err.Error())
+		}
+	}
+}
+
+// Makes sure that a second call to yyparse() does not return the error of a
+// previous run.
+func TestParseGoodAfterBad(t *testing.T) {
+	goods := []string{
+		"",
+		"define single a(){}",
+		"class x{}",
+		"define multiple a(){}",
+		"node 'x'{}",
+	}
+
+	for _, good := range goods {
+		// Parse a bad grammar file
+		if _, err := Lex("bad.ms", strings.NewReader("node{}")); err == nil {
+			t.Fatal("Bad grammar parsed")
+		}
+
+		// Now parse valid grammar and make sure we don't get an error
+		if _, err := Lex("bad.ms", strings.NewReader(good)); err != nil {
+			t.Log(good)
+			t.Error("Got error when parsing good grammar:", err)
 		}
 	}
 }

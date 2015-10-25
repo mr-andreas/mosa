@@ -17,6 +17,7 @@ extern YY_BUFFER_STATE yy_scan_string(char * str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 int yylex();
+void yylex_destroy();
 void yyerror(const char *s);
 
 %}
@@ -186,6 +187,7 @@ t_error doparse(char *file) {
 	YY_BUFFER_STATE buffer = yy_scan_string(file);
     ret = yyparse();
     yy_delete_buffer(buffer);
+	yylex_destroy();
 	
 	t_error err;
 	err.code = ret;
