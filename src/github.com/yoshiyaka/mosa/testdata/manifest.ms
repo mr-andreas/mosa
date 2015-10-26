@@ -3,18 +3,18 @@ node 'localhost' {
 }
 
 class WebServer {
-	shell { 'apt-get update': }
+	exec { 'apt-get update': }
 	
 	package { 'apache2':
-	  depends => shell['apt-get update'],
+	  depends => exec['apt-get update'],
 	}
 	
 	package { 'php5':
-	  depends => shell['apt-get update'],
+	  depends => exec['apt-get update'],
 	}
 	
 	package { 'proftpd':
-	  depends => shell['apt-get update'],
+	  depends => exec['apt-get update'],
 	}
 	
 	user { 'ftpuser':
@@ -26,7 +26,19 @@ class WebServer {
 	  depends => package['apache2'],
 	}
 	
-	shell { 'a2ensite test-site':
+	exec { 'a2ensite test-site':
 	  depends => file['/etc/apache2/sites-available/test-site.conf'],
 	}
+}
+
+define single package($name,) {
+	exec { $name: }
+}
+
+define single user($name, $password,) {
+	exec { $name: }
+}
+
+define single file($name, $ensure,) {
+	exec { $name: }
 }
