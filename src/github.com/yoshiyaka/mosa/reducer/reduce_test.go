@@ -194,10 +194,10 @@ func TestResolveClass(t *testing.T) {
 				)
 			}
 
-			if len(resolver.varDefsByName) != 0 && false {
+			if len(resolver.ls.varDefsByName) != 0 && false {
 				t.Fatal(
 					"Not all variables were resolved in", test.inputManifest,
-					resolver.varDefsByName,
+					resolver.ls.varDefsByName,
 				)
 			}
 		}
