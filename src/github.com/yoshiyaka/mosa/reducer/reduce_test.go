@@ -225,7 +225,10 @@ var resolveFileTest = []struct {
 			$foo = 'A'
 			$bar = $foo
 			file { $bar: }
-		}`,
+		}
+		
+		define single file($name,) {}
+		`,
 		`file { 'A': }`,
 	},
 
@@ -240,7 +243,10 @@ var resolveFileTest = []struct {
 			file { 'filename':
 				value => $foo,
 			}
-		}`,
+		}
+		
+		define single file($name, $value,) {}
+		`,
 		`file { 'filename':
 			value => 'fooVal',
 		}`,
@@ -258,7 +264,10 @@ var resolveFileTest = []struct {
 			file { 'filename':
 				value => $fooArray,
 			}
-		}`,
+		}
+		
+		define single file($name, $value,) {}
+		`,
 		`file { 'filename':
 			value => [ 'barVal', ],
 		}`,
@@ -276,7 +285,10 @@ var resolveFileTest = []struct {
 			file { 'f2':
 				depends => file[$fileVar],
 			}
-		}`,
+		}
+		
+		define single file($name,) {}
+		`,
 		`
 		file { 'f1': }
 		file { 'f2': depends => file['f1'], }
@@ -295,7 +307,10 @@ var resolveFileTest = []struct {
 			file { 'f2':
 				depends => [ file[$fileVar], ],
 			}
-		}`,
+		}
+		
+		define single file($name, ) {}
+		`,
 		`
 		file { 'f1': }
 		file { 'f2': depends => [ file['f1'], ], }
@@ -318,7 +333,10 @@ var resolveFileTest = []struct {
 			$foo = 'B'
 			$bar = $foo
 			file { $bar: }
-		}`,
+		}
+		
+		define single file($name, ) {}
+		`,
 		`
 		file { 'A': }
 		file { 'B': }
@@ -356,7 +374,12 @@ var resolveFileTest = []struct {
 					package[$server],
 				],
 			}
-		}`,
+		}
+		
+		define single file($name, $ensure, $content = '',) {}
+		define single package($name, $ensure,) {}
+		define single service($name, $ensure,) {}
+		`,
 		`
 		package { 'nginx': ensure => 'installed', }
 
@@ -390,6 +413,8 @@ var resolveFileTest = []struct {
 		class B {
 			package { 'foo': from => 'B', }
 		}
+		
+		define single package($name, $from,) {}
 		`,
 
 		`package { 'foo': from => 'A', }`,
@@ -415,6 +440,8 @@ var resolveFileTest = []struct {
 				var => $var,
 			}
 		}
+		
+		define single decl($name, $var = '',) {}
 		`,
 
 		`
@@ -422,6 +449,37 @@ var resolveFileTest = []struct {
 		decl { 'b_decl':
 			var => 'foo',
 		}
+		`,
+	},
+
+	{
+		`
+		// Realize empty define
+		node 'x' { class { 'A': } }
+		class A {
+			mytype { 'foo': }
+		}
+		define single mytype($name,){}
+		`,
+		`
+		mytype { 'foo': }
+		`,
+	},
+
+	{
+		`
+		// Realize simple define
+		node 'x' { class { 'A': } }
+		class A {
+			mytype { 'foo': }
+		}
+		define single mytype($name,){
+			exec { 'echo foo': }
+		}
+		`,
+		`
+		mytype { 'foo': }
+		exec { 'echo foo': }
 		`,
 	},
 }
@@ -707,6 +765,8 @@ var badDefsTest = []struct {
 		class B {
 			package { 'foo': from => 'B', }
 		}
+		
+		define single package($name, $from,){}
 		`,
 
 		`Declaration package[foo] realized twice at real.ms:11. Previously realized at real.ms:8`,
@@ -834,7 +894,7 @@ var badDefsTest = []struct {
 			myType { 'A': }
 		}
 		`,
-		`Error here`,
+		`Reference to undefined type 'myType' at real.ms:4`,
 	},
 
 	{
@@ -856,7 +916,7 @@ var badDefsTest = []struct {
 		// Single define without name parameter
 		define single testtype($names,) {}
 		`,
-		`Error here`,
+		`Missing required argument $name when defining type 'testtype' at real.ms:3`,
 	},
 
 	{
@@ -864,7 +924,44 @@ var badDefsTest = []struct {
 		// Multiple define without names parameter
 		define multiple testtype($name,) {}
 		`,
-		`Error here`,
+		`Missing required argument $names when defining type 'testtype' at real.ms:3`,
+	},
+
+	{
+		`
+		// Define same type multiple times
+		define single x($name,){}
+		define single x($name,){}
+		`,
+		`Can't redefine type 'x' at real.ms:4 which is already defined at real.ms:3`,
+	},
+
+	{
+		`
+		// Supply name in props
+		define single x($name,){}
+		class A {
+			x { 'y':
+				name => 'y',
+			}
+		}
+		node 'x' { class { 'A': } }
+		`,
+		`'name' may not be passed as an argument in real.ms:6`,
+	},
+
+	{
+		`
+		// Supply names in props
+		define multiple x($names,){}
+		class A {
+			x { 'y':
+				names => 'y',
+			}
+		}
+		node 'x' { class { 'A': } }
+		`,
+		`'names' may not be passed as an argument in real.ms:6`,
 	},
 }
 

@@ -166,6 +166,9 @@ func (ls *localState) setVarsFromArgs(passedArgs []Prop, availableParams []Varia
 		argsByName[arg.Name] = &passedArgs[i]
 	}
 
+	// Ignore depends => ...
+	delete(argsByName, "depends")
+
 	for _, def := range availableParams {
 		if _, exists := ls.varDefsByName[def.VariableName.Str]; exists {
 			return &Err{

@@ -24,6 +24,9 @@ func (r *resolver) resolve() ([]Declaration, error) {
 	if err := r.gs.populateClassesByName(r.ast.Classes); err != nil {
 		return nil, err
 	}
+	if err := r.gs.populateDefinesByName(r.ast.Defines); err != nil {
+		return nil, err
+	}
 
 	for _, node := range r.ast.Nodes {
 		if err := r.resolveNode(&node); err != nil {
@@ -99,6 +102,22 @@ func (r *resolver) realizeClassesRecursive(c *Class, args []Prop, file string, l
 							oldDef.file, oldDef.line,
 						)
 					} else {
+						def, defOk := r.gs.definesByName[decl.Type]
+						if !defOk {
+							return fmt.Errorf(
+								"Reference to undefined type '%s' at %s:%d",
+								decl.Type, c.Filename, decl.LineNum,
+							)
+						}
+
+						dr := newDeclarationResolver(
+							def, decl.Scalar, decl.Props, r.gs, c.Filename,
+							decl.LineNum,
+						)
+						if _, err := dr.resolve(); err != nil {
+							return err
+						}
+
 						r.gs.realizedDeclarations[decl.Type][string(name)] = realizedDeclaration{
 							d:    &newClass.Declarations[i],
 							file: c.Filename,
