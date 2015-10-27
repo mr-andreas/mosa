@@ -1,6 +1,10 @@
 package reducer
 
-import . "github.com/yoshiyaka/mosa/manifest"
+import (
+	"fmt"
+
+	. "github.com/yoshiyaka/mosa/manifest"
+)
 
 // Resolves variable references in a class. The object holds the internal state
 // of all variables used during the resolving, and should only be used once for
@@ -13,18 +17,20 @@ type classResolver struct {
 	args []Prop
 
 	ls *localState
+	gs *globalState
 
 	realizedInFile string
 	realizedAtLine int
 }
 
-func newClassResolver(class *Class, withArgs []Prop, realizedIn string, at int) *classResolver {
+func newClassResolver(gs *globalState, class *Class, withArgs []Prop, realizedIn string, at int) *classResolver {
 	return &classResolver{
 		original:       class,
 		args:           withArgs,
 		realizedInFile: realizedIn,
 		realizedAtLine: at,
 		ls:             newLocalState(class.Filename, realizedIn, at),
+		gs:             gs,
 	}
 }
 
@@ -125,5 +131,92 @@ func (cr *classResolver) resolveDeclaration(decl *Declaration) (Declaration, err
 		return ret, err
 	}
 
+	var name string
+	if n, ok := ret.Scalar.(QuotedString); !ok {
+		return ret, fmt.Errorf(
+			"Can't realize declaration of type %s with non-string name at %s:%d",
+			ret.Type, cr.original.Filename, ret.LineNum,
+		)
+	} else {
+		name = string(n)
+	}
+
+	if previous := cr.gs.lockRealization(decl, name, cr.original.Filename, decl.LineNum); previous != nil {
+		return ret, fmt.Errorf(
+			"%s['%s'] realized twice at %s:%d. Previously realized at %s:%d",
+			decl.Type, name, cr.original.Filename, decl.LineNum,
+			previous.file, previous.line,
+		)
+	}
+
+	if ret.Type == "class" {
+		if err := cr.realizeClass(name, &ret); err != nil {
+			return ret, err
+		}
+	} else {
+		if err := cr.realizeDeclaration(name, &ret); err != nil {
+			return ret, err
+		}
+	}
+
 	return ret, nil
+}
+
+func (cr *classResolver) realizeClass(name string, decl *Declaration) error {
+	if class, ok := cr.gs.classesByName[name]; !ok {
+		return fmt.Errorf(
+			"Reference to undefined class '%s' at %s:%d",
+			string(name), cr.original.Filename, decl.LineNum,
+		)
+	} else if oldDef, defined := cr.gs.realizedClasses[name]; defined {
+		return fmt.Errorf(
+			"Class %s realized twice at %s:%d. Previously realized at %s:%d",
+			string(name), cr.original.Filename, decl.LineNum,
+			oldDef.file, oldDef.line,
+		)
+	} else {
+		cr.gs.realizedClasses[string(name)] = realizedClass{
+			c:    class,
+			file: cr.original.Filename,
+			line: decl.LineNum,
+		}
+		nestedResolver := newClassResolver(
+			cr.gs, class, decl.Props, cr.original.Filename, decl.LineNum,
+		)
+		_, err := nestedResolver.resolve()
+		return err
+	}
+}
+
+func (cr *classResolver) realizeDeclaration(name string, decl *Declaration) error {
+	def, defOk := cr.gs.definesByName[decl.Type]
+	if !defOk {
+		return fmt.Errorf(
+			"Reference to undefined type '%s' at %s:%d",
+			decl.Type, cr.original.Filename, decl.LineNum,
+		)
+	}
+
+	dr := newDeclarationResolver(
+		def, decl.Scalar, decl.Props, cr.gs, cr.original.Filename,
+		decl.LineNum,
+	)
+	if _, err := dr.resolve(); err != nil {
+		return err
+	}
+
+	if cr.gs.realizedDeclarations[decl.Type] == nil {
+		cr.gs.realizedDeclarations[decl.Type] = map[string]realizedDeclaration{}
+	}
+
+	cr.gs.realizedDeclarations[decl.Type][name] = realizedDeclaration{
+		d:    decl,
+		file: cr.original.Filename,
+		line: decl.LineNum,
+	}
+	cr.gs.realizedDeclarationsInOrder = append(
+		cr.gs.realizedDeclarationsInOrder, *decl,
+	)
+
+	return nil
 }

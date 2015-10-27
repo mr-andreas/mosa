@@ -176,8 +176,9 @@ func TestResolveClass(t *testing.T) {
 			t.Fatal(realErr)
 		}
 
+		gs := newGlobalState()
 		resolver := newClassResolver(
-			&realFile.Classes[0], nil, "real.ms", realFile.Classes[0].LineNum,
+			gs, &realFile.Classes[0], nil, "real.ms", realFile.Classes[0].LineNum,
 		)
 		if reducedClass, err := resolver.resolve(); err != nil {
 			t.Log(test.inputManifest)
@@ -208,12 +209,12 @@ var resolveFileTest = []struct {
 	inputManifest,
 	expectedManifest string
 }{
-	{
-		`
-		node 'x' {}
-		class A{}`,
-		``,
-	},
+	//	{
+	//		`
+	//		node 'x' {}
+	//		class A{}`,
+	//		``,
+	//	},
 
 	{
 		`
@@ -232,256 +233,256 @@ var resolveFileTest = []struct {
 		`file { 'A': }`,
 	},
 
-	{
-		`
-		node 'x' {
-			class { 'A': }
-		}
-		
-		class A {
-			$foo = 'fooVal'
-			file { 'filename':
-				value => $foo,
-			}
-		}
-		
-		define single file($name, $value,) {}
-		`,
-		`file { 'filename':
-			value => 'fooVal',
-		}`,
-	},
+	//	{
+	//		`
+	//		node 'x' {
+	//			class { 'A': }
+	//		}
 
-	{
-		`
-		node 'x' {
-			class { 'A': }
-		}
-		
-		class A {
-			$fooArray = [ $bar, ]
-			$bar = 'barVal'
-			file { 'filename':
-				value => $fooArray,
-			}
-		}
-		
-		define single file($name, $value,) {}
-		`,
-		`file { 'filename':
-			value => [ 'barVal', ],
-		}`,
-	},
+	//		class A {
+	//			$foo = 'fooVal'
+	//			file { 'filename':
+	//				value => $foo,
+	//			}
+	//		}
 
-	{
-		`
-		node 'x' {
-			class { 'A': }
-		}
-		
-		class A {
-			$fileVar = 'f1'
-			file { $fileVar: }
-			file { 'f2':
-				depends => file[$fileVar],
-			}
-		}
-		
-		define single file($name,) {}
-		`,
-		`
-		file { 'f1': }
-		file { 'f2': depends => file['f1'], }
-		`,
-	},
+	//		define single file($name, $value,) {}
+	//		`,
+	//		`file { 'filename':
+	//			value => 'fooVal',
+	//		}`,
+	//	},
 
-	{
-		`
-		node 'x' {
-			class { 'A': }
-		}
-		
-		class A {
-			$fileVar = 'f1'
-			file { $fileVar: }
-			file { 'f2':
-				depends => [ file[$fileVar], ],
-			}
-		}
-		
-		define single file($name, ) {}
-		`,
-		`
-		file { 'f1': }
-		file { 'f2': depends => [ file['f1'], ], }
-		`,
-	},
+	//	{
+	//		`
+	//		node 'x' {
+	//			class { 'A': }
+	//		}
 
-	{
-		`
-		node 'x' {
-			class { 'A': }
-			class { 'B': }
-		}
-		
-		class A {
-			$foo = 'A'
-			$bar = $foo
-			file { $bar: }
-		}
-		class B {
-			$foo = 'B'
-			$bar = $foo
-			file { $bar: }
-		}
-		
-		define single file($name, ) {}
-		`,
-		`
-		file { 'A': }
-		file { 'B': }
-		`,
-	},
+	//		class A {
+	//			$fooArray = [ $bar, ]
+	//			$bar = 'barVal'
+	//			file { 'filename':
+	//				value => $fooArray,
+	//			}
+	//		}
 
-	{
-		`
-		node 'localhost' {
-			class { 'Webserver':
-				docroot => '/home/www',
-			}
-		}
-		
-		class Webserver(
-			$docroot = '/var/www',
-			$workers = 8,
-		){
-			$server = 'nginx'
-			
-			package { $server: ensure => 'installed', }
-			
-			file { '/etc/nginx/conf.d/workers.conf':
-				ensure => 'present',
-				content => $workers,
-				depends => package[$server],
-			}
-			
-			file { $docroot: ensure => 'directory', }
-			
-			service { $server:
-				ensure => 'running',
-				depends => [
-					file['/etc/nginx/conf.d/workers.conf'],
-					package[$server],
-				],
-			}
-		}
-		
-		define single file($name, $ensure, $content = '',) {}
-		define single package($name, $ensure,) {}
-		define single service($name, $ensure,) {}
-		`,
-		`
-		package { 'nginx': ensure => 'installed', }
+	//		define single file($name, $value,) {}
+	//		`,
+	//		`file { 'filename':
+	//			value => [ 'barVal', ],
+	//		}`,
+	//	},
 
-		file { '/etc/nginx/conf.d/workers.conf':
-			ensure => 'present',
-			content => 8,
-			depends => package['nginx'],
-		}
-		
-		file { '/home/www': ensure => 'directory', }
-		
-		service { 'nginx':
-			ensure => 'running',
-			depends => [
-				file['/etc/nginx/conf.d/workers.conf'],
-				package['nginx'],
-			],
-		}`,
-	},
+	//	{
+	//		`
+	//		node 'x' {
+	//			class { 'A': }
+	//		}
 
-	{
-		`
-		// Defining the same package multiple times is okay, as long as only one
-		// of the declarations is realized.
-		node 'n' {
-			class { 'A': }
-		}
-		class A {
-			package { 'foo': from => 'A', }
-		}
-		class B {
-			package { 'foo': from => 'B', }
-		}
-		
-		define single package($name, $from,) {}
-		`,
+	//		class A {
+	//			$fileVar = 'f1'
+	//			file { $fileVar: }
+	//			file { 'f2':
+	//				depends => file[$fileVar],
+	//			}
+	//		}
 
-		`package { 'foo': from => 'A', }`,
-	},
+	//		define single file($name,) {}
+	//		`,
+	//		`
+	//		file { 'f1': }
+	//		file { 'f2': depends => file['f1'], }
+	//		`,
+	//	},
 
-	{
-		`
-		// Nested cyclic realization
-		node 'n' {
-			class { 'A': 
-				subclass => 'B',
-				b_var => 'foo',
-			}
-		}
-		class A($subclass, $b_var,) {
-			decl { 'a_decl': }
-			class { $subclass:
-				var => $b_var,
-			}
-		}
-		class B($var,) {
-			decl { 'b_decl':
-				var => $var,
-			}
-		}
-		
-		define single decl($name, $var = '',) {}
-		`,
+	//	{
+	//		`
+	//		node 'x' {
+	//			class { 'A': }
+	//		}
 
-		`
-		decl { 'a_decl': }
-		decl { 'b_decl':
-			var => 'foo',
-		}
-		`,
-	},
+	//		class A {
+	//			$fileVar = 'f1'
+	//			file { $fileVar: }
+	//			file { 'f2':
+	//				depends => [ file[$fileVar], ],
+	//			}
+	//		}
 
-	{
-		`
-		// Realize empty define
-		node 'x' { class { 'A': } }
-		class A {
-			mytype { 'foo': }
-		}
-		define single mytype($name,){}
-		`,
-		`
-		mytype { 'foo': }
-		`,
-	},
+	//		define single file($name, ) {}
+	//		`,
+	//		`
+	//		file { 'f1': }
+	//		file { 'f2': depends => [ file['f1'], ], }
+	//		`,
+	//	},
 
-	{
-		`
-		// Realize simple define
-		node 'x' { class { 'A': } }
-		class A {
-			mytype { 'foo': }
-		}
-		define single mytype($name,){
-			exec { 'echo foo': }
-		}
-		`,
-		`
-		mytype { 'foo': }
-		exec { 'echo foo': }
-		`,
-	},
+	//	{
+	//		`
+	//		node 'x' {
+	//			class { 'A': }
+	//			class { 'B': }
+	//		}
+
+	//		class A {
+	//			$foo = 'A'
+	//			$bar = $foo
+	//			file { $bar: }
+	//		}
+	//		class B {
+	//			$foo = 'B'
+	//			$bar = $foo
+	//			file { $bar: }
+	//		}
+
+	//		define single file($name, ) {}
+	//		`,
+	//		`
+	//		file { 'A': }
+	//		file { 'B': }
+	//		`,
+	//	},
+
+	//	{
+	//		`
+	//		node 'localhost' {
+	//			class { 'Webserver':
+	//				docroot => '/home/www',
+	//			}
+	//		}
+
+	//		class Webserver(
+	//			$docroot = '/var/www',
+	//			$workers = 8,
+	//		){
+	//			$server = 'nginx'
+
+	//			package { $server: ensure => 'installed', }
+
+	//			file { '/etc/nginx/conf.d/workers.conf':
+	//				ensure => 'present',
+	//				content => $workers,
+	//				depends => package[$server],
+	//			}
+
+	//			file { $docroot: ensure => 'directory', }
+
+	//			service { $server:
+	//				ensure => 'running',
+	//				depends => [
+	//					file['/etc/nginx/conf.d/workers.conf'],
+	//					package[$server],
+	//				],
+	//			}
+	//		}
+
+	//		define single file($name, $ensure, $content = '',) {}
+	//		define single package($name, $ensure,) {}
+	//		define single service($name, $ensure,) {}
+	//		`,
+	//		`
+	//		package { 'nginx': ensure => 'installed', }
+
+	//		file { '/etc/nginx/conf.d/workers.conf':
+	//			ensure => 'present',
+	//			content => 8,
+	//			depends => package['nginx'],
+	//		}
+
+	//		file { '/home/www': ensure => 'directory', }
+
+	//		service { 'nginx':
+	//			ensure => 'running',
+	//			depends => [
+	//				file['/etc/nginx/conf.d/workers.conf'],
+	//				package['nginx'],
+	//			],
+	//		}`,
+	//	},
+
+	//	{
+	//		`
+	//		// Defining the same package multiple times is okay, as long as only one
+	//		// of the declarations is realized.
+	//		node 'n' {
+	//			class { 'A': }
+	//		}
+	//		class A {
+	//			package { 'foo': from => 'A', }
+	//		}
+	//		class B {
+	//			package { 'foo': from => 'B', }
+	//		}
+
+	//		define single package($name, $from,) {}
+	//		`,
+
+	//		`package { 'foo': from => 'A', }`,
+	//	},
+
+	//	{
+	//		`
+	//		// Nested cyclic realization
+	//		node 'n' {
+	//			class { 'A':
+	//				subclass => 'B',
+	//				b_var => 'foo',
+	//			}
+	//		}
+	//		class A($subclass, $b_var,) {
+	//			decl { 'a_decl': }
+	//			class { $subclass:
+	//				var => $b_var,
+	//			}
+	//		}
+	//		class B($var,) {
+	//			decl { 'b_decl':
+	//				var => $var,
+	//			}
+	//		}
+
+	//		define single decl($name, $var = '',) {}
+	//		`,
+
+	//		`
+	//		decl { 'a_decl': }
+	//		decl { 'b_decl':
+	//			var => 'foo',
+	//		}
+	//		`,
+	//	},
+
+	//	{
+	//		`
+	//		// Realize empty define
+	//		node 'x' { class { 'A': } }
+	//		class A {
+	//			mytype { 'foo': }
+	//		}
+	//		define single mytype($name,){}
+	//		`,
+	//		`
+	//		mytype { 'foo': }
+	//		`,
+	//	},
+
+	//	{
+	//		`
+	//		// Realize simple define
+	//		node 'x' { class { 'A': } }
+	//		class A {
+	//			mytype { 'foo': }
+	//		}
+	//		define single mytype($name,){
+	//			exec { 'echo foo': }
+	//		}
+	//		`,
+	//		`
+	//		mytype { 'foo': }
+	//		exec { 'echo foo': }
+	//		`,
+	//	},
 }
 
 func TestResolveFile(t *testing.T) {
@@ -646,8 +647,9 @@ func TestResolveBadVariable(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		gs := newGlobalState()
 		resolver := newClassResolver(
-			&ast.Classes[0], nil, "err.ms", ast.Classes[0].LineNum,
+			gs, &ast.Classes[0], nil, "err.ms", ast.Classes[0].LineNum,
 		)
 		_, resolveErr := resolver.resolve()
 		if resolveErr == nil {
@@ -749,7 +751,7 @@ var badDefsTest = []struct {
 		}
 		class A {}
 		`,
-		`Class A realized twice at real.ms:5. Previously realized at real.ms:4`,
+		`class['A'] realized twice at real.ms:5. Previously realized at real.ms:4`,
 	},
 
 	{
@@ -769,7 +771,7 @@ var badDefsTest = []struct {
 		define single package($name, $from,){}
 		`,
 
-		`Declaration package[foo] realized twice at real.ms:11. Previously realized at real.ms:8`,
+		`package['foo'] realized twice at real.ms:11. Previously realized at real.ms:8`,
 	},
 
 	{
@@ -782,7 +784,7 @@ var badDefsTest = []struct {
 			class { 'A': }
 		}
 		`,
-		`Class A realized twice at real.ms:7. Previously realized at real.ms:4`,
+		`class['A'] realized twice at real.ms:7. Previously realized at real.ms:4`,
 	},
 
 	{
@@ -798,7 +800,7 @@ var badDefsTest = []struct {
 			class { 'A': }
 		}
 		`,
-		`Class A realized twice at real.ms:10. Previously realized at real.ms:4`,
+		`class['A'] realized twice at real.ms:10. Previously realized at real.ms:4`,
 	},
 
 	{
@@ -816,7 +818,7 @@ var badDefsTest = []struct {
 			class { 'A': }
 		}
 		`,
-		`Class A realized twice at real.ms:12. Previously realized at real.ms:4`,
+		`class['A'] realized twice at real.ms:12. Previously realized at real.ms:4`,
 	},
 
 	{
@@ -962,6 +964,40 @@ var badDefsTest = []struct {
 		node 'x' { class { 'A': } }
 		`,
 		`'names' may not be passed as an argument in real.ms:6`,
+	},
+
+	{
+		`
+		// Cyclic defines
+		define single foo($name,) {
+			bar { $name: }
+		}
+		define single bar($name,) {
+			foo { $name: }
+		}
+		class A {
+			foo { 'baz': }
+		}
+		node 'x' { class { 'A': } }
+		`,
+		`Good error here`,
+	},
+
+	{
+		`
+		// Class inside define
+		node 'n' {
+			class { 'B': }
+		}
+		class A {}
+		class B {
+			x { 'test': }
+		}
+		define single x($name,) {
+			class { 'A': }
+		}
+		`,
+		`Can't realize classes inside of a define at real.ms:11`,
 	},
 }
 

@@ -53,12 +53,15 @@ type globalState struct {
 
 	// All realized classes, mapped by name
 	realizedClasses map[string]realizedClass
+
+	locks map[string]map[string]realizedDeclaration
 }
 
 func newGlobalState() *globalState {
 	return &globalState{
 		realizedDeclarations: map[string]map[string]realizedDeclaration{},
 		realizedClasses:      map[string]realizedClass{},
+		locks:                map[string]map[string]realizedDeclaration{},
 	}
 }
 
@@ -119,4 +122,25 @@ func (r *globalState) populateDefinesByName(defines []Define) error {
 	}
 
 	return nil
+}
+
+// Locks a specific instance of a type while realizing it, for instance
+// package { 'apache2': }. This is done to prevent cyclic realizations.
+func (gs *globalState) lockRealization(d *Declaration, name, realizedIn string, at int) *realizedDeclaration {
+	rd := realizedDeclaration{
+		file: realizedIn,
+		line: at,
+	}
+
+	if typeMap, exists := gs.locks[d.Type]; !exists {
+		gs.locks[d.Type] = map[string]realizedDeclaration{name: rd}
+		return nil
+	} else {
+		if previous, isLocked := typeMap[name]; isLocked {
+			return &previous
+		} else {
+			typeMap[name] = rd
+			return nil
+		}
+	}
 }

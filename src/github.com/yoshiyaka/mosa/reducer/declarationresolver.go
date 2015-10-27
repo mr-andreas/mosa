@@ -91,6 +91,13 @@ func (cr *declarationResolver) resolve() (Define, error) {
 
 	retClass.Declarations = make([]Declaration, len(def.Declarations))
 	for i, decl := range def.Declarations {
+		if decl.Type == "class" {
+			return retClass, fmt.Errorf(
+				"Can't realize classes inside of a define at %s:%d",
+				cr.define.Filename, decl.LineNum,
+			)
+		}
+
 		var err error
 		retClass.Declarations[i], err = cr.resolveDeclaration(&decl)
 		if err != nil {
