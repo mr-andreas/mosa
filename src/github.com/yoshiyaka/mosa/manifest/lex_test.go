@@ -994,39 +994,6 @@ func TestBadLex(t *testing.T) {
 	}
 }
 
-var badLexWithGoodGrammarTest = []struct {
-	manifest string
-	err      string
-}{
-	{
-		`
-		// Single define without name parameter
-		define single testtype($names,){}
-		`,
-		`Error here`,
-	},
-
-	{
-		`
-		// Multiple define without names parameter
-		define multiple testtype($name,) {}
-		`,
-		`Error here`,
-	},
-}
-
-func TestBadLexWithGoodGrammar(t *testing.T) {
-	for _, test := range badLexWithGoodGrammarTest {
-		if _, err := Lex("test.ms", strings.NewReader(test.manifest)); err == nil {
-			t.Log(test.manifest)
-			t.Error("Bad manifest didn't fail")
-		} else if err.Error() != test.err {
-			t.Log(test.manifest)
-			t.Error("Got bad error:", err.Error())
-		}
-	}
-}
-
 // Makes sure that a second call to yyparse() does not return the error of a
 // previous run.
 func TestParseGoodAfterBad(t *testing.T) {
