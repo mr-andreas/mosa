@@ -32,6 +32,7 @@ func newDeclarationResolver(d *Define, name Value, withArgs []Prop, gs *globalSt
 		realizedInFile: realizedIn,
 		realizedAtLine: at,
 		ls:             newLocalState(d.Filename, realizedIn, at),
+		gs:             gs,
 	}
 }
 
@@ -90,7 +91,7 @@ func (cr *declarationResolver) resolve() (Define, error) {
 	retClass.VariableDefs = newDefs
 
 	retClass.Declarations = make([]Declaration, len(def.Declarations))
-	for i, decl := range def.Declarations {
+	for _, decl := range def.Declarations {
 		if decl.Type == "class" {
 			return retClass, fmt.Errorf(
 				"Can't realize classes inside of a define at %s:%d",
@@ -98,9 +99,7 @@ func (cr *declarationResolver) resolve() (Define, error) {
 			)
 		}
 
-		var err error
-		retClass.Declarations[i], err = cr.resolveDeclaration(&decl)
-		if err != nil {
+		if _, err := cr.resolveDeclaration(&decl); err != nil {
 			return retClass, err
 		}
 	}
@@ -108,21 +107,6 @@ func (cr *declarationResolver) resolve() (Define, error) {
 	return retClass, nil
 }
 
-// Resolves all variables used in a declaration. For instance
-//
-//  package { $webserver:
-//  	ensure => present,
-//  	workers => $workers,
-//  }
-//
-// Would be resolved into
-//
-//  package { 'nginx':
-//  	ensure => present,
-//  	workers => 5,
-//  }
-//
-// when $webserver = 'nginx' and $workers = 5 are defined in the class.
 func (cr *declarationResolver) resolveDeclaration(decl *Declaration) (Declaration, error) {
 	ret := *decl
 
@@ -142,5 +126,60 @@ func (cr *declarationResolver) resolveDeclaration(decl *Declaration) (Declaratio
 		return ret, err
 	}
 
+	var name string
+	if n, ok := ret.Scalar.(QuotedString); !ok {
+		return ret, fmt.Errorf(
+			"Can't realize declaration of type %s with non-string name at %s:%d",
+			ret.Type, cr.define.Filename, ret.LineNum,
+		)
+	} else {
+		name = string(n)
+	}
+
+	if previous := cr.gs.lockRealization(decl, name, cr.define.Filename, decl.LineNum); previous != nil {
+		return ret, fmt.Errorf(
+			"%s['%s'] realized twice at %s:%d. Previously realized at %s:%d",
+			decl.Type, name, cr.define.Filename, decl.LineNum,
+			previous.file, previous.line,
+		)
+	}
+
+	if err := cr.realizeDeclaration(name, &ret); err != nil {
+		return ret, err
+	}
+
 	return ret, nil
+}
+
+func (cr *declarationResolver) realizeDeclaration(name string, decl *Declaration) error {
+	def, defOk := cr.gs.definesByName[decl.Type]
+	if !defOk {
+		return fmt.Errorf(
+			"Reference to undefined type '%s' at %s:%d",
+			decl.Type, cr.define.Filename, decl.LineNum,
+		)
+	}
+
+	dr := newDeclarationResolver(
+		def, decl.Scalar, decl.Props, cr.gs, cr.define.Filename,
+		decl.LineNum,
+	)
+	if _, err := dr.resolve(); err != nil {
+		return err
+	}
+
+	if cr.gs.realizedDeclarations[decl.Type] == nil {
+		cr.gs.realizedDeclarations[decl.Type] = map[string]realizedDeclaration{}
+	}
+
+	cr.gs.realizedDeclarations[decl.Type][name] = realizedDeclaration{
+		d:    decl,
+		file: cr.define.Filename,
+		line: decl.LineNum,
+	}
+	cr.gs.realizedDeclarationsInOrder = append(
+		cr.gs.realizedDeclarationsInOrder, *decl,
+	)
+
+	return nil
 }

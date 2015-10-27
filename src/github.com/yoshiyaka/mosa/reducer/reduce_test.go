@@ -919,7 +919,7 @@ var badDefsTest = []struct {
 			exec { $name: }
 		}
 		`,
-		`Error here`,
+		`exec['bar'] realized twice at real.ms:5. Previously realized at real.ms:8`,
 	},
 
 	{
@@ -989,7 +989,7 @@ var badDefsTest = []struct {
 		}
 		node 'x' { class { 'A': } }
 		`,
-		`Good error here`,
+		`foo['baz'] realized twice at real.ms:7. Previously realized at real.ms:10`,
 	},
 
 	{
