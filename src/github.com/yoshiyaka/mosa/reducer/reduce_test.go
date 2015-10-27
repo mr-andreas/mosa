@@ -56,28 +56,31 @@ var resolveClassTest = []struct {
   			$foo = 'bar'
  			$baz = $foo
 
-			package { $baz: }
+			exec { $baz: }
 		}`,
 
 		`class C {
   			$foo = 'bar'
 			$baz = 'bar'
 
-			package { 'bar': }
+			exec { 'bar': }
 		}`,
 	},
 
 	{
+		`
+		class C {
+  			$foo = 'bar'
+
+			package { 'baz': fooVal => $foo, }
+		}
+		define single package($name, $fooVal,){}
+		`,
+
 		`class C {
   			$foo = 'bar'
 
-			package { 'baz': name => $foo, }
-		}`,
-
-		`class C {
-  			$foo = 'bar'
-
-			package { 'baz': name => 'bar', }
+			package { 'baz': fooVal => 'bar', }
 		}`,
 	},
 
@@ -86,14 +89,16 @@ var resolveClassTest = []struct {
   			$foo = 'bar'
  			$baz = $foo
 
-			package { $baz: name => $baz, }
-		}`,
+			package { $baz: fooVal => $baz, }
+		}
+		define single package($name, $fooVal,){}
+		`,
 
 		`class C {
   			$foo = 'bar'
 			$baz = 'bar'
 
-			package { 'bar': name => 'bar', }
+			package { 'bar': fooVal => 'bar', }
 		}`,
 	},
 
@@ -127,7 +132,9 @@ var resolveClassTest = []struct {
 			bar { 'baz':
 				val => ref[$foo],
 			}
-		}`,
+		}
+		define single bar($name,$val,){}
+		`,
 		`class C {
 			$foo = 'foo'
 			bar { 'baz':
@@ -177,6 +184,8 @@ func TestResolveClass(t *testing.T) {
 		}
 
 		gs := newGlobalState()
+		gs.populateClassesByName(realFile.Classes)
+		gs.populateDefinesByName(realFile.Defines)
 		resolver := newClassResolver(
 			gs, &realFile.Classes[0], nil, "real.ms", realFile.Classes[0].LineNum,
 		)
@@ -186,7 +195,7 @@ func TestResolveClass(t *testing.T) {
 		} else {
 			c := expectedFile.Classes[0]
 			c.Filename = "real.ms"
-			if !reflect.DeepEqual(c, reducedClass) {
+			if !c.Equals(&reducedClass) {
 				t.Logf("%#v", c)
 				t.Logf("%#v", reducedClass)
 				t.Fatal(
