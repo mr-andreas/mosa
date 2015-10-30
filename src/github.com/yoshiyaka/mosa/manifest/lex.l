@@ -38,6 +38,12 @@ int level = 0;
   yylval.sval[strlen(yylval.sval)-1] = '\0';
   return QUOTED_STRING;
 }
+\"[^\"]*\" {
+  // Remove the quotes at scan time
+  yylval.sval = strdup(yytext+1);
+  yylval.sval[strlen(yylval.sval)-1] = '\0';
+  return DOUBLE_QUOTED_STRING;
+}
 \{				{ ++level; BEGIN(INBODY); return '{'; }
 \}				{ if(--level == 0) { BEGIN(INITIAL); } return '}'; }
 [\(\):;=,[\]]	{ return yytext[0]; }

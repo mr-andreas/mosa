@@ -151,6 +151,14 @@ type QuotedString string
 
 func (qs QuotedString) String() string { return fmt.Sprintf("'%s'", string(qs)) }
 
+// A double-quoted interpolated string which may contain variables. For instance
+// "php5-$module" or "/home/$user".
+type InterpolatedString string
+
+func (is InterpolatedString) String() string {
+	return fmt.Sprintf(`"%s"`, string(is))
+}
+
 type VariableName struct {
 	LineNum int
 	Str     string

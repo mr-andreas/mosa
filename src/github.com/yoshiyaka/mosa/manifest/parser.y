@@ -48,6 +48,7 @@ void yyerror(const char *s);
 %token NODE
 %token ARROW
 %token <sval> QUOTED_STRING
+%token <sval> DOUBLE_QUOTED_STRING
 
 %type <gohandle> def
 %type <gohandle> defs
@@ -153,13 +154,15 @@ value:
 	| reference		{ $$ = $1; }
 
 scalar:
-	  QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
-	| VARIABLENAME	{ $$ = SawVariableName(@1.first_line, $1);	}
-	| INT			{ $$ = SawInt(@1.first_line, $1);			}
+	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
+	| DOUBLE_QUOTED_STRING	{ $$ = SawDoubleQuotedString(@1.first_line, $1);	}
+	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
+	| INT					{ $$ = SawInt(@1.first_line, $1);					}
 
 string_or_var:
-	  QUOTED_STRING	{ $$ = SawQuotedString(@1.first_line, $1);	}
-	| VARIABLENAME	{ $$ = SawVariableName(@1.first_line, $1);	}
+	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
+	| DOUBLE_QUOTED_STRING	{ $$ = SawDoubleQuotedString(@1.first_line, $1);	}
+	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
 
 reference:
 	STRING '[' scalar ']' { $$ = SawReference(@1.first_line, $1, $3); }
