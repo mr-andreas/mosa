@@ -155,13 +155,13 @@ value:
 
 scalar:
 	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
-	| DOUBLE_QUOTED_STRING	{ $$ = SawDoubleQuotedString(@1.first_line, $1);	}
+	| DOUBLE_QUOTED_STRING	{ $$ = SawInterpolatedString(@1.first_line, $1);	}
 	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
 	| INT					{ $$ = SawInt(@1.first_line, $1);					}
 
 string_or_var:
 	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
-	| DOUBLE_QUOTED_STRING	{ $$ = SawDoubleQuotedString(@1.first_line, $1);	}
+	| DOUBLE_QUOTED_STRING	{ $$ = SawInterpolatedString(@1.first_line, $1);	}
 	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
 
 reference:

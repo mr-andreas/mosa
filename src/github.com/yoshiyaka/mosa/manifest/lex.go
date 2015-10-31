@@ -445,6 +445,11 @@ func SawQuotedString(lineNum C.int, val *C.char) goHandle {
 	return ht.Add(QuotedString(C.GoString(val)))
 }
 
+//export SawInterpolatedString
+func SawInterpolatedString(lineNum C.int, val *C.char) goHandle {
+	return ht.Add(InterpolatedString(C.GoString(val)))
+}
+
 //export SawInt
 func SawInt(lineNum C.int, val int) goHandle {
 	return ht.Add(val)

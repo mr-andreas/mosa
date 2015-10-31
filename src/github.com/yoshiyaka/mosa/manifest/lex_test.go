@@ -935,6 +935,54 @@ var lexTests = []struct {
 			},
 		},
 	},
+
+	{
+		`
+		// InterpolatedString
+		class Test {
+			$foo = "string"
+		}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 3,
+					Name:    "Test",
+					ArgDefs: []VariableDef{},
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      4,
+							VariableName: VariableName{4, "$foo"},
+							Val:          InterpolatedString("string"),
+						},
+					},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`class Test($foo = "/home/$bar",) {}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 1,
+					Name:    "Test",
+					ArgDefs: []VariableDef{
+						{
+							LineNum:      1,
+							VariableName: VariableName{1, "$foo"},
+							Val:          InterpolatedString("/home/$bar"),
+						},
+					},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
 }
 
 func TestLex(t *testing.T) {
