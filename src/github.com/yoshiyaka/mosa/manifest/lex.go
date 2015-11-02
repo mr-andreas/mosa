@@ -153,10 +153,33 @@ func (qs QuotedString) String() string { return fmt.Sprintf("'%s'", string(qs)) 
 
 // A double-quoted interpolated string which may contain variables. For instance
 // "php5-$module" or "/home/$user".
-type InterpolatedString string
+//
+// It consists of a number of segments which are parsed directly in bison, where
+// each segment is either a raw string, or a variable name. For instance, the
+// string "/home/$user/.config-{$app}" will be interpreted as
+// [ "/home/", $user, "/.config-", $app ].
+type InterpolatedString struct {
+	LineNum int
 
-func (is InterpolatedString) String() string {
-	return fmt.Sprintf(`"%s"`, string(is))
+	// Each segment will be either a string, or a VariableName.
+	Segments []interface{}
+}
+
+func (is *InterpolatedString) String() string {
+	str := `"`
+	for _, seg := range is.Segments {
+		switch seg.(type) {
+		case string:
+			str += seg.(string)
+		case VariableName:
+			str += seg.(VariableName).Str
+		default:
+			panic("Bad segment type")
+		}
+	}
+	str += `"`
+
+	return str
 }
 
 type VariableName struct {
@@ -445,9 +468,24 @@ func SawQuotedString(lineNum C.int, val *C.char) goHandle {
 	return ht.Add(QuotedString(C.GoString(val)))
 }
 
-//export SawInterpolatedString
-func SawInterpolatedString(lineNum C.int, val *C.char) goHandle {
-	return ht.Add(InterpolatedString(C.GoString(val)))
+//export EmptyInterpolatedString
+func EmptyInterpolatedString(lineNum C.int) goHandle {
+	return ht.Add(InterpolatedString{
+		LineNum: int(lineNum),
+	})
+}
+
+//export AppendInterpolatedString
+func AppendInterpolatedString(ipStrH goHandle, val goHandle) goHandle {
+	ipStr := ht.Get(ipStrH).(InterpolatedString)
+	ipStr.Segments = append(ipStr.Segments, ht.Get(val))
+	fmt.Println("appended segments", ipStr.Segments)
+	return ht.Add(ipStr)
+}
+
+//export SawString
+func SawString(val *C.char) goHandle {
+	return ht.Add(C.GoString(val))
 }
 
 //export SawInt

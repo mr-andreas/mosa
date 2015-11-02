@@ -48,7 +48,8 @@ void yyerror(const char *s);
 %token NODE
 %token ARROW
 %token <sval> QUOTED_STRING
-%token <sval> DOUBLE_QUOTED_STRING
+%token <sval> INTPOL_TEXT
+%token <sval> INTPOL_VARIABLE
 
 %type <gohandle> def
 %type <gohandle> defs
@@ -67,6 +68,8 @@ void yyerror(const char *s);
 %type <gohandle> proplist
 %type <gohandle> prop
 %type <gohandle> value
+%type <gohandle> interpolated_string
+%type <gohandle> interpolated_string_value
 %type <gohandle> arrayentries
 %type <gohandle> array
 %type <gohandle> scalar
@@ -155,13 +158,13 @@ value:
 
 scalar:
 	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
-	| DOUBLE_QUOTED_STRING	{ $$ = SawInterpolatedString(@1.first_line, $1);	}
+	| interpolated_string	{ $$ = $1;											}
 	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
 	| INT					{ $$ = SawInt(@1.first_line, $1);					}
 
 string_or_var:
 	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
-	| DOUBLE_QUOTED_STRING	{ $$ = SawInterpolatedString(@1.first_line, $1);	}
+	| interpolated_string	{ $$ = $1;											}
 	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
 
 reference:
@@ -175,6 +178,14 @@ arrayentries:
 	  arrayentries value ','	{ $$ = AppendArray($1, $2); }
 	| value ','					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY), $1); }
 
+interpolated_string:
+	  interpolated_string interpolated_string_value	{ $$ = AppendInterpolatedString($1, $2);		}
+	| interpolated_string_value						{ $$ = AppendInterpolatedString(EmptyInterpolatedString(@1.first_line), $1);	}
+
+interpolated_string_value:
+	  INTPOL_VARIABLE	{ $$ = SawVariableName(@1.first_line, $1); }
+	| INTPOL_TEXT 		{ $$ = SawString($1); }
+	
 %%
 
 char *last_error = NULL;

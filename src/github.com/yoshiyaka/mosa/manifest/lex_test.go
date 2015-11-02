@@ -953,7 +953,10 @@ var lexTests = []struct {
 						{
 							LineNum:      4,
 							VariableName: VariableName{4, "$foo"},
-							Val:          InterpolatedString("string"),
+							Val: InterpolatedString{
+								LineNum:  4,
+								Segments: []interface{}{"string"},
+							},
 						},
 					},
 					Declarations: []Declaration{},
@@ -974,7 +977,59 @@ var lexTests = []struct {
 						{
 							LineNum:      1,
 							VariableName: VariableName{1, "$foo"},
-							Val:          InterpolatedString("/home/$bar"),
+							Val: InterpolatedString{
+								LineNum: 1,
+								Segments: []interface{}{
+									"/home/",
+									VariableName{
+										LineNum: 1,
+										Str:     "$bar",
+									},
+								},
+							},
+						},
+					},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		// Different interpolated strings
+		class T {
+			$a = ""
+			$b = "$foo$bar"
+			$c = "$multi
+			$line"
+			$d = "{$foo}bar"
+			$e = "bar{$foo}"
+			$f = "bar{baz}"
+			$g = "bar{ba$z}"
+			$h = "bar{{$foo}}"
+		}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 1,
+					Name:    "Test",
+					ArgDefs: []VariableDef{
+						{
+							LineNum:      1,
+							VariableName: VariableName{1, "$foo"},
+							Val: InterpolatedString{
+								LineNum: 1,
+								Segments: []interface{}{
+									"/home/",
+									VariableName{
+										LineNum: 1,
+										Str:     "$bar",
+									},
+								},
+							},
 						},
 					},
 					VariableDefs: []VariableDef{},

@@ -12,8 +12,21 @@ int level = 0;
 
 %option yylineno
 %s INBODY
+%s INSTRING
 
 %%
+
+<INSTRING>\"						{ BEGIN(INITIAL); }
+<INSTRING>\$[a-zA-Z][a-zA-Z0-9_]*	{
+  printf("ITI DID HAPPEN\n");
+  yylval.sval = strdup(yytext);
+  return INTPOL_VARIABLE;
+}
+<INSTRING>[^\$\"]*						{
+  yylval.sval = strdup(yytext);
+  return INTPOL_TEXT;
+}
+\"				{ BEGIN(INSTRING); }
 
 [ \t]  ;
 \/\/.* ;
@@ -37,12 +50,6 @@ int level = 0;
   yylval.sval = strdup(yytext+1);
   yylval.sval[strlen(yylval.sval)-1] = '\0';
   return QUOTED_STRING;
-}
-\"[^\"]*\" {
-  // Remove the quotes at scan time
-  yylval.sval = strdup(yytext+1);
-  yylval.sval[strlen(yylval.sval)-1] = '\0';
-  return DOUBLE_QUOTED_STRING;
 }
 \{				{ ++level; BEGIN(INBODY); return '{'; }
 \}				{ if(--level == 0) { BEGIN(INITIAL); } return '}'; }
