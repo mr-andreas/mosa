@@ -32,13 +32,13 @@ class WebServer {
 }
 
 define single package($name,) {
-	exec { $name: }
+	exec { "apt-get -f install $name": }
 }
 
 define single user($name, $password,) {
-	exec { $name: }
+	exec { "useradd -p '$password' $name": }
 }
 
 define single file($name, $ensure,) {
-	exec { $name: }
+	exec { "touch $name": }
 }
