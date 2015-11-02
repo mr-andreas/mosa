@@ -110,14 +110,10 @@ func (cr *declarationResolver) resolve() (Define, error) {
 func (cr *declarationResolver) resolveDeclaration(decl *Declaration) (Declaration, error) {
 	ret := *decl
 
-	if variable, ok := decl.Scalar.(VariableName); ok {
-		// The current value points to a variable, for instance foo => $bar.
-		// Resolve it.
-		if v, err := cr.ls.resolveVariable(variable, decl.LineNum); err != nil {
-			return ret, err
-		} else {
-			ret.Scalar = v
-		}
+	if v, err := cr.ls.resolveValue(decl.Scalar, decl.LineNum); err != nil {
+		return ret, err
+	} else {
+		ret.Scalar = v
 	}
 
 	var err error

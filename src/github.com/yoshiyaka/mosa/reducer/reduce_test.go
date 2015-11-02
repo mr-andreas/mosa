@@ -68,6 +68,42 @@ var resolveClassTest = []struct {
 	},
 
 	{
+		`class C {
+  			$foo = 'foostr'
+			$bar = 'barstr'
+ 			$baz = "$foo x $bar"
+
+			exec { $baz: }
+		}`,
+
+		`class C {
+  			$foo = 'foostr'
+			$bar = 'barstr'
+			$baz = 'foostr x barstr'
+
+			exec { 'foostr x barstr': }
+		}`,
+	},
+
+	{
+		`class C {
+  			$foo = 'foostr'
+			$bar = "$foo barstr"
+ 			$baz = "$foo x $bar"
+
+			exec { $baz: }
+		}`,
+
+		`class C {
+  			$foo = 'foostr'
+			$bar = 'foostr barstr'
+			$baz = 'foostr x foostr barstr'
+
+			exec { 'foostr x foostr barstr': }
+		}`,
+	},
+
+	{
 		`
 		class C {
   			$foo = 'bar'
@@ -218,12 +254,12 @@ var resolveFileTest = []struct {
 	inputManifest,
 	expectedManifest string
 }{
-	//	{
-	//		`
-	//		node 'x' {}
-	//		class A{}`,
-	//		``,
-	//	},
+	{
+		`
+		node 'x' {}
+		class A{}`,
+		``,
+	},
 
 	{
 		`
@@ -242,256 +278,273 @@ var resolveFileTest = []struct {
 		`file { 'A': }`,
 	},
 
-	//	{
-	//		`
-	//		node 'x' {
-	//			class { 'A': }
-	//		}
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
 
-	//		class A {
-	//			$foo = 'fooVal'
-	//			file { 'filename':
-	//				value => $foo,
-	//			}
-	//		}
+		class A {
+			$foo = 'fooVal'
+			file { 'filename':
+				value => $foo,
+			}
+		}
 
-	//		define single file($name, $value,) {}
-	//		`,
-	//		`file { 'filename':
-	//			value => 'fooVal',
-	//		}`,
-	//	},
+		define single file($name, $value,) {}
+		`,
+		`file { 'filename':
+			value => 'fooVal',
+		}`,
+	},
 
-	//	{
-	//		`
-	//		node 'x' {
-	//			class { 'A': }
-	//		}
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
 
-	//		class A {
-	//			$fooArray = [ $bar, ]
-	//			$bar = 'barVal'
-	//			file { 'filename':
-	//				value => $fooArray,
-	//			}
-	//		}
+		class A {
+			$fooArray = [ $bar, ]
+			$bar = 'barVal'
+			file { 'filename':
+				value => $fooArray,
+			}
+		}
 
-	//		define single file($name, $value,) {}
-	//		`,
-	//		`file { 'filename':
-	//			value => [ 'barVal', ],
-	//		}`,
-	//	},
+		define single file($name, $value,) {}
+		`,
+		`file { 'filename':
+			value => [ 'barVal', ],
+		}`,
+	},
 
-	//	{
-	//		`
-	//		node 'x' {
-	//			class { 'A': }
-	//		}
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
 
-	//		class A {
-	//			$fileVar = 'f1'
-	//			file { $fileVar: }
-	//			file { 'f2':
-	//				depends => file[$fileVar],
-	//			}
-	//		}
+		class A {
+			$fileVar = 'f1'
+			file { $fileVar: }
+			file { 'f2':
+				depends => file[$fileVar],
+			}
+		}
 
-	//		define single file($name,) {}
-	//		`,
-	//		`
-	//		file { 'f1': }
-	//		file { 'f2': depends => file['f1'], }
-	//		`,
-	//	},
+		define single file($name,) {}
+		`,
+		`
+		file { 'f1': }
+		file { 'f2': depends => file['f1'], }
+		`,
+	},
 
-	//	{
-	//		`
-	//		node 'x' {
-	//			class { 'A': }
-	//		}
+	{
+		`
+		node 'x' {
+			class { 'A': }
+		}
 
-	//		class A {
-	//			$fileVar = 'f1'
-	//			file { $fileVar: }
-	//			file { 'f2':
-	//				depends => [ file[$fileVar], ],
-	//			}
-	//		}
+		class A {
+			$fileVar = 'f1'
+			file { $fileVar: }
+			file { 'f2':
+				depends => [ file[$fileVar], ],
+			}
+		}
 
-	//		define single file($name, ) {}
-	//		`,
-	//		`
-	//		file { 'f1': }
-	//		file { 'f2': depends => [ file['f1'], ], }
-	//		`,
-	//	},
+		define single file($name, ) {}
+		`,
+		`
+		file { 'f1': }
+		file { 'f2': depends => [ file['f1'], ], }
+		`,
+	},
 
-	//	{
-	//		`
-	//		node 'x' {
-	//			class { 'A': }
-	//			class { 'B': }
-	//		}
+	{
+		`
+		node 'x' {
+			class { 'A': }
+			class { 'B': }
+		}
 
-	//		class A {
-	//			$foo = 'A'
-	//			$bar = $foo
-	//			file { $bar: }
-	//		}
-	//		class B {
-	//			$foo = 'B'
-	//			$bar = $foo
-	//			file { $bar: }
-	//		}
+		class A {
+			$foo = 'A'
+			$bar = $foo
+			file { $bar: }
+		}
+		class B {
+			$foo = 'B'
+			$bar = $foo
+			file { $bar: }
+		}
 
-	//		define single file($name, ) {}
-	//		`,
-	//		`
-	//		file { 'A': }
-	//		file { 'B': }
-	//		`,
-	//	},
+		define single file($name, ) {}
+		`,
+		`
+		file { 'A': }
+		file { 'B': }
+		`,
+	},
 
-	//	{
-	//		`
-	//		node 'localhost' {
-	//			class { 'Webserver':
-	//				docroot => '/home/www',
-	//			}
-	//		}
+	{
+		`
+		node 'localhost' {
+			class { 'Webserver':
+				docroot => '/home/www',
+			}
+		}
 
-	//		class Webserver(
-	//			$docroot = '/var/www',
-	//			$workers = 8,
-	//		){
-	//			$server = 'nginx'
+		class Webserver(
+			$docroot = '/var/www',
+			$workers = 8,
+		){
+			$server = 'nginx'
 
-	//			package { $server: ensure => 'installed', }
+			package { $server: ensure => 'installed', }
 
-	//			file { '/etc/nginx/conf.d/workers.conf':
-	//				ensure => 'present',
-	//				content => $workers,
-	//				depends => package[$server],
-	//			}
+			file { '/etc/nginx/conf.d/workers.conf':
+				ensure => 'present',
+				content => $workers,
+				depends => package[$server],
+			}
 
-	//			file { $docroot: ensure => 'directory', }
+			file { $docroot: ensure => 'directory', }
 
-	//			service { $server:
-	//				ensure => 'running',
-	//				depends => [
-	//					file['/etc/nginx/conf.d/workers.conf'],
-	//					package[$server],
-	//				],
-	//			}
-	//		}
+			service { $server:
+				ensure => 'running',
+				depends => [
+					file['/etc/nginx/conf.d/workers.conf'],
+					package[$server],
+				],
+			}
+		}
 
-	//		define single file($name, $ensure, $content = '',) {}
-	//		define single package($name, $ensure,) {}
-	//		define single service($name, $ensure,) {}
-	//		`,
-	//		`
-	//		package { 'nginx': ensure => 'installed', }
+		define single file($name, $ensure, $content = '',) {}
+		define single package($name, $ensure,) {}
+		define single service($name, $ensure,) {}
+		`,
+		`
+		package { 'nginx': ensure => 'installed', }
 
-	//		file { '/etc/nginx/conf.d/workers.conf':
-	//			ensure => 'present',
-	//			content => 8,
-	//			depends => package['nginx'],
-	//		}
+		file { '/etc/nginx/conf.d/workers.conf':
+			ensure => 'present',
+			content => 8,
+			depends => package['nginx'],
+		}
 
-	//		file { '/home/www': ensure => 'directory', }
+		file { '/home/www': ensure => 'directory', }
 
-	//		service { 'nginx':
-	//			ensure => 'running',
-	//			depends => [
-	//				file['/etc/nginx/conf.d/workers.conf'],
-	//				package['nginx'],
-	//			],
-	//		}`,
-	//	},
+		service { 'nginx':
+			ensure => 'running',
+			depends => [
+				file['/etc/nginx/conf.d/workers.conf'],
+				package['nginx'],
+			],
+		}`,
+	},
 
-	//	{
-	//		`
-	//		// Defining the same package multiple times is okay, as long as only one
-	//		// of the declarations is realized.
-	//		node 'n' {
-	//			class { 'A': }
-	//		}
-	//		class A {
-	//			package { 'foo': from => 'A', }
-	//		}
-	//		class B {
-	//			package { 'foo': from => 'B', }
-	//		}
+	{
+		`
+		// Defining the same package multiple times is okay, as long as only one
+		// of the declarations is realized.
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			package { 'foo': from => 'A', }
+		}
+		class B {
+			package { 'foo': from => 'B', }
+		}
 
-	//		define single package($name, $from,) {}
-	//		`,
+		define single package($name, $from,) {}
+		`,
 
-	//		`package { 'foo': from => 'A', }`,
-	//	},
+		`package { 'foo': from => 'A', }`,
+	},
 
-	//	{
-	//		`
-	//		// Nested cyclic realization
-	//		node 'n' {
-	//			class { 'A':
-	//				subclass => 'B',
-	//				b_var => 'foo',
-	//			}
-	//		}
-	//		class A($subclass, $b_var,) {
-	//			decl { 'a_decl': }
-	//			class { $subclass:
-	//				var => $b_var,
-	//			}
-	//		}
-	//		class B($var,) {
-	//			decl { 'b_decl':
-	//				var => $var,
-	//			}
-	//		}
+	{
+		`
+		// Nested cyclic realization
+		node 'n' {
+			class { 'A':
+				subclass => 'B',
+				b_var => 'foo',
+			}
+		}
+		class A($subclass, $b_var,) {
+			decl { 'a_decl': }
+			class { $subclass:
+				var => $b_var,
+			}
+		}
+		class B($var,) {
+			decl { 'b_decl':
+				var => $var,
+			}
+		}
 
-	//		define single decl($name, $var = '',) {}
-	//		`,
+		define single decl($name, $var = '',) {}
+		`,
 
-	//		`
-	//		decl { 'a_decl': }
-	//		decl { 'b_decl':
-	//			var => 'foo',
-	//		}
-	//		`,
-	//	},
+		`
+		decl { 'a_decl': }
+		decl { 'b_decl':
+			var => 'foo',
+		}
+		`,
+	},
 
-	//	{
-	//		`
-	//		// Realize empty define
-	//		node 'x' { class { 'A': } }
-	//		class A {
-	//			mytype { 'foo': }
-	//		}
-	//		define single mytype($name,){}
-	//		`,
-	//		`
-	//		mytype { 'foo': }
-	//		`,
-	//	},
+	{
+		`
+		// Realize empty define
+		node 'x' { class { 'A': } }
+		class A {
+			mytype { 'foo': }
+		}
+		define single mytype($name,){}
+		`,
+		`
+		mytype { 'foo': }
+		`,
+	},
 
-	//	{
-	//		`
-	//		// Realize simple define
-	//		node 'x' { class { 'A': } }
-	//		class A {
-	//			mytype { 'foo': }
-	//		}
-	//		define single mytype($name,){
-	//			exec { 'echo foo': }
-	//		}
-	//		`,
-	//		`
-	//		mytype { 'foo': }
-	//		exec { 'echo foo': }
-	//		`,
-	//	},
+	{
+		`
+		// Realize simple define
+		node 'x' { class { 'A': } }
+		class A {
+			mytype { 'foo': }
+		}
+		define single mytype($name,){
+			exec { 'echo foo': }
+		}
+		`,
+		`
+		exec { 'echo foo': }
+		mytype { 'foo': }
+		`,
+	},
+
+	{
+		`
+		// Realize simple define with interpolated string
+		node 'x' { class { 'A': } }
+		class A {
+			mytype { "foostr": }
+		}
+		define single mytype($name,){
+			exec { "echo $name": }
+		}
+		`,
+		`
+		exec { 'echo foostr': }
+		mytype { 'foostr': }
+		`,
+	},
 }
 
 func TestResolveFile(t *testing.T) {
@@ -544,6 +597,23 @@ var badVariableTest = []struct {
 	inputManifest string
 	expectedError error
 }{
+
+	{
+		"Cyclic interpolated string",
+		`class C {
+			$foo = "$foo"
+		}`,
+		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
+	},
+
+	{
+		"Cyclic array",
+		`class C {
+			$a = [ $a, ]
+		}`,
+		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
+	},
+
 	{
 		"Non-existing variable",
 		`class C { $foo = $bar }`,
@@ -606,6 +676,16 @@ var badVariableTest = []struct {
 	},
 
 	{
+		"Nested cyclic variables in string $foo -> $bar -> $baz -> $foo",
+		`class C {
+			$foo = $bar
+			$bar = "$baz"
+			$baz = $foo
+		}`,
+		&Err{Line: 3, Type: ErrorTypeCyclicVariable},
+	},
+
+	{
 		"Nested cyclic variables with arrays",
 		`class C {
 			$foo = $bar
@@ -660,16 +740,16 @@ func TestResolveBadVariable(t *testing.T) {
 		resolver := newClassResolver(
 			gs, &ast.Classes[0], nil, "err.ms", ast.Classes[0].LineNum,
 		)
-		_, resolveErr := resolver.resolve()
+		resolved, resolveErr := resolver.resolve()
 		if resolveErr == nil {
 			t.Log(test.inputManifest)
-			t.Error("Got no error for", test.comment)
+			t.Log(&resolved)
+			t.Fatal("Got no error for", test.comment)
 		} else {
 			var e, expE *Err
 			if ce, ok := resolveErr.(*CyclicError); ok {
 				e = &ce.Err
 			} else {
-				t.Log(test.inputManifest)
 				e = resolveErr.(*Err)
 			}
 

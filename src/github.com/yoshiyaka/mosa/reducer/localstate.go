@@ -64,6 +64,24 @@ func (ls *localState) resolveVariableRecursive(lookingFor VariableName, lineNum 
 		}
 	}
 
+	chain = append(chain, &foundVar)
+	if _, seen := seenNames[lookingFor]; seen {
+		cycle := make([]string, len(chain)+1)
+		for i, def := range chain {
+			cycle[i] = string(def.VariableName.Str)
+		}
+		cycle[len(cycle)-1] = string(lookingFor.Str)
+		return nil, &CyclicError{
+			Err: Err{
+				Line:       chain[0].LineNum,
+				Type:       ErrorTypeCyclicVariable,
+				SymbolName: string(chain[0].VariableName.Str),
+			},
+			Cycle: cycle,
+		}
+	}
+	seenNames[lookingFor] = true
+
 	if _, isVar := foundVar.Val.(VariableName); !isVar {
 		// This is an actual value
 		if array, isArray := foundVar.Val.(Array); isArray {
@@ -82,6 +100,23 @@ func (ls *localState) resolveVariableRecursive(lookingFor VariableName, lineNum 
 				delete(ls.varDefsByName, lookingFor.Str)
 			}
 			return resolvedArray, err
+		} else if is, isIs := foundVar.Val.(InterpolatedString); isIs {
+			// The value pointed to is an interpolated string. Resolve all
+			// values in the string aswell.
+			seenNamesCopy := map[VariableName]bool{}
+			for key, val := range seenNames {
+				seenNamesCopy[key] = val
+			}
+
+			quotedString, err := ls.resolveInterpolatedStringRecursive(
+				is, chain, seenNamesCopy,
+			)
+			if err == nil {
+				ls.resolvedVars[lookingFor.Str] = quotedString
+				delete(ls.varDefsByName, lookingFor.Str)
+			}
+
+			return quotedString, err
 		} else {
 			ls.resolvedVars[lookingFor.Str] = foundVar.Val
 			delete(ls.varDefsByName, lookingFor.Str)
@@ -89,25 +124,6 @@ func (ls *localState) resolveVariableRecursive(lookingFor VariableName, lineNum 
 			return foundVar.Val, nil
 		}
 	}
-
-	if _, seen := seenNames[lookingFor]; seen {
-		cycle := make([]string, len(chain)+1)
-		for i, def := range chain {
-			cycle[i] = string(def.VariableName.Str)
-		}
-		cycle[len(cycle)-1] = string(lookingFor.Str)
-
-		return nil, &CyclicError{
-			Err: Err{
-				Line:       chain[0].LineNum,
-				Type:       ErrorTypeCyclicVariable,
-				SymbolName: string(chain[0].VariableName.Str),
-			},
-			Cycle: cycle,
-		}
-	}
-
-	seenNames[lookingFor] = true
 
 	return ls.resolveVariableRecursive(
 		foundVar.Val.(VariableName), foundVar.LineNum, append(chain, &foundVar),
@@ -145,6 +161,40 @@ func (ls *localState) resolveArrayRecursive(a Array, lineNum int, chain []*Varia
 	return newArray, nil
 }
 
+func (ls *localState) resolveInterpolatedStringRecursive(is InterpolatedString, chain []*VariableDef, seenNames map[VariableName]bool) (QuotedString, error) {
+	ret := ""
+
+	for _, part := range is.Segments {
+		if v, isVar := part.(VariableName); isVar {
+			// This segment is a variable name, resolve it.
+			seenNamesCopy := map[VariableName]bool{}
+			for key, val := range seenNames {
+				seenNamesCopy[key] = val
+			}
+
+			if val, err := ls.resolveVariableRecursive(
+				v, is.LineNum, chain, seenNamesCopy,
+			); err != nil {
+				return "", err
+			} else {
+				switch val.(type) {
+				case string:
+					ret += val.(string)
+				case QuotedString:
+					ret += string(val.(QuotedString))
+				default:
+					fmt.Println(val)
+					panic("value can't be interpolated")
+				}
+			}
+		} else {
+			ret += part.(string)
+		}
+	}
+
+	return QuotedString(ret), nil
+}
+
 func (ls *localState) resolveValue(v Value, lineNum int) (Value, error) {
 	switch v.(type) {
 	case VariableName:
@@ -153,6 +203,8 @@ func (ls *localState) resolveValue(v Value, lineNum int) (Value, error) {
 		return ls.resolveArray(v.(Array), lineNum)
 	case Reference:
 		return ls.resolveReference(v.(Reference))
+	case InterpolatedString:
+		return ls.resolveInterpolatedString(v.(InterpolatedString))
 	default:
 		return v, nil
 	}
@@ -210,6 +262,12 @@ func (ls *localState) setVarsFromArgs(passedArgs []Prop, availableParams []Varia
 func (ls *localState) resolveArray(a Array, lineNum int) (Array, error) {
 	return ls.resolveArrayRecursive(
 		a, lineNum, nil, map[VariableName]bool{},
+	)
+}
+
+func (ls *localState) resolveInterpolatedString(is InterpolatedString) (QuotedString, error) {
+	return ls.resolveInterpolatedStringRecursive(
+		is, nil, map[VariableName]bool{},
 	)
 }
 
