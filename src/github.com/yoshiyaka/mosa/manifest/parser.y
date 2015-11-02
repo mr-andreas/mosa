@@ -48,6 +48,7 @@ void yyerror(const char *s);
 %token NODE
 %token ARROW
 %token <sval> QUOTED_STRING
+%token INTPOL_START
 %token <sval> INTPOL_TEXT
 %token <sval> INTPOL_VARIABLE
 
@@ -69,6 +70,7 @@ void yyerror(const char *s);
 %type <gohandle> prop
 %type <gohandle> value
 %type <gohandle> interpolated_string
+%type <gohandle> interpolated_string_list
 %type <gohandle> interpolated_string_value
 %type <gohandle> arrayentries
 %type <gohandle> array
@@ -179,8 +181,12 @@ arrayentries:
 	| value ','					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY), $1); }
 
 interpolated_string:
-	  interpolated_string interpolated_string_value	{ $$ = AppendInterpolatedString($1, $2);		}
-	| interpolated_string_value						{ $$ = AppendInterpolatedString(EmptyInterpolatedString(@1.first_line), $1);	}
+	  INTPOL_START interpolated_string_list	{ $$ = $2; }
+	| INTPOL_START							{ $$ = EmptyInterpolatedString(@1.first_line); }
+	  
+interpolated_string_list:
+	  interpolated_string_list interpolated_string_value	{ $$ = AppendInterpolatedString($1, $2);		}
+	| interpolated_string_value								{ $$ = AppendInterpolatedString(EmptyInterpolatedString(@1.first_line), $1);	}
 
 interpolated_string_value:
 	  INTPOL_VARIABLE	{ $$ = SawVariableName(@1.first_line, $1); }

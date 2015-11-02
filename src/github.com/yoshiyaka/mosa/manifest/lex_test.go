@@ -997,18 +997,8 @@ var lexTests = []struct {
 	},
 
 	{
-		`
-		// Different interpolated strings
-		class T {
-			$a = ""
-			$b = "$foo$bar"
-			$c = "$multi
-			$line"
-			$d = "{$foo}bar"
-			$e = "bar{$foo}"
-			$f = "bar{baz}"
-			$g = "bar{ba$z}"
-			$h = "bar{{$foo}}"
+		`class Test {
+			$a = "${b}"
 		}`,
 
 		&File{
@@ -1016,23 +1006,155 @@ var lexTests = []struct {
 				{
 					LineNum: 1,
 					Name:    "Test",
-					ArgDefs: []VariableDef{
+					ArgDefs: []VariableDef{},
+					VariableDefs: []VariableDef{
 						{
-							LineNum:      1,
-							VariableName: VariableName{1, "$foo"},
+							LineNum:      2,
+							VariableName: VariableName{2, "$a"},
 							Val: InterpolatedString{
-								LineNum: 1,
+								LineNum: 2,
 								Segments: []interface{}{
-									"/home/",
-									VariableName{
-										LineNum: 1,
-										Str:     "$bar",
-									},
+									VariableName{LineNum: 2, Str: "$b"},
 								},
 							},
 						},
 					},
-					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		// Different interpolated strings
+		class T {
+			$a = ""
+			$b = "$foo$bar"
+			$c = "$multi
+			$line"
+			$d = "${foo}bar"
+			$e = "bar${foo}"
+			$f = "bar{baz}"
+			$g = "bar{ba$z}"
+			$h = "bar{${foo}}"
+			$i = "bar${{foo}}"
+			$j = "bar{{$foo}}"
+		}`,
+
+		&File{
+			Classes: []Class{
+				{
+					LineNum: 3,
+					Name:    "T",
+					ArgDefs: []VariableDef{},
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      4,
+							VariableName: VariableName{4, "$a"},
+							Val: InterpolatedString{
+								LineNum:  4,
+								Segments: nil,
+							},
+						},
+						{
+							LineNum:      5,
+							VariableName: VariableName{5, "$b"},
+							Val: InterpolatedString{
+								LineNum: 5,
+								Segments: []interface{}{
+									VariableName{LineNum: 5, Str: "$foo"},
+									VariableName{LineNum: 5, Str: "$bar"},
+								},
+							},
+						},
+						{
+							LineNum:      6,
+							VariableName: VariableName{6, "$c"},
+							Val: InterpolatedString{
+								LineNum: 6,
+								Segments: []interface{}{
+									VariableName{LineNum: 6, Str: "$multi"},
+									string("\n\t\t\t"),
+									VariableName{LineNum: 7, Str: "$line"},
+								},
+							},
+						},
+						{
+							LineNum:      8,
+							VariableName: VariableName{8, "$d"},
+							Val: InterpolatedString{
+								LineNum: 8,
+								Segments: []interface{}{
+									VariableName{LineNum: 8, Str: "$foo"},
+									"bar",
+								},
+							},
+						},
+						{
+							LineNum:      9,
+							VariableName: VariableName{9, "$e"},
+							Val: InterpolatedString{
+								LineNum: 9,
+								Segments: []interface{}{
+									"bar",
+									VariableName{LineNum: 9, Str: "$foo"},
+								},
+							},
+						},
+						{
+							LineNum:      10,
+							VariableName: VariableName{10, "$f"},
+							Val: InterpolatedString{
+								LineNum:  10,
+								Segments: []interface{}{"bar{baz}"},
+							},
+						},
+						{
+							LineNum:      11,
+							VariableName: VariableName{11, "$g"},
+							Val: InterpolatedString{
+								LineNum: 11,
+								Segments: []interface{}{
+									"bar{ba",
+									VariableName{LineNum: 11, Str: "$z"},
+									"}",
+								},
+							},
+						},
+						{
+							LineNum:      12,
+							VariableName: VariableName{12, "$h"},
+							Val: InterpolatedString{
+								LineNum: 12,
+								Segments: []interface{}{
+									"bar{",
+									VariableName{LineNum: 12, Str: "$foo"},
+									"}",
+								},
+							},
+						},
+						{
+							LineNum:      13,
+							VariableName: VariableName{13, "$i"},
+							Val: InterpolatedString{
+								LineNum:  13,
+								Segments: []interface{}{"bar", "$", "{{foo}}"},
+							},
+						},
+						{
+							LineNum:      14,
+							VariableName: VariableName{14, "$j"},
+							Val: InterpolatedString{
+								LineNum: 14,
+								Segments: []interface{}{
+									"bar{{",
+									VariableName{LineNum: 14, Str: "$foo"},
+									"}}",
+								},
+							},
+						},
+					},
 					Declarations: []Declaration{},
 				},
 			},

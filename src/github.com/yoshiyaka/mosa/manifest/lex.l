@@ -16,17 +16,27 @@ int level = 0;
 
 %%
 
-<INSTRING>\"						{ BEGIN(INITIAL); }
-<INSTRING>\$[a-zA-Z][a-zA-Z0-9_]*	{
-  printf("ITI DID HAPPEN\n");
+<INSTRING>\"							{ if(level > 0) BEGIN(INBODY); else BEGIN(INITIAL); }
+<INSTRING>\$[a-zA-Z][a-zA-Z0-9_]*		{
   yylval.sval = strdup(yytext);
+  return INTPOL_VARIABLE;
+}
+<INSTRING>\$\{[a-zA-Z][a-zA-Z0-9_]*\}	{
+  // Normalize ${foo} to $foo directly at lex time.
+  yylval.sval = strdup(yytext+1);
+  yylval.sval[0] = '$';
+  yylval.sval[strlen(yylval.sval)-1] = '\0';
   return INTPOL_VARIABLE;
 }
 <INSTRING>[^\$\"]*						{
   yylval.sval = strdup(yytext);
   return INTPOL_TEXT;
 }
-\"				{ BEGIN(INSTRING); }
+<INSTRING>\$							{
+  yylval.sval = strdup(yytext);
+  return INTPOL_TEXT;
+}
+\"				{ BEGIN(INSTRING); return INTPOL_START; }
 
 [ \t]  ;
 \/\/.* ;

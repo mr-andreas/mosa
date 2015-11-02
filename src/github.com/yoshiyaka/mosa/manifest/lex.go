@@ -479,7 +479,6 @@ func EmptyInterpolatedString(lineNum C.int) goHandle {
 func AppendInterpolatedString(ipStrH goHandle, val goHandle) goHandle {
 	ipStr := ht.Get(ipStrH).(InterpolatedString)
 	ipStr.Segments = append(ipStr.Segments, ht.Get(val))
-	fmt.Println("appended segments", ipStr.Segments)
 	return ht.Add(ipStr)
 }
 
