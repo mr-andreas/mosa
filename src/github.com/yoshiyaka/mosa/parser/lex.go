@@ -24,8 +24,8 @@ var (
 	currentAST *AST
 )
 
-//export NilArray
-func NilArray(typ C.ASTTYPE) goHandle {
+//export nilArray
+func nilArray(typ C.ASTTYPE) goHandle {
 	switch typ {
 	case C.ASTTYPE_DEFS:
 		return ht.Add([]interface{}{})
@@ -45,8 +45,8 @@ func NilArray(typ C.ASTTYPE) goHandle {
 	panic("Bad type")
 }
 
-//export AppendArray
-func AppendArray(arrayHandle, newValue goHandle) goHandle {
+//export appendArray
+func appendArray(arrayHandle, newValue goHandle) goHandle {
 	array := ht.Get(arrayHandle)
 	switch array.(type) {
 	case []VariableDef:
@@ -65,8 +65,8 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 	panic("Bad type")
 }
 
-//export SawBody
-func SawBody(classesAndDefines goHandle) {
+//export sawBody
+func sawBody(classesAndDefines goHandle) {
 	for _, classOrDefine := range ht.Get(classesAndDefines).([]interface{}) {
 		switch classOrDefine.(type) {
 		case Class:
@@ -81,8 +81,8 @@ func SawBody(classesAndDefines goHandle) {
 	}
 }
 
-//export NewClass
-func NewClass(lineNum C.int, identifier *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
+//export newClass
+func newClass(lineNum C.int, identifier *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
 	argDefs := ht.Get(argDefsH).([]VariableDef)
 	defsAndDecls := ht.Get(defsAndDeclsH).([]interface{})
 
@@ -110,8 +110,8 @@ func NewClass(lineNum C.int, identifier *C.char, argDefsH, defsAndDeclsH goHandl
 	})
 }
 
-//export SawNode
-func SawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle {
+//export sawNode
+func sawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle {
 	defsAndDecls := ht.Get(defsAndDeclsHandle).([]interface{})
 
 	defs := []VariableDef{}
@@ -137,8 +137,8 @@ func SawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle 
 	})
 }
 
-//export SawVariableDef
-func SawVariableDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
+//export sawVariableDef
+func sawVariableDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 	return ht.Add(VariableDef{
 		int(lineNum),
 		VariableName{int(lineNum), C.GoString(varName)},
@@ -146,42 +146,42 @@ func SawVariableDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 	})
 }
 
-//export SawQuotedString
-func SawQuotedString(lineNum C.int, val *C.char) goHandle {
+//export sawQuotedString
+func sawQuotedString(lineNum C.int, val *C.char) goHandle {
 	return ht.Add(QuotedString(C.GoString(val)))
 }
 
-//export EmptyInterpolatedString
-func EmptyInterpolatedString(lineNum C.int) goHandle {
+//export emptyInterpolatedString
+func emptyInterpolatedString(lineNum C.int) goHandle {
 	return ht.Add(InterpolatedString{
 		LineNum: int(lineNum),
 	})
 }
 
-//export AppendInterpolatedString
-func AppendInterpolatedString(ipStrH goHandle, val goHandle) goHandle {
+//export appendInterpolatedString
+func appendInterpolatedString(ipStrH goHandle, val goHandle) goHandle {
 	ipStr := ht.Get(ipStrH).(InterpolatedString)
 	ipStr.Segments = append(ipStr.Segments, ht.Get(val))
 	return ht.Add(ipStr)
 }
 
-//export SawString
-func SawString(val *C.char) goHandle {
+//export sawString
+func sawString(val *C.char) goHandle {
 	return ht.Add(C.GoString(val))
 }
 
-//export SawInt
-func SawInt(lineNum C.int, val int) goHandle {
+//export sawInt
+func sawInt(lineNum C.int, val int) goHandle {
 	return ht.Add(val)
 }
 
-//export SawVariableName
-func SawVariableName(lineNum C.int, name *C.char) goHandle {
+//export sawVariableName
+func sawVariableName(lineNum C.int, name *C.char) goHandle {
 	return ht.Add(VariableName{int(lineNum), C.GoString(name)})
 }
 
-//export SawDeclaration
-func SawDeclaration(lineNum C.int, typ *C.char, scalar, proplist goHandle) goHandle {
+//export sawDeclaration
+func sawDeclaration(lineNum C.int, typ *C.char, scalar, proplist goHandle) goHandle {
 	return ht.Add(Declaration{
 		Filename: curFilename,
 		LineNum:  int(lineNum),
@@ -191,8 +191,8 @@ func SawDeclaration(lineNum C.int, typ *C.char, scalar, proplist goHandle) goHan
 	})
 }
 
-//export SawProp
-func SawProp(lineNum C.int, propName *C.char, value goHandle) goHandle {
+//export sawProp
+func sawProp(lineNum C.int, propName *C.char, value goHandle) goHandle {
 	return ht.Add(Prop{
 		LineNum: int(lineNum),
 		Name:    C.GoString(propName),
@@ -200,8 +200,8 @@ func SawProp(lineNum C.int, propName *C.char, value goHandle) goHandle {
 	})
 }
 
-//export SawReference
-func SawReference(lineNum C.int, typ *C.char, scalar goHandle) goHandle {
+//export sawReference
+func sawReference(lineNum C.int, typ *C.char, scalar goHandle) goHandle {
 	return ht.Add(Reference{
 		LineNum: int(lineNum),
 		Type:    C.GoString(typ),
@@ -209,8 +209,8 @@ func SawReference(lineNum C.int, typ *C.char, scalar goHandle) goHandle {
 	})
 }
 
-//export SawDefine
-func SawDefine(lineNum C.int, modifier, name *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
+//export sawDefine
+func sawDefine(lineNum C.int, modifier, name *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
 	var dt DefineType
 	switch C.GoString(modifier) {
 	case "single":
@@ -249,8 +249,8 @@ func SawDefine(lineNum C.int, modifier, name *C.char, argDefsH, defsAndDeclsH go
 	})
 }
 
-//export SawArgDef
-func SawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
+//export sawArgDef
+func sawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 	v := Value(nil)
 	if val != 0 {
 		v = ht.Get(val).(Value)

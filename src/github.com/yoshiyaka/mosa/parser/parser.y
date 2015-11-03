@@ -81,24 +81,24 @@ void yyerror(const char *s);
 %%
 
 file:
-	file_body				{ SawBody($1); }
+	file_body				{ sawBody($1); }
 	| /* Empty manifest */	{}
 
 file_body:
-	  file_body class   	{ $$ = AppendArray($1, $2); }
-	| file_body define		{ $$ = AppendArray($1, $2); }
-	| file_body node		{ $$ = AppendArray($1, $2); }
-	| class					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
-	| define				{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
-	| node					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+	  file_body class   	{ $$ = appendArray($1, $2); }
+	| file_body define		{ $$ = appendArray($1, $2); }
+	| file_body node		{ $$ = appendArray($1, $2); }
+	| class					{ $$ = appendArray(nilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+	| define				{ $$ = appendArray(nilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
+	| node					{ $$ = appendArray(nilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
 
 node:
-	  NODE QUOTED_STRING '{' defs '}' { $$ = SawNode(@1.first_line, $2, $4); }
-	| NODE QUOTED_STRING '{' '}' { $$ = SawNode(@1.first_line, $2, NilArray(ASTTYPE_DEFS)); }
+	  NODE QUOTED_STRING '{' defs '}'	{ $$ = sawNode(@1.first_line, $2, $4); }
+	| NODE QUOTED_STRING '{' '}' 		{ $$ = sawNode(@1.first_line, $2, nilArray(ASTTYPE_DEFS)); }
 
 define:
 	DEFINE STRING STRING define_arg_defs define_body {
-		$$ = SawDefine(@1.first_line, $2, $3, $4, $5);
+		$$ = sawDefine(@1.first_line, $2, $3, $4, $5);
 		if($$ == -1) {
 			yyerror("Expected 'single' or 'multiple' after define");
 			YYABORT;
@@ -106,52 +106,52 @@ define:
 	}
 
 define_arg_defs:
-	  '(' ')'			{ $$ = NilArray(ASTTYPE_ARGDEFS); }
+	  '(' ')'			{ $$ = nilArray(ASTTYPE_ARGDEFS); }
 	| '(' arg_defs ')'	{ $$ = $2; }
 
 define_body:
-	  '{' '}'		{ $$ = NilArray(ASTTYPE_DEFS); }
+	  '{' '}'		{ $$ = nilArray(ASTTYPE_DEFS); }
 	| '{' defs '}'	{ $$ = $2; }
 
 class:
-	  CLASS STRING optional_arg_defs '{' defs '}'	{ $$ = NewClass(@1.first_line, $2, $3, $5);						}
-	| CLASS STRING optional_arg_defs '{' '}'		{ $$ = NewClass(@1.first_line, $2, $3, NilArray(ASTTYPE_DEFS));	}
+	  CLASS STRING optional_arg_defs '{' defs '}'	{ $$ = newClass(@1.first_line, $2, $3, $5);						}
+	| CLASS STRING optional_arg_defs '{' '}'		{ $$ = newClass(@1.first_line, $2, $3, nilArray(ASTTYPE_DEFS));	}
 
 optional_arg_defs:
-	/* empty */					{ $$ = NilArray(ASTTYPE_ARGDEFS); }
-	| '(' ')'					{ $$ = NilArray(ASTTYPE_ARGDEFS); }
+	/* empty */					{ $$ = nilArray(ASTTYPE_ARGDEFS); }
+	| '(' ')'					{ $$ = nilArray(ASTTYPE_ARGDEFS); }
 	| '(' arg_defs ')'			{ $$ = $2; }
 
 arg_defs:
-	  arg_defs arg_def			{ $$ = AppendArray($1, $2); }
-	| arg_def					{ $$ = AppendArray(NilArray(ASTTYPE_ARGDEFS), $1); }
+	  arg_defs arg_def			{ $$ = appendArray($1, $2); }
+	| arg_def					{ $$ = appendArray(nilArray(ASTTYPE_ARGDEFS), $1); }
 
 arg_def:
-	  VARIABLENAME ','				{ $$ = SawArgDef(@1.first_line, $1, 0);  }
-	| VARIABLENAME '=' scalar ','	{ $$ = SawArgDef(@1.first_line, $1, $3); }
-	| VARIABLENAME '=' array  ','	{ $$ = SawArgDef(@1.first_line, $1, $3); }
+	  VARIABLENAME ','				{ $$ = sawArgDef(@1.first_line, $1, 0);  }
+	| VARIABLENAME '=' scalar ','	{ $$ = sawArgDef(@1.first_line, $1, $3); }
+	| VARIABLENAME '=' array  ','	{ $$ = sawArgDef(@1.first_line, $1, $3); }
 
 defs:
-	  defs def	{ $$ = AppendArray($1, $2);						}
-	| def		{ $$ = AppendArray(NilArray(ASTTYPE_DEFS), $1);	}
+	  defs def	{ $$ = appendArray($1, $2);						}
+	| def		{ $$ = appendArray(nilArray(ASTTYPE_DEFS), $1);	}
 	
 def:
 	variable_def | declaration;
 	
 variable_def:
-	VARIABLENAME '=' value { $$ = SawVariableDef(@1.first_line, $1, $3);	}
+	VARIABLENAME '=' value { $$ = sawVariableDef(@1.first_line, $1, $3);	}
 
 declaration:
-	  STRING '{' string_or_var ':' proplist '}'	{ $$ = SawDeclaration(@1.first_line, $1, $3, $5); }
-	| STRING '{' string_or_var ':' '}'			{ $$ = SawDeclaration(@1.first_line, $1, $3, NilArray(ASTTYPE_PROPLIST)); }
+	  STRING '{' string_or_var ':' proplist '}'	{ $$ = sawDeclaration(@1.first_line, $1, $3, $5); }
+	| STRING '{' string_or_var ':' '}'			{ $$ = sawDeclaration(@1.first_line, $1, $3, nilArray(ASTTYPE_PROPLIST)); }
 
 proplist:
-	  proplist prop	{ $$ = AppendArray($1, $2); }
-	| prop			{ $$ = AppendArray(NilArray(ASTTYPE_PROPLIST), $1); }
+	  proplist prop	{ $$ = appendArray($1, $2); }
+	| prop			{ $$ = appendArray(nilArray(ASTTYPE_PROPLIST), $1); }
 	;
 
 prop:
-	STRING ARROW value ','	{ $$ = SawProp(@1.first_line, $1, $3); }
+	STRING ARROW value ','	{ $$ = sawProp(@1.first_line, $1, $3); }
 
 value:
 	  scalar		{ $$ = $1; }
@@ -159,38 +159,38 @@ value:
 	| reference		{ $$ = $1; }
 
 scalar:
-	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
+	  QUOTED_STRING			{ $$ = sawQuotedString(@1.first_line, $1);			}
 	| interpolated_string	{ $$ = $1;											}
-	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
-	| INT					{ $$ = SawInt(@1.first_line, $1);					}
+	| VARIABLENAME			{ $$ = sawVariableName(@1.first_line, $1);			}
+	| INT					{ $$ = sawInt(@1.first_line, $1);					}
 
 string_or_var:
-	  QUOTED_STRING			{ $$ = SawQuotedString(@1.first_line, $1);			}
+	  QUOTED_STRING			{ $$ = sawQuotedString(@1.first_line, $1);			}
 	| interpolated_string	{ $$ = $1;											}
-	| VARIABLENAME			{ $$ = SawVariableName(@1.first_line, $1);			}
+	| VARIABLENAME			{ $$ = sawVariableName(@1.first_line, $1);			}
 
 reference:
-	STRING '[' scalar ']' { $$ = SawReference(@1.first_line, $1, $3); }
+	STRING '[' scalar ']' { $$ = sawReference(@1.first_line, $1, $3); }
 
 array:
 	  '[' arrayentries ']'	{ $$ = $2; }
-	| '[' ']' 				{ $$ = NilArray(ASTTYPE_ARRAY); }
+	| '[' ']' 				{ $$ = nilArray(ASTTYPE_ARRAY); }
 
 arrayentries:
-	  arrayentries value ','	{ $$ = AppendArray($1, $2); }
-	| value ','					{ $$ = AppendArray(NilArray(ASTTYPE_ARRAY), $1); }
+	  arrayentries value ','	{ $$ = appendArray($1, $2); }
+	| value ','					{ $$ = appendArray(nilArray(ASTTYPE_ARRAY), $1); }
 
 interpolated_string:
 	  INTPOL_START interpolated_string_list	{ $$ = $2; }
-	| INTPOL_START							{ $$ = EmptyInterpolatedString(@1.first_line); }
+	| INTPOL_START							{ $$ = emptyInterpolatedString(@1.first_line); }
 	  
 interpolated_string_list:
-	  interpolated_string_list interpolated_string_value	{ $$ = AppendInterpolatedString($1, $2);		}
-	| interpolated_string_value								{ $$ = AppendInterpolatedString(EmptyInterpolatedString(@1.first_line), $1);	}
+	  interpolated_string_list interpolated_string_value	{ $$ = appendInterpolatedString($1, $2);		}
+	| interpolated_string_value								{ $$ = appendInterpolatedString(emptyInterpolatedString(@1.first_line), $1);	}
 
 interpolated_string_value:
-	  INTPOL_VARIABLE	{ $$ = SawVariableName(@1.first_line, $1); }
-	| INTPOL_TEXT 		{ $$ = SawString($1); }
+	  INTPOL_VARIABLE	{ $$ = sawVariableName(@1.first_line, $1); }
+	| INTPOL_TEXT 		{ $$ = sawString($1); }
 	
 %%
 
