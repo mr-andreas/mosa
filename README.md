@@ -42,8 +42,11 @@ define single file($name, $content,) {
 ## reducer
 
 The reducer resolves all declarations in the manifest and returns them. The
-declarations returned will all have concrete values. After our AST above has
-been run through the reducer, the following will be returned:
+declarations returned will all have concrete values. This gives us a definition
+of how the final state of our target system should look like. 
+
+After our AST above has been run through the reducer, the following will be
+returned:
 
 ```
 exec { 'apt-get install nginx': }
@@ -68,4 +71,41 @@ file { '/etc/nginx/sites-available/server.conf':
 	',
 }
 ```
+
+## facter
+
+Now that we have a clear image of what the final state of the target system
+should be, it's time to run the facter. The facter helps us find out which
+declarations are already fullfilled in the target system. With this knowledge,
+we can remove those declarations from the manifest, as we need no action to
+reach them.
+
+If we for example's sake suppose that `/etc/nginx/sites-available/server.conf`
+already exists on the target system, and has the content specified, our
+declaration list would look like the following after the facter has been
+invoked:
+
+```
+exec { 'apt-get install nginx': }
+
+package { 'nginx': }
+```
+
+## stepconverter
+
+After the facter has been invoked, we only have a subset of our original
+declarations that we need to actually execute. The stepconverter converts these
+into a number of concrete steps with dependencies between them. As `exec` is the
+only builtin type in mosa, all defines result in a number of `exec`
+declarations. It's these declarations that are converted into steps, while
+everything else is thrown away:
+
+```
+exec { 'apt-get install nginx': }
+```
+
+## planner
+
+The planner resolves the dependencies between the steps that we need to execute,
+and groups them into a number of stages. 
 
