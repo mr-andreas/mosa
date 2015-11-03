@@ -24,9 +24,9 @@ func main() {
 	}
 	defer file.Close()
 
-	mfst, mfstErr := manifest.Lex(fName, file)
-	if mfstErr != nil {
-		panic(mfstErr)
+	mfst := manifest.NewAST()
+	if err := manifest.Lex(mfst, fName, file); err != nil {
+		panic(err)
 	}
 
 	reduced, reducedErr := reducer.Reduce(mfst)

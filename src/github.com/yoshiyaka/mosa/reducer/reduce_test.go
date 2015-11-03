@@ -204,7 +204,9 @@ var resolveClassTest = []struct {
 
 func TestResolveClass(t *testing.T) {
 	for _, test := range resolveClassTest {
-		expectedFile, err := manifest.Lex(
+		expectedAST := manifest.NewAST()
+		err := manifest.Lex(
+			expectedAST,
 			"expected.ms", strings.NewReader(test.expectedManifest),
 		)
 		if err != nil {
@@ -212,24 +214,25 @@ func TestResolveClass(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		realFile, realErr := manifest.Lex(
-			"real.ms", strings.NewReader(test.inputManifest),
+		realAST := manifest.NewAST()
+		realErr := manifest.Lex(
+			realAST, "real.ms", strings.NewReader(test.inputManifest),
 		)
 		if realErr != nil {
 			t.Fatal(realErr)
 		}
 
 		gs := newGlobalState()
-		gs.populateClassesByName(realFile.Classes)
-		gs.populateDefinesByName(realFile.Defines)
+		gs.populateClassesByName(realAST.Classes)
+		gs.populateDefinesByName(realAST.Defines)
 		resolver := newClassResolver(
-			gs, &realFile.Classes[0], nil, "real.ms", realFile.Classes[0].LineNum,
+			gs, &realAST.Classes[0], nil, "real.ms", realAST.Classes[0].LineNum,
 		)
 		if reducedClass, err := resolver.resolve(); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
 		} else {
-			c := expectedFile.Classes[0]
+			c := expectedAST.Classes[0]
 			c.Filename = "real.ms"
 			if !c.Equals(&reducedClass) {
 				t.Logf("%#v", c)
@@ -558,26 +561,28 @@ func TestResolveFile(t *testing.T) {
 			}
 			`, test.expectedManifest,
 		)
-		expectedFile, err := manifest.Lex(
-			"expected.ms", strings.NewReader(expectedWrapper),
+		expectedAST := manifest.NewAST()
+		err := manifest.Lex(
+			expectedAST, "expected.ms", strings.NewReader(expectedWrapper),
 		)
 		if err != nil {
 			t.Log(expectedWrapper)
 			t.Fatal(err)
 		}
 
-		realFile, realErr := manifest.Lex(
-			"real.ms", strings.NewReader(test.inputManifest),
+		realAST := manifest.NewAST()
+		realErr := manifest.Lex(
+			realAST, "real.ms", strings.NewReader(test.inputManifest),
 		)
 		if realErr != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(realErr)
 		}
 
-		if reducedDecls, err := Reduce(realFile); err != nil {
+		if reducedDecls, err := Reduce(realAST); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
-		} else if decls := expectedFile.Classes[0].Declarations; !manifest.DeclarationsEquals(decls, reducedDecls) {
+		} else if decls := expectedAST.Classes[0].Declarations; !manifest.DeclarationsEquals(decls, reducedDecls) {
 			t.Logf("%#v", decls)
 			t.Logf("%#v", reducedDecls)
 
@@ -728,8 +733,9 @@ var badVariableTest = []struct {
 
 func TestResolveBadVariable(t *testing.T) {
 	for _, test := range badVariableTest {
-		ast, err := manifest.Lex(
-			"err.ms", strings.NewReader(test.inputManifest),
+		ast := manifest.NewAST()
+		err := manifest.Lex(
+			ast, "err.ms", strings.NewReader(test.inputManifest),
 		)
 		if err != nil {
 			t.Log(test.inputManifest)
@@ -1092,15 +1098,16 @@ var badDefsTest = []struct {
 
 func TestBadDefs(t *testing.T) {
 	for _, test := range badDefsTest {
-		realFile, realErr := manifest.Lex(
-			"real.ms", strings.NewReader(test.manifest),
+		realAST := manifest.NewAST()
+		realErr := manifest.Lex(
+			realAST, "real.ms", strings.NewReader(test.manifest),
 		)
 		if realErr != nil {
 			t.Log(test.manifest)
 			t.Fatal(realErr)
 		}
 
-		if _, err := Reduce(realFile); err == nil {
+		if _, err := Reduce(realAST); err == nil {
 			t.Log(test.manifest)
 			t.Error("Got no error for bad file")
 		} else if err.Error() != test.expectedErr {

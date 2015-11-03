@@ -1174,16 +1174,17 @@ func TestLex(t *testing.T) {
 			test.ast.Nodes[i].Filename = "test.manifest"
 		}
 
-		if file, err := Lex("test.manifest", strings.NewReader(test.manifest)); err != nil {
+		ast := NewAST()
+		if err := Lex(ast, "test.manifest", strings.NewReader(test.manifest)); err != nil {
 			t.Log(test.manifest)
 			t.Error(err)
 		} else {
-			if !equalsAsJson(file, test.ast) {
+			if !equalsAsJson(ast, test.ast) {
 				t.Logf("%#v", test.ast)
-				t.Logf("%#v", lastFile)
+				t.Logf("%#v", ast)
 				js2, _ := json.MarshalIndent(test.ast, "", "  ")
 				t.Log(string(js2))
-				js, _ := json.MarshalIndent(lastFile, "", "  ")
+				js, _ := json.MarshalIndent(ast, "", "  ")
 				t.Log(string(js))
 				t.Fatal(test.manifest)
 			}
@@ -1213,7 +1214,8 @@ var badLexTests = []struct {
 
 func TestBadLex(t *testing.T) {
 	for _, test := range badLexTests {
-		if _, err := Lex("test.manifest", strings.NewReader(test.manifest)); err == nil {
+		ast := NewAST()
+		if err := Lex(ast, "test.manifest", strings.NewReader(test.manifest)); err == nil {
 			t.Error("Bad manifest didn't fail:", test.manifest)
 		}
 	}
@@ -1232,12 +1234,14 @@ func TestParseGoodAfterBad(t *testing.T) {
 
 	for _, good := range goods {
 		// Parse a bad grammar file
-		if _, err := Lex("bad.ms", strings.NewReader("node{}")); err == nil {
+		ast := NewAST()
+		if err := Lex(ast, "bad.ms", strings.NewReader("node{}")); err == nil {
 			t.Fatal("Bad grammar parsed")
 		}
 
 		// Now parse valid grammar and make sure we don't get an error
-		if _, err := Lex("bad.ms", strings.NewReader(good)); err != nil {
+		ast2 := NewAST()
+		if err := Lex(ast2, "bad.ms", strings.NewReader(good)); err != nil {
 			t.Log(good)
 			t.Error("Got error when parsing good grammar:", err)
 		}

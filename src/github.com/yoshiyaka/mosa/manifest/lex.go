@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	ht       handleTable
-	lastFile *AST
+	ht         handleTable
+	currentAST *AST
 )
 
 type stringable interface {
@@ -31,6 +31,10 @@ type AST struct {
 	Classes []Class
 	Defines []Define
 	Nodes   []Node
+}
+
+func NewAST() *AST {
+	return &AST{}
 }
 
 func (f *AST) String() string {
@@ -378,24 +382,20 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 	panic("Bad type")
 }
 
-//export NewAST
-func NewAST(classesAndDefines goHandle) goHandle {
-	lastFile = &AST{}
-
+//export SawBody
+func SawBody(classesAndDefines goHandle) {
 	for _, classOrDefine := range ht.Get(classesAndDefines).([]interface{}) {
 		switch classOrDefine.(type) {
 		case Class:
-			lastFile.Classes = append(lastFile.Classes, classOrDefine.(Class))
+			currentAST.Classes = append(currentAST.Classes, classOrDefine.(Class))
 		case Define:
-			lastFile.Defines = append(lastFile.Defines, classOrDefine.(Define))
+			currentAST.Defines = append(currentAST.Defines, classOrDefine.(Define))
 		case Node:
-			lastFile.Nodes = append(lastFile.Nodes, classOrDefine.(Node))
+			currentAST.Nodes = append(currentAST.Nodes, classOrDefine.(Node))
 		default:
 			panic("Found top-level object which is not class or define")
 		}
 	}
-
-	return ht.Add(lastFile)
 }
 
 //export NewClass
@@ -582,20 +582,22 @@ func SawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 var curFilename string
 
 // Please note that as of current, Lex() is /NOT/ reentrant.
-func Lex(filename string, r io.Reader) (*AST, error) {
+// This function will parse r and store the output into ast.
+func Lex(ast *AST, filename string, r io.Reader) error {
 	curFilename = filename
+	currentAST = ast
 
 	buf, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ret := C.doparse(C.CString(string(buf)))
 	if ret.code != 0 {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"%s:%d: %s", filename, C.line_num, C.GoString(ret.error),
 		)
 	} else {
-		return lastFile, nil
+		return nil
 	}
 }

@@ -138,7 +138,8 @@ var convertTests = []struct {
 
 func TestConvert(t *testing.T) {
 	for _, test := range convertTests {
-		ast, astErr := manifest.Lex("test.ms", strings.NewReader(test.manifest))
+		ast := manifest.NewAST()
+		astErr := manifest.Lex(ast, "test.ms", strings.NewReader(test.manifest))
 		if astErr != nil {
 			t.Fatal(astErr)
 		}
@@ -212,7 +213,8 @@ var invalidManifests = []struct {
 
 func TestConvertInvalidManifests(t *testing.T) {
 	for _, test := range invalidManifests {
-		ast, astErr := manifest.Lex("test.ms", strings.NewReader(test.manifest))
+		ast := manifest.NewAST()
+		astErr := manifest.Lex(ast, "test.ms", strings.NewReader(test.manifest))
 		if astErr != nil {
 			t.Log(test.manifest)
 			t.Fatal(astErr)
