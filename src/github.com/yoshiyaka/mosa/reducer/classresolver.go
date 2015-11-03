@@ -3,7 +3,7 @@ package reducer
 import (
 	"fmt"
 
-	. "github.com/yoshiyaka/mosa/manifest"
+	. "github.com/yoshiyaka/mosa/ast"
 )
 
 // Resolves variable references in a class. The object holds the internal state

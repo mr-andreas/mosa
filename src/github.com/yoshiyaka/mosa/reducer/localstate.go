@@ -3,7 +3,7 @@ package reducer
 import (
 	"fmt"
 
-	. "github.com/yoshiyaka/mosa/manifest"
+	. "github.com/yoshiyaka/mosa/ast"
 )
 
 // Holds local state when resolving a node, class or define. This includes stuff

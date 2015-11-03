@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	. "github.com/yoshiyaka/mosa/ast"
 )
 
 var lexTests = []struct {

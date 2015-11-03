@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	. "github.com/yoshiyaka/mosa/ast"
 	. "github.com/yoshiyaka/mosa/common"
 	"github.com/yoshiyaka/mosa/manifest"
 	"github.com/yoshiyaka/mosa/reducer"
@@ -63,7 +64,7 @@ var convertTests = []struct {
 				Type: "package",
 				Item: "foo",
 				Args: map[string]interface{}{
-					"ensure": manifest.QuotedString("latest"),
+					"ensure": QuotedString("latest"),
 				},
 				Depends: nil,
 			},
@@ -89,7 +90,7 @@ var convertTests = []struct {
 				Type: "package",
 				Item: "foo",
 				Args: map[string]interface{}{
-					"ensure": manifest.QuotedString("latest"),
+					"ensure": QuotedString("latest"),
 				},
 				Depends: map[string][]string{"file": []string{"undefined"}},
 			},
@@ -125,7 +126,7 @@ var convertTests = []struct {
 				Type: "package",
 				Item: "foo",
 				Args: map[string]interface{}{
-					"ensure": manifest.QuotedString("latest"),
+					"ensure": QuotedString("latest"),
 				},
 				Depends: map[string][]string{
 					"file": []string{"undefined", "anotherfile"},
@@ -135,8 +136,8 @@ var convertTests = []struct {
 				Type: "file",
 				Item: "anotherfile",
 				Args: map[string]interface{}{
-					"ensure":  manifest.QuotedString("present"),
-					"content": manifest.QuotedString("string content"),
+					"ensure":  QuotedString("present"),
+					"content": QuotedString("string content"),
 				},
 				Depends: map[string][]string{"file": []string{"undefined"}},
 			},
@@ -146,7 +147,7 @@ var convertTests = []struct {
 
 func TestConvert(t *testing.T) {
 	for _, test := range convertTests {
-		ast := manifest.NewAST()
+		ast := NewAST()
 		astErr := manifest.Lex(ast, "test.ms", strings.NewReader(test.manifest))
 		if astErr != nil {
 			t.Fatal(astErr)
@@ -225,7 +226,7 @@ var invalidManifests = []struct {
 
 func TestConvertInvalidManifests(t *testing.T) {
 	for _, test := range invalidManifests {
-		ast := manifest.NewAST()
+		ast := NewAST()
 		astErr := manifest.Lex(ast, "test.ms", strings.NewReader(test.manifest))
 		if astErr != nil {
 			t.Log(test.manifest)

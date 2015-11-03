@@ -1,6 +1,6 @@
 package reducer
 
-import . "github.com/yoshiyaka/mosa/manifest"
+import . "github.com/yoshiyaka/mosa/ast"
 
 // Resolves a whole manifest
 type resolver struct {

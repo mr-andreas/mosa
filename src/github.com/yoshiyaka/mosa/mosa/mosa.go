@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/yoshiyaka/mosa/ast"
 	"github.com/yoshiyaka/mosa/executor"
 	"github.com/yoshiyaka/mosa/manifest"
 	"github.com/yoshiyaka/mosa/planner"
@@ -13,7 +14,7 @@ import (
 	"github.com/yoshiyaka/mosa/stepconverter"
 )
 
-func parseDirAsASTRecursively(ast *manifest.AST, dirName string) error {
+func parseDirAsASTRecursively(ast *ast.AST, dirName string) error {
 	files, filesErr := ioutil.ReadDir(dirName)
 	if filesErr != nil {
 		return filesErr
@@ -55,7 +56,7 @@ func main() {
 		dirName = args[0]
 	}
 
-	mfst := manifest.NewAST()
+	mfst := ast.NewAST()
 	if err := parseDirAsASTRecursively(mfst, dirName); err != nil {
 		panic(err)
 	}

@@ -3,8 +3,8 @@ package stepconverter
 import (
 	"fmt"
 
+	. "github.com/yoshiyaka/mosa/ast"
 	"github.com/yoshiyaka/mosa/common"
-	. "github.com/yoshiyaka/mosa/manifest"
 )
 
 // Converts the specified manifest into a number of concrete steps that needs to

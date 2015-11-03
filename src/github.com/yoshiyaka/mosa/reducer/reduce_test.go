@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/yoshiyaka/mosa/ast"
 	"github.com/yoshiyaka/mosa/manifest"
 )
 
@@ -204,7 +205,7 @@ var resolveClassTest = []struct {
 
 func TestResolveClass(t *testing.T) {
 	for _, test := range resolveClassTest {
-		expectedAST := manifest.NewAST()
+		expectedAST := ast.NewAST()
 		err := manifest.Lex(
 			expectedAST,
 			"expected.ms", strings.NewReader(test.expectedManifest),
@@ -214,7 +215,7 @@ func TestResolveClass(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		realAST := manifest.NewAST()
+		realAST := ast.NewAST()
 		realErr := manifest.Lex(
 			realAST, "real.ms", strings.NewReader(test.inputManifest),
 		)
@@ -561,7 +562,7 @@ func TestResolveFile(t *testing.T) {
 			}
 			`, test.expectedManifest,
 		)
-		expectedAST := manifest.NewAST()
+		expectedAST := ast.NewAST()
 		err := manifest.Lex(
 			expectedAST, "expected.ms", strings.NewReader(expectedWrapper),
 		)
@@ -570,7 +571,7 @@ func TestResolveFile(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		realAST := manifest.NewAST()
+		realAST := ast.NewAST()
 		realErr := manifest.Lex(
 			realAST, "real.ms", strings.NewReader(test.inputManifest),
 		)
@@ -582,12 +583,12 @@ func TestResolveFile(t *testing.T) {
 		if reducedDecls, err := Reduce(realAST); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
-		} else if decls := expectedAST.Classes[0].Declarations; !manifest.DeclarationsEquals(decls, reducedDecls) {
+		} else if decls := expectedAST.Classes[0].Declarations; !ast.DeclarationsEquals(decls, reducedDecls) {
 			t.Logf("%#v", decls)
 			t.Logf("%#v", reducedDecls)
 
-			declsClass := &manifest.Class{Declarations: decls}
-			reducedDeclsClass := &manifest.Class{Declarations: reducedDecls}
+			declsClass := &ast.Class{Declarations: decls}
+			reducedDeclsClass := &ast.Class{Declarations: reducedDecls}
 
 			t.Fatalf(
 				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
@@ -733,7 +734,7 @@ var badVariableTest = []struct {
 
 func TestResolveBadVariable(t *testing.T) {
 	for _, test := range badVariableTest {
-		ast := manifest.NewAST()
+		ast := ast.NewAST()
 		err := manifest.Lex(
 			ast, "err.ms", strings.NewReader(test.inputManifest),
 		)
@@ -1098,7 +1099,7 @@ var badDefsTest = []struct {
 
 func TestBadDefs(t *testing.T) {
 	for _, test := range badDefsTest {
-		realAST := manifest.NewAST()
+		realAST := ast.NewAST()
 		realErr := manifest.Lex(
 			realAST, "real.ms", strings.NewReader(test.manifest),
 		)
