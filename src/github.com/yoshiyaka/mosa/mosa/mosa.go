@@ -8,7 +8,7 @@ import (
 
 	"github.com/yoshiyaka/mosa/ast"
 	"github.com/yoshiyaka/mosa/executor"
-	"github.com/yoshiyaka/mosa/manifest"
+	"github.com/yoshiyaka/mosa/parser"
 	"github.com/yoshiyaka/mosa/planner"
 	"github.com/yoshiyaka/mosa/reducer"
 	"github.com/yoshiyaka/mosa/stepconverter"
@@ -37,7 +37,7 @@ func parseDirAsASTRecursively(ast *ast.AST, dirName string) error {
 				return fErr
 			}
 
-			if err := manifest.Lex(ast, fullPath, f); err != nil {
+			if err := parser.Parse(ast, fullPath, f); err != nil {
 				f.Close()
 				return err
 			} else {

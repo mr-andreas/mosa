@@ -7,7 +7,7 @@ import (
 
 	. "github.com/yoshiyaka/mosa/ast"
 	. "github.com/yoshiyaka/mosa/common"
-	"github.com/yoshiyaka/mosa/manifest"
+	"github.com/yoshiyaka/mosa/parser"
 	"github.com/yoshiyaka/mosa/reducer"
 )
 
@@ -148,7 +148,7 @@ var convertTests = []struct {
 func TestConvert(t *testing.T) {
 	for _, test := range convertTests {
 		ast := NewAST()
-		astErr := manifest.Lex(ast, "test.ms", strings.NewReader(test.manifest))
+		astErr := parser.Parse(ast, "test.ms", strings.NewReader(test.manifest))
 		if astErr != nil {
 			t.Fatal(astErr)
 		}
@@ -227,7 +227,7 @@ var invalidManifests = []struct {
 func TestConvertInvalidManifests(t *testing.T) {
 	for _, test := range invalidManifests {
 		ast := NewAST()
-		astErr := manifest.Lex(ast, "test.ms", strings.NewReader(test.manifest))
+		astErr := parser.Parse(ast, "test.ms", strings.NewReader(test.manifest))
 		if astErr != nil {
 			t.Log(test.manifest)
 			t.Fatal(astErr)

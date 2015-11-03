@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/yoshiyaka/mosa/ast"
-	"github.com/yoshiyaka/mosa/manifest"
+	"github.com/yoshiyaka/mosa/parser"
 )
 
 var resolveClassTest = []struct {
@@ -206,7 +206,7 @@ var resolveClassTest = []struct {
 func TestResolveClass(t *testing.T) {
 	for _, test := range resolveClassTest {
 		expectedAST := ast.NewAST()
-		err := manifest.Lex(
+		err := parser.Parse(
 			expectedAST,
 			"expected.ms", strings.NewReader(test.expectedManifest),
 		)
@@ -216,7 +216,7 @@ func TestResolveClass(t *testing.T) {
 		}
 
 		realAST := ast.NewAST()
-		realErr := manifest.Lex(
+		realErr := parser.Parse(
 			realAST, "real.ms", strings.NewReader(test.inputManifest),
 		)
 		if realErr != nil {
@@ -563,7 +563,7 @@ func TestResolveFile(t *testing.T) {
 			`, test.expectedManifest,
 		)
 		expectedAST := ast.NewAST()
-		err := manifest.Lex(
+		err := parser.Parse(
 			expectedAST, "expected.ms", strings.NewReader(expectedWrapper),
 		)
 		if err != nil {
@@ -572,7 +572,7 @@ func TestResolveFile(t *testing.T) {
 		}
 
 		realAST := ast.NewAST()
-		realErr := manifest.Lex(
+		realErr := parser.Parse(
 			realAST, "real.ms", strings.NewReader(test.inputManifest),
 		)
 		if realErr != nil {
@@ -735,7 +735,7 @@ var badVariableTest = []struct {
 func TestResolveBadVariable(t *testing.T) {
 	for _, test := range badVariableTest {
 		ast := ast.NewAST()
-		err := manifest.Lex(
+		err := parser.Parse(
 			ast, "err.ms", strings.NewReader(test.inputManifest),
 		)
 		if err != nil {
@@ -1100,7 +1100,7 @@ var badDefsTest = []struct {
 func TestBadDefs(t *testing.T) {
 	for _, test := range badDefsTest {
 		realAST := ast.NewAST()
-		realErr := manifest.Lex(
+		realErr := parser.Parse(
 			realAST, "real.ms", strings.NewReader(test.manifest),
 		)
 		if realErr != nil {

@@ -1,4 +1,4 @@
-package manifest
+package parser
 
 // #cgo LDFLAGS: -lfl
 // typedef struct {
@@ -267,7 +267,7 @@ var curFilename string
 
 // Please note that as of current, Lex() is /NOT/ reentrant.
 // This function will parse r and store the output into ast.
-func Lex(ast *AST, filename string, r io.Reader) error {
+func Parse(ast *AST, filename string, r io.Reader) error {
 	curFilename = filename
 	currentAST = ast
 
