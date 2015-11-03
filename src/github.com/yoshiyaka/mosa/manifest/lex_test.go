@@ -9,12 +9,12 @@ import (
 
 var lexTests = []struct {
 	manifest string
-	ast      *File
+	ast      *AST
 }{
 	{
 		`class Test {}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      1,
@@ -34,7 +34,7 @@ var lexTests = []struct {
 		class Bar {}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      2,
@@ -61,7 +61,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 2,
@@ -87,7 +87,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 2,
@@ -121,7 +121,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 3,
@@ -148,7 +148,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      2,
@@ -177,7 +177,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      2,
@@ -212,7 +212,7 @@ var lexTests = []struct {
 			}
 		}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      1,
@@ -260,7 +260,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 2,
@@ -308,7 +308,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      2,
@@ -343,7 +343,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      2,
@@ -387,7 +387,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      2,
@@ -436,7 +436,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 2,
@@ -492,7 +492,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 2,
@@ -545,7 +545,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 2,
@@ -620,7 +620,7 @@ var lexTests = []struct {
 		}
 		`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      2,
@@ -710,7 +710,7 @@ var lexTests = []struct {
 		`define multiple package($names,) {
 			$foo = 'x'
 		}`,
-		&File{
+		&AST{
 			Defines: []Define{
 				{
 					Name:    "package",
@@ -738,7 +738,7 @@ var lexTests = []struct {
 
 	{
 		`define multiple package($names,) {}`,
-		&File{
+		&AST{
 			Defines: []Define{
 				{
 					Name:    "package",
@@ -762,7 +762,7 @@ var lexTests = []struct {
 		`node 'localhost' {
 			$foo = 'x'
 		}`,
-		&File{
+		&AST{
 			Nodes: []Node{
 				{
 					Name:    "localhost",
@@ -782,7 +782,7 @@ var lexTests = []struct {
 
 	{
 		`node 'localhost' {}`,
-		&File{
+		&AST{
 			Nodes: []Node{
 				{
 					Name:         "localhost",
@@ -800,7 +800,7 @@ var lexTests = []struct {
 			
 			decl { 'x': foo => 5, }
 		}`,
-		&File{
+		&AST{
 			Nodes: []Node{
 				{
 					Name:    "localhost",
@@ -834,7 +834,7 @@ var lexTests = []struct {
 	{
 		`class Test() {}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum:      1,
@@ -850,7 +850,7 @@ var lexTests = []struct {
 	{
 		`class Test($foo,) {}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 1,
@@ -875,7 +875,7 @@ var lexTests = []struct {
 		$bar,
 		) {}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 1,
@@ -902,7 +902,7 @@ var lexTests = []struct {
 	{
 		`class Test($foo = 5, $bar = 'x', $baz = [ 1, 2, ], $a,) {}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 1,
@@ -943,7 +943,7 @@ var lexTests = []struct {
 			$foo = "string"
 		}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 3,
@@ -968,7 +968,7 @@ var lexTests = []struct {
 	{
 		`class Test($foo = "/home/$bar",) {}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 1,
@@ -1001,7 +1001,7 @@ var lexTests = []struct {
 			$a = "${b}"
 		}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 1,
@@ -1042,7 +1042,7 @@ var lexTests = []struct {
 			$j = "bar{{$foo}}"
 		}`,
 
-		&File{
+		&AST{
 			Classes: []Class{
 				{
 					LineNum: 3,

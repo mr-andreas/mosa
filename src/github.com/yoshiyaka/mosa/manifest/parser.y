@@ -81,8 +81,8 @@ void yyerror(const char *s);
 %%
 
 file:
-	file_body				{ NewFile($1); }
-	| /* Empty manifest */	{ NewFile(NilArray(ASTTYPE_ARRAY_INTERFACE)); }
+	file_body				{ NewAST($1); }
+	| /* Empty manifest */	{ NewAST(NilArray(ASTTYPE_ARRAY_INTERFACE)); }
 
 file_body:
 	  file_body class   	{ $$ = AppendArray($1, $2); }

@@ -103,7 +103,7 @@ func (ce *CyclicError) Error() string {
 //  	],
 //  }
 //
-func Reduce(ast *File) ([]Declaration, error) {
+func Reduce(ast *AST) ([]Declaration, error) {
 	r := newResolver(ast)
 	return r.resolve()
 }

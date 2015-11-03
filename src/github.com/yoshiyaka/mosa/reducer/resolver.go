@@ -4,12 +4,12 @@ import . "github.com/yoshiyaka/mosa/manifest"
 
 // Resolves a whole manifest
 type resolver struct {
-	ast *File
+	ast *AST
 
 	gs *globalState
 }
 
-func newResolver(ast *File) *resolver {
+func newResolver(ast *AST) *resolver {
 	return &resolver{
 		ast: ast,
 		gs:  newGlobalState(),

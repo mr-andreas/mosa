@@ -20,20 +20,20 @@ import (
 
 var (
 	ht       handleTable
-	lastFile *File
+	lastFile *AST
 )
 
 type stringable interface {
 	String() string
 }
 
-type File struct {
+type AST struct {
 	Classes []Class
 	Defines []Define
 	Nodes   []Node
 }
 
-func (f *File) String() string {
+func (f *AST) String() string {
 	s := ""
 	for _, class := range f.Classes {
 		s = class.String() + "\n"
@@ -378,9 +378,9 @@ func AppendArray(arrayHandle, newValue goHandle) goHandle {
 	panic("Bad type")
 }
 
-//export NewFile
-func NewFile(classesAndDefines goHandle) goHandle {
-	lastFile = &File{}
+//export NewAST
+func NewAST(classesAndDefines goHandle) goHandle {
+	lastFile = &AST{}
 
 	for _, classOrDefine := range ht.Get(classesAndDefines).([]interface{}) {
 		switch classOrDefine.(type) {
@@ -582,7 +582,7 @@ func SawArgDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
 var curFilename string
 
 // Please note that as of current, Lex() is /NOT/ reentrant.
-func Lex(filename string, r io.Reader) (*File, error) {
+func Lex(filename string, r io.Reader) (*AST, error) {
 	curFilename = filename
 
 	buf, err := ioutil.ReadAll(r)
