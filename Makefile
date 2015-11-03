@@ -15,7 +15,7 @@ clean:
 .PHONY: clean
 
 run: bin/mosa
-	bin/mosa src/github.com/yoshiyaka/mosa/testdata/manifest.ms
+	bin/mosa src/github.com/yoshiyaka/mosa/testdata
 
 test: lex
 	GOPATH=`pwd` go test github.com/yoshiyaka/mosa/...

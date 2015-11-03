@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/yoshiyaka/mosa/executor"
 	"github.com/yoshiyaka/mosa/manifest"
@@ -11,21 +13,50 @@ import (
 	"github.com/yoshiyaka/mosa/stepconverter"
 )
 
+func parseDirAsASTRecursively(ast *manifest.AST, dirName string) error {
+	files, filesErr := ioutil.ReadDir(dirName)
+	if filesErr != nil {
+		return filesErr
+	}
+
+	for _, file := range files {
+		if file.Name()[0] == '.' {
+			continue
+		}
+
+		fullPath := dirName + "/" + file.Name()
+
+		if file.IsDir() {
+			if err := parseDirAsASTRecursively(ast, fullPath); err != nil {
+				return err
+			}
+		} else if strings.HasSuffix(file.Name(), ".ms") {
+			f, fErr := os.Open(fullPath)
+			if fErr != nil {
+				return fErr
+			}
+
+			if err := manifest.Lex(ast, fullPath, f); err != nil {
+				f.Close()
+				return err
+			} else {
+				f.Close()
+			}
+		}
+	}
+
+	return nil
+}
+
 func main() {
-	fName := "../testdata/manifest.ms"
+	dirName := "../testdata"
 	flag.Parse()
 	if args := flag.CommandLine.Args(); len(args) == 1 {
-		fName = args[0]
+		dirName = args[0]
 	}
-
-	file, fileErr := os.Open(fName)
-	if fileErr != nil {
-		panic(fileErr)
-	}
-	defer file.Close()
 
 	mfst := manifest.NewAST()
-	if err := manifest.Lex(mfst, fName, file); err != nil {
+	if err := parseDirAsASTRecursively(mfst, dirName); err != nil {
 		panic(err)
 	}
 
