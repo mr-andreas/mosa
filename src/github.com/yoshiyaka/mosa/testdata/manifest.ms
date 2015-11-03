@@ -30,15 +30,3 @@ class WebServer {
 	  depends => file['/etc/apache2/sites-available/test-site.conf'],
 	}
 }
-
-define single package($name,) {
-	exec { "apt-get -f install $name": }
-}
-
-define single user($name, $password,) {
-	exec { "useradd -p '$password' $name": }
-}
-
-define single file($name, $ensure,) {
-	exec { "touch $name": }
-}
