@@ -1248,6 +1248,73 @@ func TestParseGoodAfterBad(t *testing.T) {
 	}
 }
 
+func TestParseMultipleFiles(t *testing.T) {
+	testMs := `
+		node 'n' { 
+			class { 'A': }
+		}`
+	test2Ms := `
+		class A { 
+			exec { 'ls': }
+		}`
+
+	ast := NewAST()
+	expectedAst := &AST{
+		Nodes: []Node{
+			{
+				Filename:     "test.ms",
+				LineNum:      2,
+				Name:         "n",
+				VariableDefs: []VariableDef{},
+				Declarations: []Declaration{
+					{
+						LineNum: 3,
+						Type:    "class",
+						Scalar:  QuotedString("A"),
+						Props:   []Prop{},
+					},
+				},
+			},
+		},
+		Classes: []Class{
+			{
+				Filename:     "test2.ms",
+				LineNum:      2,
+				Name:         "A",
+				ArgDefs:      []VariableDef{},
+				VariableDefs: []VariableDef{},
+				Declarations: []Declaration{
+					{
+						LineNum: 3,
+						Type:    "exec",
+						Scalar:  QuotedString("ls"),
+						Props:   []Prop{},
+					},
+				},
+			},
+		},
+	}
+
+	if err := Lex(ast, "test.ms", strings.NewReader(testMs)); err != nil {
+		t.Log(testMs)
+		t.Fatal(err)
+	}
+	if err := Lex(ast, "test2.ms", strings.NewReader(test2Ms)); err != nil {
+		t.Log(test2Ms)
+		t.Fatal(err)
+	}
+
+	if !equalsAsJson(ast, expectedAst) {
+		t.Logf("%#v", expectedAst)
+		t.Logf("%#v", ast)
+		js2, _ := json.MarshalIndent(expectedAst, "", "  ")
+		t.Log(string(js2))
+		js, _ := json.MarshalIndent(ast, "", "  ")
+		t.Log(string(js))
+		t.Fail()
+	}
+}
+
 func equalsAsJson(i1, i2 interface{}) bool {
 	j1, err1 := json.Marshal(i1)
 	j2, err2 := json.Marshal(i2)
