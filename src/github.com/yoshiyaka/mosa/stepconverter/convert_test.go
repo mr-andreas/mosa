@@ -27,7 +27,8 @@ var convertTests = []struct {
 	{
 		`class A {
 			package { 'foo': }
-		}`,
+		}
+		define single package($name,) {}`,
 		[]Step{},
 	},
 
@@ -36,7 +37,8 @@ var convertTests = []struct {
 		node 'x' { class { 'A': } }
 		class A {
 			package { 'foo': }
-		}`,
+		}
+		define single package($name,) {}`,
 		[]Step{
 			Step{
 				Type:    "package",
@@ -54,7 +56,8 @@ var convertTests = []struct {
 			package { 'foo':
 				ensure => 'latest',
 			}
-		}`,
+		}
+		define single package($name, $ensure,) {}`,
 		[]Step{
 			Step{
 				Type: "package",
@@ -78,7 +81,9 @@ var convertTests = []struct {
 				// just converting to steps, not checking dependencies yet.
 				depends => file['undefined'], 
 			}
-		}`,
+		}
+		define single package($name, $ensure,) {}
+		`,
 		[]Step{
 			Step{
 				Type: "package",
@@ -111,7 +116,10 @@ var convertTests = []struct {
 				content => $content,
 				depends => file['undefined'],
 			}
-		}`,
+		}
+		define single file($name, $ensure, $content,) {}
+		define single package($name, $ensure,) {}
+		`,
 		[]Step{
 			Step{
 				Type: "package",
@@ -146,6 +154,7 @@ func TestConvert(t *testing.T) {
 
 		reduced, reducedErr := reducer.Reduce(ast)
 		if reducedErr != nil {
+			t.Log(test.manifest)
 			t.Fatal(reducedErr)
 		}
 
@@ -173,8 +182,9 @@ var invalidManifests = []struct {
 				depends => 'bar',
 			}
 		}
+		define single file($name,) {}
 		`,
-		`Good error here`,
+		`depends must be a reference or an array of references at test.ms:7`,
 	},
 	{
 		`
@@ -189,8 +199,9 @@ var invalidManifests = []struct {
 				],
 			}
 		}
+		define single file($name,) {}
 		`,
-		`Good error here`,
+		`depends must be a reference or an array of references at test.ms:7`,
 	},
 
 	{
@@ -206,8 +217,9 @@ var invalidManifests = []struct {
 				],
 			}
 		}
+		define single file($name,) {}
 		`,
-		`Good error here`,
+		`depends must be a reference or an array of references at test.ms:7`,
 	},
 }
 

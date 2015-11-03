@@ -19,7 +19,7 @@ func Convert(declarations []Declaration) ([]common.Step, error) {
 		for _, prop := range decl.Props {
 			if prop.Name == "depends" {
 				var err error
-				depends, err = propAsReferenceList(&prop)
+				depends, err = propAsReferenceList(decl.Filename, &prop)
 				if err != nil {
 					return nil, err
 				}
@@ -39,7 +39,7 @@ func Convert(declarations []Declaration) ([]common.Step, error) {
 	return steps, nil
 }
 
-func propAsReferenceList(depends *Prop) (map[string][]string, error) {
+func propAsReferenceList(filename string, depends *Prop) (map[string][]string, error) {
 	switch depends.Value.(type) {
 	case Reference:
 		r := depends.Value.(Reference)
@@ -52,7 +52,7 @@ func propAsReferenceList(depends *Prop) (map[string][]string, error) {
 			if ref, ok := val.(Reference); !ok {
 				return nil, fmt.Errorf(
 					"depends must be a reference or an array of references at %s:%d",
-					"foooo", depends.LineNum,
+					filename, depends.LineNum,
 				)
 			} else {
 				if ret[ref.Type] == nil {
@@ -70,7 +70,7 @@ func propAsReferenceList(depends *Prop) (map[string][]string, error) {
 	default:
 		return nil, fmt.Errorf(
 			"depends must be a reference or an array of references at %s:%d",
-			"foooo", depends.LineNum,
+			filename, depends.LineNum,
 		)
 	}
 }

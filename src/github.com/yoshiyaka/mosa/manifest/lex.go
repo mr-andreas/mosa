@@ -195,7 +195,8 @@ func (vn VariableName) String() string { return vn.Str }
 
 // A used type, for instance package { 'nginx': ensure => 'latest' }
 type Declaration struct {
-	LineNum int
+	Filename string
+	LineNum  int
 
 	// The type of declaration, 'package' in the example above
 	Type string
@@ -500,10 +501,11 @@ func SawVariableName(lineNum C.int, name *C.char) goHandle {
 //export SawDeclaration
 func SawDeclaration(lineNum C.int, typ *C.char, scalar, proplist goHandle) goHandle {
 	return ht.Add(Declaration{
-		LineNum: int(lineNum),
-		Type:    C.GoString(typ),
-		Scalar:  ht.Get(scalar).(Value),
-		Props:   ht.Get(proplist).([]Prop),
+		Filename: curFilename,
+		LineNum:  int(lineNum),
+		Type:     C.GoString(typ),
+		Scalar:   ht.Get(scalar).(Value),
+		Props:    ht.Get(proplist).([]Prop),
 	})
 }
 

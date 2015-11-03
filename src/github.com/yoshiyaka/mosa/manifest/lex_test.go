@@ -1166,12 +1166,24 @@ func TestLex(t *testing.T) {
 	for _, test := range lexTests {
 		for i, _ := range test.ast.Classes {
 			test.ast.Classes[i].Filename = "test.manifest"
+
+			for j, _ := range test.ast.Classes[i].Declarations {
+				test.ast.Classes[i].Declarations[j].Filename = "test.manifest"
+			}
 		}
 		for i, _ := range test.ast.Defines {
 			test.ast.Defines[i].Filename = "test.manifest"
+
+			for j, _ := range test.ast.Defines[i].Declarations {
+				test.ast.Defines[i].Declarations[j].Filename = "test.manifest"
+			}
 		}
 		for i, _ := range test.ast.Nodes {
 			test.ast.Nodes[i].Filename = "test.manifest"
+
+			for j, _ := range test.ast.Nodes[i].Declarations {
+				test.ast.Nodes[i].Declarations[j].Filename = "test.manifest"
+			}
 		}
 
 		ast := NewAST()
@@ -1268,10 +1280,11 @@ func TestParseMultipleFiles(t *testing.T) {
 				VariableDefs: []VariableDef{},
 				Declarations: []Declaration{
 					{
-						LineNum: 3,
-						Type:    "class",
-						Scalar:  QuotedString("A"),
-						Props:   []Prop{},
+						Filename: "test.ms",
+						LineNum:  3,
+						Type:     "class",
+						Scalar:   QuotedString("A"),
+						Props:    []Prop{},
 					},
 				},
 			},
@@ -1285,10 +1298,11 @@ func TestParseMultipleFiles(t *testing.T) {
 				VariableDefs: []VariableDef{},
 				Declarations: []Declaration{
 					{
-						LineNum: 3,
-						Type:    "exec",
-						Scalar:  QuotedString("ls"),
-						Props:   []Prop{},
+						Filename: "test2.ms",
+						LineNum:  3,
+						Type:     "exec",
+						Scalar:   QuotedString("ls"),
+						Props:    []Prop{},
 					},
 				},
 			},
