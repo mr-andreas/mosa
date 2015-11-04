@@ -46,3 +46,38 @@ facter single file($name, $content = "") {
 		return false
 	}
 }
+
+// Defines which use exec needs a facter (how would we otherwise know whether
+// the define is already fullfilled?). 
+define single configfile($name, $key, $val) {
+	// mosa will detect the following line and require a facter for the type
+	exec { "echo '$key = $val' > $name": }
+}
+
+facter single configfile($name, $key, $val) {
+	$content = exec { "cat $name": }
+	
+	return $content == "$key = $val"
+}
+
+// Defines which are composed of other defines doesn't need facters. Instead,
+// the facters of the types declared inside the define will be used. It is
+// however prefectly fine to still supply a facter in these cases.
+define single configfilewithprefix($name, $prefix, $key, $val) {
+	// This declaration references another define, so we don't need a facter for
+	// configfilewithprefix.
+	configfile { $name:
+		key => "$prefix-$key",
+		val => $val,
+	}
+}
+
+// What about this? It needs a separate facter for the exec?
+define single configfileandbinpkg($name, $configKey, $configVal) {
+	configfile { "/etc/$name/config.conf":
+		key => $configKey,
+		val => $configVal,
+	}
+	
+	exec { "wget -O /usr/bin/$name/ http://buildserver.local/$name": }
+}
