@@ -205,9 +205,64 @@ func (ls *localState) resolveValue(v Value, lineNum int) (Value, error) {
 		return ls.resolveReference(v.(Reference))
 	case InterpolatedString:
 		return ls.resolveInterpolatedString(v.(InterpolatedString))
+	case Expression:
+		return ls.resolveExpression(v.(Expression))
 	default:
 		return v, nil
 	}
+}
+
+func (ls *localState) resolveExpression(e Expression) (v Value, retErr error) {
+	left, leftErr := ls.resolveValue(e.Left, e.LineNum)
+	if leftErr != nil {
+		return nil, leftErr
+	}
+	right, rightErr := ls.resolveValue(e.Right, e.LineNum)
+	if rightErr != nil {
+		return nil, rightErr
+	}
+
+	if left == right {
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			retErr = fmt.Errorf(
+				"Bad types supplied for operation '%s' at %s:%d",
+				e.Operation, ls.definedInFile, e.LineNum,
+			)
+		}
+	}()
+
+	// The functions below will panic if one of the types are bad (for instance
+	// 5 > "banana" or true * 4.
+	switch e.Operation {
+	case "+":
+		return ExpPlus(left, right)
+	case "-":
+		return ExpMinus(left, right)
+	case "*":
+		return ExpMultiply(left, right)
+	case "/":
+		return ExpDivide(left, right)
+	case "<":
+		return ExpLT(left, right)
+	case "<=":
+		return ExpLTEq(left, right)
+	case ">":
+		return ExpGT(left, right)
+	case ">=":
+		return ExpGTEq(left, right)
+	case "&&":
+		return ExpBoolAnd(left, right)
+	case "||":
+		return ExpBoolOr(left, right)
+	}
+
+	return nil, fmt.Errorf(
+		"Encountered unknown operation '%s' in expression at %s:%d",
+		e.Operation, ls.definedInFile, e.LineNum,
+	)
 }
 
 // Defines local variables from an array of arguments. This is used when a class
