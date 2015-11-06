@@ -46,6 +46,7 @@ void yyerror(const char *s);
 %token CLASS
 %token DEFINE
 %token NODE
+%token FUNC
 %token ARROW
 %token <sval> QUOTED_STRING
 %token INTPOL_START

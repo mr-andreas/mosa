@@ -43,6 +43,7 @@ int level = 0;
 <INITIAL>class	{ return CLASS; }
 <INITIAL>define	{ return DEFINE; }
 <INITIAL>node	{ return NODE; }
+<INITIAL>func	{ return FUNC; }
 [0-9]+\.[0-9]+	{ yylval.fval = atof(yytext); return FLOAT; }
 [0-9]+			{ yylval.ival = atoi(yytext); return INT; }
 =>				{ return ARROW; }

@@ -81,3 +81,60 @@ define single configfileandbinpkg($name, $configKey, $configVal) {
 	
 	exec { "wget -O /usr/bin/$name/ http://buildserver.local/$name": }
 }
+
+
+
+// Functions. $localState from the class/define realizing the function is
+// automatically sent along. This is useful for instance when creating a
+// template function, so that the variables in the define may be used in the
+// template.
+func template($localState, $templateFilename) {
+	return exec { "mytemplateengine $templateFilename":
+		stdin => json($localState),
+	}
+}
+
+// Maybe exec is a function?
+// But that would be problematic... our function calls are no longer
+// deterministic. If exec is a define/realization, a separate facter for each
+// exec is required, giving a more predictable result.
+func template($localState, $templateFilename) {
+	return exec("mytemplateengine $templateFilename", [
+		stdin => json($localState),
+	])
+}
+
+// Switch statements
+// Defaults?
+define single service($name, $ensure,) {
+	switch $ensure {
+		case "running": exec { "service $name start": }
+		case "stopped": exec { "service $name stop": }
+	}
+}
+
+facter single service($name, $ensure,) {
+	$status = exec { "service $name status": }
+
+	switch $ensure {
+		case "running": return $status == "started"
+		case "stopped": return $status == "stopped"
+	}
+}
+
+class c($val) {
+	switch $val {
+		case "foo": $baz = "fooVal"
+		case "bar": $baz = "barVal"
+	}
+}
+
+
+
+
+
+
+
+
+
+
