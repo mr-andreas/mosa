@@ -56,6 +56,10 @@ void yyerror(const char *s);
 %token <sval> INTPOL_TEXT
 %token <sval> INTPOL_VARIABLE
 
+%left COMPARISON
+%left PLUSMINUS
+%left MULDIV
+
 %type <gohandle> def
 %type <gohandle> defs
 %type <gohandle> define
@@ -73,7 +77,7 @@ void yyerror(const char *s);
 %type <gohandle> proplist
 %type <gohandle> prop
 %type <gohandle> value
-%type <gohandle> expression factor_expression
+%type <gohandle> expression
 %type <gohandle> interpolated_string
 %type <gohandle> interpolated_string_list
 %type <gohandle> interpolated_string_value
@@ -159,13 +163,11 @@ prop:
 	STRING ARROW value ','	{ $$ = sawProp(@1.first_line, $1, $3); }
 
 expression:
-	  factor_expression							{ $$ = $1; }
-	//| '(' expression ')'			{ $$ = $2; }
-	| expression PLUSMINUS factor_expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
-
-factor_expression:
-	  value
-	| factor_expression MULDIV factor_expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
+	  value								{ $$ = $1; }
+	| '(' expression ')'				{ $$ = $2; }
+	| expression PLUSMINUS	expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
+	| expression MULDIV		expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
+	| expression COMPARISON	expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
 
 value:
 	  scalar		{ $$ = $1; }

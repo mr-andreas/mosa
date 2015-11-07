@@ -87,7 +87,7 @@ var lexTests = []struct {
 		class Test {
 			$prop = 4 * (2 + 3)
 			$foo = $prop / 'foo' - 8
-			$bool = 4 > 3
+			$bool = 4 > 3 + 1
 		}
 		`,
 
@@ -118,14 +118,14 @@ var lexTests = []struct {
 							VariableName: VariableName{4, "$foo"},
 							Val: Expression{
 								LineNum:   4,
-								Operation: "/",
-								Left:      VariableName{4, "$prop"},
-								Right: Expression{
-									LineNum:   3,
-									Operation: "-",
-									Left:      QuotedString("foo"),
-									Right:     8,
+								Operation: "-",
+								Left: Expression{
+									LineNum:   4,
+									Operation: "/",
+									Left:      VariableName{4, "$prop"},
+									Right:     QuotedString("foo"),
 								},
+								Right: 8,
 							},
 						},
 						{
@@ -135,7 +135,12 @@ var lexTests = []struct {
 								LineNum:   5,
 								Operation: ">",
 								Left:      4,
-								Right:     3,
+								Right: Expression{
+									LineNum:   5,
+									Operation: "+",
+									Left:      3,
+									Right:     1,
+								},
 							},
 						},
 					},
@@ -161,26 +166,26 @@ var lexTests = []struct {
 					VariableDefs: []VariableDef{
 						{
 							LineNum:      3,
-							VariableName: VariableName{3, "$prop"},
+							VariableName: VariableName{3, "$order"},
 							Val: Expression{
 								LineNum:   3,
-								Operation: "+",
-								Left:      1,
-								Right: Expression{
+								Operation: "-",
+								Left: Expression{
 									LineNum:   3,
-									Operation: "*",
-									Left: Expression{
+									Operation: "+",
+									Left:      1,
+									Right: Expression{
 										LineNum:   3,
 										Operation: "*",
 										Left:      5,
 										Right:     3,
 									},
-									Right: Expression{
-										LineNum:   3,
-										Operation: "/",
-										Left:      4,
-										Right:     2,
-									},
+								},
+								Right: Expression{
+									LineNum:   3,
+									Operation: "/",
+									Left:      4,
+									Right:     2,
 								},
 							},
 						},

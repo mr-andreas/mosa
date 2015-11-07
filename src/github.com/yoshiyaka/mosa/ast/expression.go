@@ -18,7 +18,15 @@ type Expression struct {
 }
 
 func (e Expression) String() string {
-	return fmt.Sprintf(
-		"(%s) %s (%s)", valToStr(e.Left), e.Operation, valToStr(e.Right),
-	)
+	left := valToStr(e.Left)
+	if _, ok := e.Left.(Expression); ok {
+		left = "(" + left + ")"
+	}
+
+	right := valToStr(e.Right)
+	if _, ok := e.Right.(Expression); ok {
+		right = "(" + right + ")"
+	}
+
+	return fmt.Sprintf("%s %s %s", left, e.Operation, right)
 }
