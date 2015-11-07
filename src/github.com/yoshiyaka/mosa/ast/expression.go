@@ -1,5 +1,7 @@
 package ast
 
+import "fmt"
+
 // Operation. Supported values are: + - * / < > != ==
 type ExpOp string
 
@@ -13,4 +15,10 @@ type Expression struct {
 	// (such as VariableName or QuotedString).
 	Left  Value
 	Right Value
+}
+
+func (e Expression) String() string {
+	return fmt.Sprintf(
+		"(%s) %s (%s)", valToStr(e.Left), e.Operation, valToStr(e.Right),
+	)
 }

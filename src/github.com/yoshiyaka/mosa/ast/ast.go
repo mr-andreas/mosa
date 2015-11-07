@@ -256,6 +256,8 @@ func valToStr(i interface{}) string {
 		return fmt.Sprintf("%d", i)
 	case stringable:
 		return i.(stringable).String()
+	case Expression:
+		return i.(Expression).String()
 	default:
 		return i.(string)
 	}

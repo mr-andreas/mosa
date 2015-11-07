@@ -48,6 +48,9 @@ void yyerror(const char *s);
 %token NODE
 %token FUNC
 %token ARROW
+%token <sval> PLUSMINUS // + -
+%token <sval> MULDIV // * /
+%token <sval> COMPARISON // > < >= <=
 %token <sval> QUOTED_STRING
 %token INTPOL_START
 %token <sval> INTPOL_TEXT
@@ -70,6 +73,7 @@ void yyerror(const char *s);
 %type <gohandle> proplist
 %type <gohandle> prop
 %type <gohandle> value
+%type <gohandle> expression factor_expression
 %type <gohandle> interpolated_string
 %type <gohandle> interpolated_string_list
 %type <gohandle> interpolated_string_value
@@ -140,7 +144,7 @@ def:
 	variable_def | declaration;
 	
 variable_def:
-	VARIABLENAME '=' value { $$ = sawVariableDef(@1.first_line, $1, $3);	}
+	VARIABLENAME '=' expression { $$ = sawVariableDef(@1.first_line, $1, $3);	}
 
 declaration:
 	  STRING '{' string_or_var ':' proplist '}'	{ $$ = sawDeclaration(@1.first_line, $1, $3, $5); }
@@ -153,6 +157,15 @@ proplist:
 
 prop:
 	STRING ARROW value ','	{ $$ = sawProp(@1.first_line, $1, $3); }
+
+expression:
+	  factor_expression							{ $$ = $1; }
+	//| '(' expression ')'			{ $$ = $2; }
+	| expression PLUSMINUS factor_expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
+
+factor_expression:
+	  value
+	| factor_expression MULDIV factor_expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
 
 value:
 	  scalar		{ $$ = $1; }

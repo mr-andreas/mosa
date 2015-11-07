@@ -66,4 +66,16 @@ int level = 0;
 \}				{ if(--level == 0) { BEGIN(INITIAL); } return '}'; }
 [\(\):;=,[\]]	{ return yytext[0]; }
 [\n]			{ line_num++; }
+[+-]			{
+  yylval.sval = strdup(yytext);
+  return PLUSMINUS;
+}
+[*/]			{
+  yylval.sval = strdup(yytext);
+  return MULDIV;
+}
+[><]=?			{
+  yylval.sval = strdup(yytext);
+  return COMPARISON;
+}
 %%

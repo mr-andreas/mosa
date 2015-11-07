@@ -180,6 +180,16 @@ func sawVariableName(lineNum C.int, name *C.char) goHandle {
 	return ht.Add(VariableName{int(lineNum), C.GoString(name)})
 }
 
+//export sawExpression
+func sawExpression(lineNum C.int, op *C.char, left, right goHandle) goHandle {
+	return ht.Add(Expression{
+		LineNum:   int(lineNum),
+		Operation: ExpOp(C.GoString(op)),
+		Left:      ht.Get(left),
+		Right:     ht.Get(right),
+	})
+}
+
 //export sawDeclaration
 func sawDeclaration(lineNum C.int, typ *C.char, scalar, proplist goHandle) goHandle {
 	return ht.Add(Declaration{

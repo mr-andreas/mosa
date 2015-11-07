@@ -85,6 +85,115 @@ var lexTests = []struct {
 	{
 		`
 		class Test {
+			$prop = 4 * (2 + 3)
+			$foo = $prop / 'foo' - 8
+			$bool = 4 > 3
+		}
+		`,
+
+		&AST{
+			Classes: []Class{
+				{
+					LineNum: 2,
+					Name:    "Test",
+					ArgDefs: []VariableDef{},
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      3,
+							VariableName: VariableName{3, "$prop"},
+							Val: Expression{
+								LineNum:   3,
+								Operation: "*",
+								Left:      4,
+								Right: Expression{
+									LineNum:   3,
+									Operation: "+",
+									Left:      2,
+									Right:     3,
+								},
+							},
+						},
+						{
+							LineNum:      4,
+							VariableName: VariableName{4, "$foo"},
+							Val: Expression{
+								LineNum:   4,
+								Operation: "/",
+								Left:      VariableName{4, "$prop"},
+								Right: Expression{
+									LineNum:   3,
+									Operation: "-",
+									Left:      QuotedString("foo"),
+									Right:     8,
+								},
+							},
+						},
+						{
+							LineNum:      5,
+							VariableName: VariableName{5, "$bool"},
+							Val: Expression{
+								LineNum:   5,
+								Operation: ">",
+								Left:      4,
+								Right:     3,
+							},
+						},
+					},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
+			$order = 1 + 5 * 3 - 4 / 2
+		}
+		`,
+
+		&AST{
+			Classes: []Class{
+				{
+					LineNum: 2,
+					Name:    "Test",
+					ArgDefs: []VariableDef{},
+					VariableDefs: []VariableDef{
+						{
+							LineNum:      3,
+							VariableName: VariableName{3, "$prop"},
+							Val: Expression{
+								LineNum:   3,
+								Operation: "+",
+								Left:      1,
+								Right: Expression{
+									LineNum:   3,
+									Operation: "*",
+									Left: Expression{
+										LineNum:   3,
+										Operation: "*",
+										Left:      5,
+										Right:     3,
+									},
+									Right: Expression{
+										LineNum:   3,
+										Operation: "/",
+										Left:      4,
+										Right:     2,
+									},
+								},
+							},
+						},
+					},
+					Declarations: []Declaration{},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
 			$prop = [ 'x', 1, [ 'y', ], ]
 		}
 		`,
@@ -1200,7 +1309,10 @@ func TestLex(t *testing.T) {
 				t.Log(string(js2))
 				js, _ := json.MarshalIndent(ast, "", "  ")
 				t.Log(string(js))
-				t.Fatal(test.manifest)
+				t.Error("Expected manifest", test.manifest)
+				if ast != nil {
+					t.Log("Read manifest", ast.String())
+				}
 			}
 		}
 	}
