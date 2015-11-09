@@ -199,6 +199,73 @@ var lexTests = []struct {
 	{
 		`
 		class Test {
+			exec { 'my' + 'type':
+				threads => 6-4,
+				args => [
+					[ 5 + 2, ] - [ 7, ],
+				],
+			}
+		}
+		`,
+
+		&AST{
+			Classes: []Class{
+				{
+					LineNum:      2,
+					Name:         "Test",
+					ArgDefs:      []VariableDef{},
+					VariableDefs: []VariableDef{},
+					Declarations: []Declaration{
+						{
+							LineNum: 3,
+							Type:    "exec",
+							Scalar: Expression{
+								LineNum:   3,
+								Operation: "+",
+								Left:      QuotedString("my"),
+								Right:     QuotedString("type"),
+							},
+							Props: []Prop{
+								{
+									LineNum: 4,
+									Name:    "threads",
+									Value: Expression{
+										LineNum:   4,
+										Operation: "-",
+										Left:      6,
+										Right:     4,
+									},
+								},
+								{
+									LineNum: 5,
+									Name:    "args",
+									Value: Array{
+										Expression{
+											LineNum:   6,
+											Operation: "-",
+											Left: Array{
+												Expression{
+													LineNum:   6,
+													Operation: "+",
+													Left:      5,
+													Right:     2,
+												},
+											},
+											Right: Array{7},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		class Test {
 			$prop = [ 'x', 1, [ 'y', ], ]
 		}
 		`,

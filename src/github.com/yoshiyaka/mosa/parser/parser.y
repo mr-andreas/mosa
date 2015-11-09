@@ -84,7 +84,6 @@ void yyerror(const char *s);
 %type <gohandle> arrayentries
 %type <gohandle> array
 %type <gohandle> scalar
-%type <gohandle> string_or_var
 %type <gohandle> reference
 
 %%
@@ -151,8 +150,8 @@ variable_def:
 	VARIABLENAME '=' expression { $$ = sawVariableDef(@1.first_line, $1, $3);	}
 
 declaration:
-	  STRING '{' string_or_var ':' proplist '}'	{ $$ = sawDeclaration(@1.first_line, $1, $3, $5); }
-	| STRING '{' string_or_var ':' '}'			{ $$ = sawDeclaration(@1.first_line, $1, $3, nilArray(ASTTYPE_PROPLIST)); }
+	  STRING '{' expression ':' proplist '}'	{ $$ = sawDeclaration(@1.first_line, $1, $3, $5); }
+	| STRING '{' expression ':' '}'			{ $$ = sawDeclaration(@1.first_line, $1, $3, nilArray(ASTTYPE_PROPLIST)); }
 
 proplist:
 	  proplist prop	{ $$ = appendArray($1, $2); }
@@ -160,7 +159,7 @@ proplist:
 	;
 
 prop:
-	STRING ARROW value ','	{ $$ = sawProp(@1.first_line, $1, $3); }
+	STRING ARROW expression ','	{ $$ = sawProp(@1.first_line, $1, $3); }
 
 expression:
 	  value								{ $$ = $1; }
@@ -180,11 +179,6 @@ scalar:
 	| VARIABLENAME			{ $$ = sawVariableName(@1.first_line, $1);			}
 	| INT					{ $$ = sawInt(@1.first_line, $1);					}
 
-string_or_var:
-	  QUOTED_STRING			{ $$ = sawQuotedString(@1.first_line, $1);			}
-	| interpolated_string	{ $$ = $1;											}
-	| VARIABLENAME			{ $$ = sawVariableName(@1.first_line, $1);			}
-
 reference:
 	STRING '[' scalar ']' { $$ = sawReference(@1.first_line, $1, $3); }
 
@@ -193,8 +187,8 @@ array:
 	| '[' ']' 				{ $$ = nilArray(ASTTYPE_ARRAY); }
 
 arrayentries:
-	  arrayentries value ','	{ $$ = appendArray($1, $2); }
-	| value ','					{ $$ = appendArray(nilArray(ASTTYPE_ARRAY), $1); }
+	  arrayentries expression ','	{ $$ = appendArray($1, $2); }
+	| expression ','				{ $$ = appendArray(nilArray(ASTTYPE_ARRAY), $1); }
 
 interpolated_string:
 	  INTPOL_START interpolated_string_list	{ $$ = $2; }
