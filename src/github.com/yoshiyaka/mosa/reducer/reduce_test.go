@@ -549,6 +549,43 @@ var resolveFileTest = []struct {
 		mytype { 'foostr': }
 		`,
 	},
+
+	{
+		`
+		// Expressions
+		node 'x' { class { 'A': } }
+		class A {
+			$str = 'a' + 'bar'
+			exec { $str: }
+		}
+		`,
+		`
+		exec { 'abar': }
+		`,
+	},
+
+	{
+		`
+		// Expressions
+		node 'x' { class { 'A': } }
+		class A {
+			$number = 2
+			mytype { "foo" + 'bar':
+				workers => 5 + 6 * $number,
+				array => [
+					$number, 'string', 2+3,
+				],
+			}
+		}
+		define single mytype($name, $workers, $array,) {}
+		`,
+		`
+		mytype { 'foobar': 
+			workers => 17,
+			array => [ 2, 'string', 5, ],
+		}
+		`,
+	},
 }
 
 func TestResolveFile(t *testing.T) {
@@ -582,7 +619,7 @@ func TestResolveFile(t *testing.T) {
 
 		if reducedDecls, err := Reduce(realAST); err != nil {
 			t.Log(test.inputManifest)
-			t.Fatal(err)
+			t.Error(err)
 		} else if decls := expectedAST.Classes[0].Declarations; !ast.DeclarationsEquals(decls, reducedDecls) {
 			t.Logf("%#v", decls)
 			t.Logf("%#v", reducedDecls)
@@ -1113,6 +1150,70 @@ func TestBadDefs(t *testing.T) {
 			t.Error("Got no error for bad file")
 		} else if err.Error() != test.expectedErr {
 			t.Log(test.manifest)
+			t.Error("Got bad error:", err)
+		}
+	}
+}
+
+var badExpressionManifests = []struct {
+	expression    string
+	expectedError string
+}{
+	{
+		`$foo = 5 / 'notanumber'`,
+		``,
+	},
+	{
+		`$foo = true > false`,
+		`Comparing bools`,
+	},
+	{
+		`$foo = 5 > true`,
+		`Comparing bools`,
+	},
+	{
+		`$foo = 5 > (4 > 3)`,
+		`Comparing bools`,
+	},
+	{
+		`$foo = 5 / 'foo'`,
+		`Math on strings`,
+	},
+	{
+		`$foo = "bar" / 'foo'`,
+		`Math on strings`,
+	},
+	{
+		`$foo = 5 * 'foo'`,
+		`Math on strings`,
+	},
+	{
+		`$foo = "foo" * 'foo'`,
+		`Math on strings`,
+	},
+	{
+		`$foo = 5 + []`,
+		`Math on arrays`,
+	},
+	{
+		`$foo = [] + 'foo'`,
+		`Math on arrays`,
+	},
+}
+
+func TestBadExpressionManifests(t *testing.T) {
+	for _, test := range badExpressionManifests {
+		realManifest := fmt.Sprintf("class c { %s }", test.expression)
+
+		ast := ast.NewAST()
+		if err := parser.Parse(ast, "test.ms", strings.NewReader(realManifest)); err != nil {
+			t.Log(realManifest)
+			t.Error(err)
+			continue
+		}
+
+		if _, err := Reduce(ast); err == nil || err.Error() != test.expectedError {
+			t.Log(test.expression)
 			t.Error("Got bad error:", err)
 		}
 	}

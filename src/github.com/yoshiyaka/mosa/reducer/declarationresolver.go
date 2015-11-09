@@ -123,13 +123,16 @@ func (cr *declarationResolver) resolveDeclaration(decl *Declaration) (Declaratio
 	}
 
 	var name string
-	if n, ok := ret.Scalar.(QuotedString); !ok {
+	if resolvedName, err := cr.ls.resolveValue(ret.Scalar, decl.LineNum); err != nil {
+		return ret, err
+	} else if n, ok := resolvedName.(QuotedString); !ok {
 		return ret, fmt.Errorf(
 			"Can't realize declaration of type %s with non-string name at %s:%d",
 			ret.Type, cr.define.Filename, ret.LineNum,
 		)
 	} else {
 		name = string(n)
+		ret.Scalar = n
 	}
 
 	if previous := cr.gs.lockRealization(decl, name, cr.define.Filename, decl.LineNum); previous != nil {

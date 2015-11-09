@@ -10,6 +10,8 @@ func ExpPlus(a, b Value) (Value, error) {
 	switch a.(type) {
 	case int:
 		return a.(int) + b.(int), nil
+	case QuotedString:
+		return a.(QuotedString) + b.(QuotedString), nil
 	}
 
 	panic("Bad types")

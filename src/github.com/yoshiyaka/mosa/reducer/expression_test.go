@@ -36,6 +36,20 @@ var expressionTests = []struct {
 	{Expression{0, "||", true, true}, true},
 
 	{Expression{0, "*", Expression{0, "-", 4, 5}, 5}, -5},
+
+	{
+		Expression{0, "+", QuotedString("a"), QuotedString("b")},
+		QuotedString("ab"),
+	},
+
+	{
+		Expression{
+			0, "+",
+			InterpolatedString{0, []interface{}{"a"}},
+			InterpolatedString{0, []interface{}{"b"}},
+		},
+		QuotedString("ab"),
+	},
 }
 
 func TestExpressions(t *testing.T) {
