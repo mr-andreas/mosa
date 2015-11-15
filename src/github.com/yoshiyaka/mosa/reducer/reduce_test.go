@@ -688,6 +688,26 @@ var resolveFileTest = []struct {
 		exec { 'fromelseelse': }
 		`,
 	},
+
+	{
+		`
+		// If-statements in defines
+		node 'x' { class { 'A': } }
+		class A {
+			mytype { 'foo': }
+		}
+		define single mytype($name,) {
+			if $name == "foo" {
+				exec { "name is foo": }
+			}
+		}
+		`,
+
+		`
+		exec { 'name is foo': }
+		mytype { 'foo': }
+		`,
+	},
 }
 
 func TestResolveFile(t *testing.T) {

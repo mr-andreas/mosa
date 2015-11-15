@@ -247,6 +247,8 @@ func (ls *localState) resolveExpression(e Expression) (v Value, retErr error) {
 		return ExpDivide(left, right)
 	case "==":
 		return ExpEquals(left, right)
+	case "!=":
+		return ExpNotEquals(left, right)
 	case "<":
 		return ExpLT(left, right)
 	case "<=":

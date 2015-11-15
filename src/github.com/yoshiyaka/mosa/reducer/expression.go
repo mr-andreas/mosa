@@ -57,6 +57,11 @@ func ExpEquals(a, b Value) (Bool, error) {
 	panic("Bad types")
 }
 
+func ExpNotEquals(a, b Value) (Bool, error) {
+	b, err := ExpEquals(a, b)
+	return Bool(!b.(bool)), err
+}
+
 func ExpLT(a, b Value) (bool, error) {
 	switch a.(type) {
 	case int:

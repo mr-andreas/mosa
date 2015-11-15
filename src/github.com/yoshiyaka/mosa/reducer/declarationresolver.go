@@ -37,12 +37,10 @@ func newDeclarationResolver(d *Define, name Value, withArgs []Prop, gs *globalSt
 }
 
 func (cr *declarationResolver) resolve() (Define, error) {
-	def := cr.define
-
 	retClass := *cr.define
 
 	nameKey := "name"
-	if def.Type == DefineTypeMultiple {
+	if cr.define.Type == DefineTypeMultiple {
 		nameKey = "names"
 	}
 	for _, arg := range cr.args {
@@ -61,13 +59,25 @@ func (cr *declarationResolver) resolve() (Define, error) {
 	})
 
 	// Start by loading all top-level variables defined
-	if err := cr.ls.setVarsFromArgs(cr.args, def.ArgDefs); err != nil {
+	if err := cr.ls.setVarsFromArgs(cr.args, cr.define.ArgDefs); err != nil {
 		return retClass, err
 	}
 
-	for _, def := range def.Block.VariableDefs {
+	var err error
+	retClass.Block, err = cr.resolveBlock(&cr.define.Block)
+	if err != nil {
+		return retClass, err
+	}
+
+	return retClass, nil
+}
+
+func (cr *declarationResolver) resolveBlock(block *Block) (Block, error) {
+	retBlock := *block
+
+	for _, def := range block.VariableDefs {
 		if _, exists := cr.ls.varDefsByName[def.VariableName.Str]; exists {
-			return retClass, &Err{
+			return retBlock, &Err{
 				Line:       def.LineNum,
 				Type:       ErrorTypeMultipleDefinition,
 				SymbolName: string(def.VariableName.Str),
@@ -78,33 +88,73 @@ func (cr *declarationResolver) resolve() (Define, error) {
 	}
 
 	// Resolve top-level variables defined
-	newDefs := make([]VariableDef, len(def.Block.VariableDefs))
-	for i, def := range def.Block.VariableDefs {
+	newDefs := make([]VariableDef, len(block.VariableDefs))
+	for i, def := range block.VariableDefs {
 		var err error
 		def.Val, err = cr.ls.resolveValue(def.Val, def.LineNum)
 		if err != nil {
-			return retClass, err
+			return retBlock, err
 		}
 		newDefs[i] = def
 	}
+	retBlock.VariableDefs = newDefs
 
-	retClass.Block.VariableDefs = newDefs
+	retBlock.Ifs = make([]If, len(block.Ifs))
+	for i, _if := range block.Ifs {
+		var err error
+		retBlock.Ifs[i], err = cr.resolveIf(&_if)
+		if err != nil {
+			return retBlock, err
+		}
+	}
 
-	retClass.Block.Declarations = make([]Declaration, len(def.Block.Declarations))
-	for _, decl := range def.Block.Declarations {
+	retBlock.Declarations = make([]Declaration, len(block.Declarations))
+	for _, decl := range block.Declarations {
 		if decl.Type == "class" {
-			return retClass, fmt.Errorf(
+			return retBlock, fmt.Errorf(
 				"Can't realize classes inside of a define at %s:%d",
 				cr.define.Filename, decl.LineNum,
 			)
 		}
 
 		if _, err := cr.resolveDeclaration(&decl); err != nil {
-			return retClass, err
+			return retBlock, err
 		}
 	}
 
-	return retClass, nil
+	return retBlock, nil
+}
+
+func (cr *declarationResolver) resolveIf(_if *If) (If, error) {
+	retIf := *_if
+
+	var boolean bool
+	if boolVal, err := cr.ls.resolveValue(_if.Expression, _if.LineNum); err != nil {
+		return retIf, err
+	} else if realBool, ok := boolVal.(Bool); !ok {
+		return retIf, fmt.Errorf(
+			"Expressions in if-statements must be boolean at %s:%d",
+			cr.define.Filename, _if.LineNum,
+		)
+	} else {
+		boolean = bool(realBool)
+	}
+
+	if boolean {
+		var err error
+		retIf.Block, err = cr.resolveBlock(&_if.Block)
+		if err != nil {
+			return retIf, err
+		}
+	} else if _if.Else != nil {
+		if block, err := cr.resolveBlock(_if.Else); err != nil {
+			return retIf, err
+		} else {
+			retIf.Else = &block
+		}
+	}
+
+	return retIf, nil
 }
 
 func (cr *declarationResolver) resolveDeclaration(decl *Declaration) (Declaration, error) {

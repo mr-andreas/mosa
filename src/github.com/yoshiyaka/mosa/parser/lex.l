@@ -86,5 +86,9 @@ false			{ return BOOLFALSE; }
   yylval.sval = strdup(yytext);
   return COMPARISON;
 }
+!=				{
+  yylval.sval = strdup(yytext);
+  return COMPARISON;
+}
 [\(\):;=,[\]]	{ return yytext[0]; }
 %%
