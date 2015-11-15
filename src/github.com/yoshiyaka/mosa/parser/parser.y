@@ -48,9 +48,11 @@ void yyerror(const char *s);
 %token NODE
 %token FUNC
 %token ARROW
+%token IF ELSE
+%token <ival> BOOLTRUE BOOLFALSE
 %token <sval> PLUSMINUS // + -
 %token <sval> MULDIV // * /
-%token <sval> COMPARISON // > < >= <=
+%token <sval> COMPARISON // == > < >= <=
 %token <sval> QUOTED_STRING
 %token INTPOL_START
 %token <sval> INTPOL_TEXT
@@ -65,6 +67,7 @@ void yyerror(const char *s);
 %type <gohandle> node
 %type <gohandle> block
 %type <gohandle> statement statements
+%type <gohandle> ifstmt
 %type <gohandle> optional_arg_defs
 %type <gohandle> define_arg_defs
 %type <gohandle> arg_defs
@@ -114,7 +117,7 @@ statements:
 	| statement				{ $$ = appendArray(nilArray(ASTTYPE_STMTS), $1); }
 
 statement:
-	  variable_def | declaration;
+	  variable_def | declaration | ifstmt;
 
 define:
 	DEFINE STRING STRING define_arg_defs block {
@@ -150,6 +153,10 @@ declaration:
 	  STRING '{' expression ':' proplist '}'	{ $$ = sawDeclaration(@1.first_line, $1, $3, $5); }
 	| STRING '{' expression ':' '}'			{ $$ = sawDeclaration(@1.first_line, $1, $3, nilArray(ASTTYPE_PROPLIST)); }
 
+ifstmt:
+	  IF expression block				{ $$ = sawIf(@1.first_line, $2, $3, 0);  }
+	| IF expression block ELSE block	{ $$ = sawIf(@1.first_line, $2, $3, $5); }
+
 proplist:
 	  proplist prop	{ $$ = appendArray($1, $2); }
 	| prop			{ $$ = appendArray(nilArray(ASTTYPE_PROPLIST), $1); }
@@ -171,10 +178,12 @@ value:
 	| reference		{ $$ = $1; }
 
 scalar:
-	  QUOTED_STRING			{ $$ = sawQuotedString(@1.first_line, $1);			}
-	| interpolated_string	{ $$ = $1;											}
-	| VARIABLENAME			{ $$ = sawVariableName(@1.first_line, $1);			}
-	| INT					{ $$ = sawInt(@1.first_line, $1);					}
+	  QUOTED_STRING			{ $$ = sawQuotedString(@1.first_line, $1);	}
+	| interpolated_string	{ $$ = $1;									}
+	| VARIABLENAME			{ $$ = sawVariableName(@1.first_line, $1);	}
+	| INT					{ $$ = sawInt(@1.first_line, $1);			}
+	| BOOLTRUE				{ $$ = sawBoolTrue(); 						}
+	| BOOLFALSE				{ $$ = sawBoolFalse();						}
 
 reference:
 	STRING '[' scalar ']' { $$ = sawReference(@1.first_line, $1, $3); }

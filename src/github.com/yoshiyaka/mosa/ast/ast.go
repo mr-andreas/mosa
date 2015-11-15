@@ -277,7 +277,15 @@ func valToStr(i interface{}) string {
 		return i.(Expression).String()
 	case InterpolatedString:
 		return i.(InterpolatedString).String()
+	case Bool:
+		if i.(Bool) == true {
+			return "true"
+		} else {
+			return "false"
+		}
 	default:
 		return i.(string)
 	}
 }
+
+type Bool bool

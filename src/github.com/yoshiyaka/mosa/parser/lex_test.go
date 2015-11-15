@@ -1445,33 +1445,213 @@ var lexTests = []struct {
 			},
 		},
 	},
+
+	{
+		`
+		// If
+		class Test {
+			if 4 == 5 {
+				$foo = 'bar'
+			}
+		}`,
+
+		&AST{
+			Classes: []Class{
+				{
+					LineNum: 3,
+					Name:    "Test",
+					ArgDefs: []VariableDef{},
+					Block: Block{
+						LineNum:      3,
+						VariableDefs: []VariableDef{},
+						Ifs: []If{
+							{
+								LineNum: 4,
+								Expression: Expression{
+									LineNum:   4,
+									Operation: "==",
+									Left:      4,
+									Right:     5,
+								},
+								Block: Block{
+									LineNum: 4,
+									VariableDefs: []VariableDef{
+										{
+											LineNum:      5,
+											VariableName: VariableName{5, "$foo"},
+											Val:          "bar",
+										},
+									},
+								},
+							},
+						},
+						Declarations: []Declaration{},
+					},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		// If
+		class Test {
+			if true {
+				$foo = 'bar'
+			} else {
+				$foo = 'baz'
+			}
+		}`,
+
+		&AST{
+			Classes: []Class{
+				{
+					LineNum: 3,
+					Name:    "Test",
+					ArgDefs: []VariableDef{},
+					Block: Block{
+						LineNum:      3,
+						VariableDefs: []VariableDef{},
+						Ifs: []If{
+							{
+								LineNum:    4,
+								Expression: Bool(true),
+								Block: Block{
+									LineNum: 4,
+									VariableDefs: []VariableDef{
+										{
+											LineNum:      5,
+											VariableName: VariableName{5, "$foo"},
+											Val:          QuotedString("bar"),
+										},
+									},
+								},
+								Else: &Block{
+									LineNum: 6,
+									VariableDefs: []VariableDef{
+										{
+											LineNum:      7,
+											VariableName: VariableName{7, "$foo"},
+											Val:          QuotedString("baz"),
+										},
+									},
+								},
+							},
+						},
+						Declarations: []Declaration{},
+					},
+				},
+			},
+		},
+	},
+
+	{
+		`
+		// If
+		class Test {
+			if true {
+				if false {
+					$foo = 'bar'
+				}
+			} else {
+				$foo = 'baz'
+			}
+		}`,
+
+		&AST{
+			Classes: []Class{
+				{
+					LineNum: 3,
+					Name:    "Test",
+					ArgDefs: []VariableDef{},
+					Block: Block{
+						LineNum:      3,
+						VariableDefs: []VariableDef{},
+						Ifs: []If{
+							{
+								LineNum:    4,
+								Expression: Bool(true),
+								Block: Block{
+									LineNum: 4,
+									Ifs: []If{
+										{
+											LineNum:    5,
+											Expression: Bool(false),
+											Block: Block{
+												LineNum: 5,
+												VariableDefs: []VariableDef{
+													{
+														LineNum:      6,
+														VariableName: VariableName{6, "$foo"},
+														Val:          QuotedString("bar"),
+													},
+												},
+											},
+										},
+									},
+								},
+								Else: &Block{
+									LineNum: 8,
+									VariableDefs: []VariableDef{
+										{
+											LineNum:      9,
+											VariableName: VariableName{9, "$foo"},
+											Val:          QuotedString("baz"),
+										},
+									},
+								},
+							},
+						},
+						Declarations: []Declaration{},
+					},
+				},
+			},
+		},
+	},
+}
+
+func normalizeBlock(b *Block, filename string) {
+	if b == nil {
+		return
+	}
+
+	b.Filename = filename
+
+	if b.VariableDefs == nil {
+		b.VariableDefs = []VariableDef{}
+	}
+
+	if b.Declarations == nil {
+		b.Declarations = []Declaration{}
+	}
+
+	for i, _ := range b.Declarations {
+		b.Declarations[i].Filename = filename
+	}
+
+	if b.Ifs == nil {
+		b.Ifs = []If{}
+	}
+
+	for i, _ := range b.Ifs {
+		normalizeBlock(&b.Ifs[i].Block, filename)
+		normalizeBlock(b.Ifs[i].Else, filename)
+	}
 }
 
 func TestLex(t *testing.T) {
 	for _, test := range lexTests {
 		for i, _ := range test.ast.Classes {
 			test.ast.Classes[i].Filename = "test.manifest"
-			test.ast.Classes[i].Block.Filename = "test.manifest"
-
-			for j, _ := range test.ast.Classes[i].Block.Declarations {
-				test.ast.Classes[i].Block.Declarations[j].Filename = "test.manifest"
-			}
+			normalizeBlock(&test.ast.Classes[i].Block, "test.manifest")
 		}
 		for i, _ := range test.ast.Defines {
 			test.ast.Defines[i].Filename = "test.manifest"
-			test.ast.Defines[i].Block.Filename = "test.manifest"
-
-			for j, _ := range test.ast.Defines[i].Block.Declarations {
-				test.ast.Defines[i].Block.Declarations[j].Filename = "test.manifest"
-			}
+			normalizeBlock(&test.ast.Defines[i].Block, "test.manifest")
 		}
 		for i, _ := range test.ast.Nodes {
 			test.ast.Nodes[i].Filename = "test.manifest"
-			test.ast.Nodes[i].Block.Filename = "test.manifest"
-
-			for j, _ := range test.ast.Nodes[i].Block.Declarations {
-				test.ast.Nodes[i].Block.Declarations[j].Filename = "test.manifest"
-			}
+			normalizeBlock(&test.ast.Nodes[i].Block, "test.manifest")
 		}
 
 		ast := NewAST()
@@ -1581,6 +1761,7 @@ func TestParseMultipleFiles(t *testing.T) {
 							Props:    []Prop{},
 						},
 					},
+					Ifs: []If{},
 				},
 			},
 		},
@@ -1603,6 +1784,7 @@ func TestParseMultipleFiles(t *testing.T) {
 							Props:    []Prop{},
 						},
 					},
+					Ifs: []If{},
 				},
 			},
 		},

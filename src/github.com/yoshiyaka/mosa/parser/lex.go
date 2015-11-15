@@ -113,6 +113,7 @@ func sawBlock(lineNum C.int, statementsH goHandle) goHandle {
 
 	defs := []VariableDef{}
 	decls := []Declaration{}
+	ifs := []If{}
 
 	for _, val := range statements {
 		switch val.(type) {
@@ -120,6 +121,8 @@ func sawBlock(lineNum C.int, statementsH goHandle) goHandle {
 			defs = append(defs, val.(VariableDef))
 		case Declaration:
 			decls = append(decls, val.(Declaration))
+		case If:
+			ifs = append(ifs, val.(If))
 		default:
 			panic("Value is neither def nor decl")
 		}
@@ -130,7 +133,34 @@ func sawBlock(lineNum C.int, statementsH goHandle) goHandle {
 		LineNum:      int(lineNum),
 		VariableDefs: defs,
 		Declarations: decls,
+		Ifs:          ifs,
 	})
+}
+
+//export sawIf
+func sawIf(lineNum C.int, expression, block, _else goHandle) goHandle {
+	var loadedElse *Block
+	if _else != 0 {
+		b := ht.Get(_else).(Block)
+		loadedElse = &b
+	}
+
+	return ht.Add(If{
+		LineNum:    int(lineNum),
+		Expression: ht.Get(expression).(Value),
+		Block:      ht.Get(block).(Block),
+		Else:       loadedElse,
+	})
+}
+
+//export sawBoolTrue
+func sawBoolTrue() goHandle {
+	return ht.Add(Bool(true))
+}
+
+//export sawBoolFalse
+func sawBoolFalse() goHandle {
+	return ht.Add(Bool(false))
 }
 
 //export sawVariableDef

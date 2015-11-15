@@ -44,6 +44,11 @@ int level = 0;
 <INITIAL>define	{ return DEFINE; }
 <INITIAL>node	{ return NODE; }
 <INITIAL>func	{ return FUNC; }
+if				{ return IF; }
+else			{ return ELSE; }
+true			{ return BOOLTRUE; }
+false			{ return BOOLFALSE; }
+
 [0-9]+\.[0-9]+	{ yylval.fval = atof(yytext); return FLOAT; }
 [0-9]+			{ yylval.ival = atoi(yytext); return INT; }
 =>				{ return ARROW; }
@@ -64,7 +69,6 @@ int level = 0;
 }
 \{				{ ++level; BEGIN(INBODY); return '{'; }
 \}				{ if(--level == 0) { BEGIN(INITIAL); } return '}'; }
-[\(\):;=,[\]]	{ return yytext[0]; }
 [\n]			{ line_num++; }
 [+-]			{
   yylval.sval = strdup(yytext);
@@ -78,4 +82,9 @@ int level = 0;
   yylval.sval = strdup(yytext);
   return COMPARISON;
 }
+==				{
+  yylval.sval = strdup(yytext);
+  return COMPARISON;
+}
+[\(\):;=,[\]]	{ return yytext[0]; }
 %%
