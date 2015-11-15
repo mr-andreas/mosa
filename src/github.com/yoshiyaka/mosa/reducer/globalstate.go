@@ -12,13 +12,8 @@ var (
 		LineNum:  0,
 		Name:     "exec",
 		ArgDefs: []VariableDef{
-			VariableDef{
-				LineNum: 0,
-				VariableName: VariableName{
-					LineNum: 0,
-					Str:     "$name",
-				},
-			},
+			VariableDef{VariableName: VariableName{Str: "$name"}},
+			VariableDef{VariableName: VariableName{Str: "$stdin"}, Val: Bool(false)},
 		},
 		Type: DefineTypeSingle,
 	}
