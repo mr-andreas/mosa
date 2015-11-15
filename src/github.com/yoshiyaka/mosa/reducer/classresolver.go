@@ -60,9 +60,22 @@ func (cr *classResolver) resolve() (Class, error) {
 	if err := cr.ls.setVarsFromArgs(cr.args, cr.original.ArgDefs); err != nil {
 		return retClass, err
 	}
-	for _, def := range c.Block.VariableDefs {
+
+	var err error
+	retClass.Block, err = cr.resolveBlock(&c.Block)
+	if err != nil {
+		return retClass, err
+	}
+
+	return retClass, nil
+}
+
+func (cr *classResolver) resolveBlock(block *Block) (Block, error) {
+	retBlock := *block
+
+	for _, def := range block.VariableDefs {
 		if _, exists := cr.ls.varDefsByName[def.VariableName.Str]; exists {
-			return retClass, &Err{
+			return retBlock, &Err{
 				Line:       def.LineNum,
 				Type:       ErrorTypeMultipleDefinition,
 				SymbolName: string(def.VariableName.Str),
@@ -73,28 +86,68 @@ func (cr *classResolver) resolve() (Class, error) {
 	}
 
 	// Resolve top-level variables defined
-	newDefs := make([]VariableDef, len(c.Block.VariableDefs))
-	for i, def := range c.Block.VariableDefs {
+	newDefs := make([]VariableDef, len(block.VariableDefs))
+	for i, def := range block.VariableDefs {
 		var err error
 		def.Val, err = cr.ls.resolveValue(def.Val, def.LineNum)
 		if err != nil {
-			return retClass, err
+			return retBlock, err
 		}
 		newDefs[i] = def
 	}
+	retBlock.VariableDefs = newDefs
 
-	retClass.Block.VariableDefs = newDefs
-
-	retClass.Block.Declarations = make([]Declaration, len(c.Block.Declarations))
-	for i, decl := range c.Block.Declarations {
+	retBlock.Ifs = make([]If, len(block.Ifs))
+	for i, _if := range block.Ifs {
 		var err error
-		retClass.Block.Declarations[i], err = cr.resolveDeclaration(&decl)
+		retBlock.Ifs[i], err = cr.resolveIf(&_if)
 		if err != nil {
-			return retClass, err
+			return retBlock, err
 		}
 	}
 
-	return retClass, nil
+	retBlock.Declarations = make([]Declaration, len(block.Declarations))
+	for i, decl := range block.Declarations {
+		var err error
+		retBlock.Declarations[i], err = cr.resolveDeclaration(&decl)
+		if err != nil {
+			return retBlock, err
+		}
+	}
+
+	return retBlock, nil
+}
+
+func (cr *classResolver) resolveIf(_if *If) (If, error) {
+	retIf := *_if
+
+	var boolean bool
+	if boolVal, err := cr.ls.resolveValue(_if.Expression, _if.LineNum); err != nil {
+		return retIf, err
+	} else if realBool, ok := boolVal.(Bool); !ok {
+		return retIf, fmt.Errorf(
+			"Expressions in if-statements must be boolean at %s:%d",
+			cr.original.Filename, _if.LineNum,
+		)
+	} else {
+		boolean = bool(realBool)
+	}
+
+	if boolean {
+		var err error
+		retIf.Block, err = cr.resolveBlock(&_if.Block)
+		if err != nil {
+			return retIf, err
+		}
+	} else if _if.Else != nil {
+		if block, err := cr.resolveBlock(_if.Else); err != nil {
+			return retIf, err
+		} else {
+			retIf.Else = &block
+		}
+	}
+
+	return retIf, nil
 }
 
 // Resolves all variables used in a declaration. For instance

@@ -586,6 +586,108 @@ var resolveFileTest = []struct {
 		}
 		`,
 	},
+
+	{
+		`
+		// If-statements
+		node 'x' { class { 'A': } }
+		class A {
+			if true {
+				exec { 'foo': }
+			}
+		}
+		`,
+
+		`
+		exec { 'foo': }
+		`,
+	},
+
+	{
+		`
+		// If-statements
+		node 'x' { class { 'A': } }
+		class A {
+			if false {
+				exec { 'foo': }
+			} else {
+				exec { 'bar': }
+			}
+		}
+		`,
+
+		`
+		exec { 'bar': }
+		`,
+	},
+
+	{
+		`
+		// If-statements
+		node 'x' { class { 'A': } }
+		class A {
+			$myval = "foo"
+			
+			if $myval == 'foo' {
+				$bar = 'fromif'
+			} else {
+				$bar = 'fromelse'
+			}
+			
+			exec { $bar: }
+		}
+		`,
+
+		`
+		exec { 'fromif': }
+		`,
+	},
+
+	{
+		`
+		// If-statements
+		node 'x' { class { 'A': } }
+		class A {
+			$myval = "foo$bar"
+			
+			if true {
+				$bar = 'baz'
+			}
+			
+			exec { $myval: }
+		}
+		`,
+
+		`
+		exec { 'foobaz': }
+		`,
+	},
+
+	{
+		`
+		// If-statements
+		node 'x' { class { 'A': } }
+		class A {
+			$myval = "foo"
+			
+			if $myval != 'foo' {
+				$bar = 'fromif'
+			} else {
+				if $myval == "baz" {
+					$bar = 'fromelseif'
+				} else {
+					$bar = 'fromelseelse'
+				}
+			}
+			
+			exec { $bar: }
+		}
+		`,
+
+		`
+		exec { 'fromelseelse': }
+		`,
+	},
 }
 
 func TestResolveFile(t *testing.T) {
@@ -628,6 +730,8 @@ func TestResolveFile(t *testing.T) {
 			reducedDeclsClass := &ast.Class{Block: ast.Block{
 				Declarations: reducedDecls,
 			}}
+
+			t.Log(expectedWrapper)
 
 			t.Fatalf(
 				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
@@ -1133,6 +1237,16 @@ var badDefsTest = []struct {
 		}
 		`,
 		`Can't realize classes inside of a define at real.ms:11`,
+	},
+
+	{
+		`
+		// Non-bool expression in if
+		node 'n' {
+			if "five" {}
+		}
+		`,
+		`Expressions in if-statements must be boolean at real.ms:4`,
 	},
 }
 

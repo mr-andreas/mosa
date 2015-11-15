@@ -44,6 +44,19 @@ func ExpDivide(a, b Value) (Value, error) {
 	panic("Bad types")
 }
 
+func ExpEquals(a, b Value) (Bool, error) {
+	switch a.(type) {
+	case int:
+		return a.(int) == b.(int), nil
+	case QuotedString:
+		return a.(QuotedString) == b.(QuotedString), nil
+	case string:
+		return a.(string) == b.(string), nil
+	}
+
+	panic("Bad types")
+}
+
 func ExpLT(a, b Value) (bool, error) {
 	switch a.(type) {
 	case int:
