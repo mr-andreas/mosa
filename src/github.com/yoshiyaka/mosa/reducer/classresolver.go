@@ -60,7 +60,7 @@ func (cr *classResolver) resolve() (Class, error) {
 	if err := cr.ls.setVarsFromArgs(cr.args, cr.original.ArgDefs); err != nil {
 		return retClass, err
 	}
-	for _, def := range c.VariableDefs {
+	for _, def := range c.Block.VariableDefs {
 		if _, exists := cr.ls.varDefsByName[def.VariableName.Str]; exists {
 			return retClass, &Err{
 				Line:       def.LineNum,
@@ -73,8 +73,8 @@ func (cr *classResolver) resolve() (Class, error) {
 	}
 
 	// Resolve top-level variables defined
-	newDefs := make([]VariableDef, len(c.VariableDefs))
-	for i, def := range c.VariableDefs {
+	newDefs := make([]VariableDef, len(c.Block.VariableDefs))
+	for i, def := range c.Block.VariableDefs {
 		var err error
 		def.Val, err = cr.ls.resolveValue(def.Val, def.LineNum)
 		if err != nil {
@@ -83,12 +83,12 @@ func (cr *classResolver) resolve() (Class, error) {
 		newDefs[i] = def
 	}
 
-	retClass.VariableDefs = newDefs
+	retClass.Block.VariableDefs = newDefs
 
-	retClass.Declarations = make([]Declaration, len(c.Declarations))
-	for i, decl := range c.Declarations {
+	retClass.Block.Declarations = make([]Declaration, len(c.Block.Declarations))
+	for i, decl := range c.Block.Declarations {
 		var err error
-		retClass.Declarations[i], err = cr.resolveDeclaration(&decl)
+		retClass.Block.Declarations[i], err = cr.resolveDeclaration(&decl)
 		if err != nil {
 			return retClass, err
 		}

@@ -30,3 +30,9 @@ func (e Expression) String() string {
 
 	return fmt.Sprintf("%s %s %s", left, e.Operation, right)
 }
+
+func ExpressionEquals(e1, e2 *Expression) bool {
+	return e1.Operation == e2.Operation &&
+		ValueEquals(e1.Left, e2.Left) &&
+		ValueEquals(e1.Right, e2.Right)
+}

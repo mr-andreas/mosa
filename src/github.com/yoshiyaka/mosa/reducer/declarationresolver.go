@@ -65,7 +65,7 @@ func (cr *declarationResolver) resolve() (Define, error) {
 		return retClass, err
 	}
 
-	for _, def := range def.VariableDefs {
+	for _, def := range def.Block.VariableDefs {
 		if _, exists := cr.ls.varDefsByName[def.VariableName.Str]; exists {
 			return retClass, &Err{
 				Line:       def.LineNum,
@@ -78,8 +78,8 @@ func (cr *declarationResolver) resolve() (Define, error) {
 	}
 
 	// Resolve top-level variables defined
-	newDefs := make([]VariableDef, len(def.VariableDefs))
-	for i, def := range def.VariableDefs {
+	newDefs := make([]VariableDef, len(def.Block.VariableDefs))
+	for i, def := range def.Block.VariableDefs {
 		var err error
 		def.Val, err = cr.ls.resolveValue(def.Val, def.LineNum)
 		if err != nil {
@@ -88,10 +88,10 @@ func (cr *declarationResolver) resolve() (Define, error) {
 		newDefs[i] = def
 	}
 
-	retClass.VariableDefs = newDefs
+	retClass.Block.VariableDefs = newDefs
 
-	retClass.Declarations = make([]Declaration, len(def.Declarations))
-	for _, decl := range def.Declarations {
+	retClass.Block.Declarations = make([]Declaration, len(def.Block.Declarations))
+	for _, decl := range def.Block.Declarations {
 		if decl.Type == "class" {
 			return retClass, fmt.Errorf(
 				"Can't realize classes inside of a define at %s:%d",

@@ -620,12 +620,14 @@ func TestResolveFile(t *testing.T) {
 		if reducedDecls, err := Reduce(realAST); err != nil {
 			t.Log(test.inputManifest)
 			t.Error(err)
-		} else if decls := expectedAST.Classes[0].Declarations; !ast.DeclarationsEquals(decls, reducedDecls) {
+		} else if decls := expectedAST.Classes[0].Block.Declarations; !ast.DeclarationsEquals(decls, reducedDecls) {
 			t.Logf("%#v", decls)
 			t.Logf("%#v", reducedDecls)
 
-			declsClass := &ast.Class{Declarations: decls}
-			reducedDeclsClass := &ast.Class{Declarations: reducedDecls}
+			declsClass := &ast.Class{Block: ast.Block{Declarations: decls}}
+			reducedDeclsClass := &ast.Class{Block: ast.Block{
+				Declarations: reducedDecls,
+			}}
 
 			t.Fatalf(
 				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",

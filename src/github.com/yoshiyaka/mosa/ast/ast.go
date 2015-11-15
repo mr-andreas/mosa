@@ -28,6 +28,15 @@ func (f *AST) String() string {
 	return s
 }
 
+type Block struct {
+	Filename string
+	LineNum  int
+
+	VariableDefs []VariableDef
+	Declarations []Declaration
+	Ifs          []If
+}
+
 type DefineType int
 
 const (
@@ -36,24 +45,53 @@ const (
 )
 
 type Define struct {
-	Filename     string
-	LineNum      int
-	Name         string
-	ArgDefs      []VariableDef
-	VariableDefs []VariableDef
-	Declarations []Declaration
-	Type         DefineType
+	Filename string
+	LineNum  int
+	Name     string
+	ArgDefs  []VariableDef
+	Block    Block
+	Type     DefineType
 }
 
 type Node Class
 
 type Class struct {
-	Filename     string
-	LineNum      int
-	Name         string
-	ArgDefs      []VariableDef
-	VariableDefs []VariableDef
-	Declarations []Declaration
+	Filename string
+	LineNum  int
+	Name     string
+	ArgDefs  []VariableDef
+	Block    Block
+}
+
+// Returns whether the blocks are equal. Line numbers and filenames are not
+// taken into consideration.
+func BlockEquals(b1, b2 *Block) bool {
+	if b1 == nil || b2 == nil {
+		return b1 == b2
+	}
+
+	return VariableDefsEquals(b1.VariableDefs, b2.VariableDefs) &&
+		DeclarationsEquals(b1.Declarations, b2.Declarations) &&
+		IfsEquals(b1.Ifs, b2.Ifs)
+}
+
+func (b *Block) String() string {
+	defs := ""
+	ifs := ""
+	decls := ""
+	for _, def := range b.VariableDefs {
+		defs += fmt.Sprintf("\t%s\n", def.String())
+	}
+
+	for _, _if := range b.Ifs {
+		ifs += fmt.Sprintf("\t%s\n", _if.String())
+	}
+
+	for _, decl := range b.Declarations {
+		decls += fmt.Sprintf("\t%s\n", decl.String())
+	}
+
+	return fmt.Sprintf("{\n%s\n%s\n%s\n}\n", defs, ifs, decls)
 }
 
 // Returns whether the classes are equal. Line numbers and filenames are not
@@ -61,36 +99,15 @@ type Class struct {
 func (c *Class) Equals(c2 *Class) bool {
 	return c.Name == c2.Name &&
 		VariableDefsEquals(c.ArgDefs, c2.ArgDefs) &&
-		VariableDefsEquals(c.VariableDefs, c2.VariableDefs) &&
-		DeclarationsEquals(c.Declarations, c2.Declarations)
+		BlockEquals(&c.Block, &c2.Block)
 }
 
 func (n *Node) String() string {
-	defs := ""
-	decls := ""
-	for _, def := range n.VariableDefs {
-		defs += fmt.Sprintf("\t%s\n", def.String())
-	}
-
-	for _, decl := range n.Declarations {
-		decls += fmt.Sprintf("\t%s\n", decl.String())
-	}
-
-	return fmt.Sprintf("node '%s' {\n%s\n%s\n}\n", n.Name, defs, decls)
+	return fmt.Sprintf("node '%s' %s", n.Name, n.Block.String())
 }
 
 func (c *Class) String() string {
-	defs := ""
-	decls := ""
-	for _, def := range c.VariableDefs {
-		defs += fmt.Sprintf("\t\t%s\n", def.String())
-	}
-
-	for _, decl := range c.Declarations {
-		decls += fmt.Sprintf("\t\t%s\n", decl.String())
-	}
-
-	return fmt.Sprintf("\tclass %s {\n%s\n%s\n\t}\n", c.Name, defs, decls)
+	return fmt.Sprintf("class %s %s", c.Name, c.Block.String())
 }
 
 type VariableDef struct {
@@ -258,6 +275,8 @@ func valToStr(i interface{}) string {
 		return i.(stringable).String()
 	case Expression:
 		return i.(Expression).String()
+	case InterpolatedString:
+		return i.(InterpolatedString).String()
 	default:
 		return i.(string)
 	}

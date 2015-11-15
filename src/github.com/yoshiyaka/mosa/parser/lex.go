@@ -27,7 +27,7 @@ var (
 //export nilArray
 func nilArray(typ C.ASTTYPE) goHandle {
 	switch typ {
-	case C.ASTTYPE_DEFS:
+	case C.ASTTYPE_STMTS:
 		return ht.Add([]interface{}{})
 	case C.ASTTYPE_CLASSES:
 		return ht.Add([]Class{})
@@ -82,42 +82,39 @@ func sawBody(classesAndDefines goHandle) {
 }
 
 //export newClass
-func newClass(lineNum C.int, identifier *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
+func newClass(lineNum C.int, identifier *C.char, argDefsH, blockH goHandle) goHandle {
 	argDefs := ht.Get(argDefsH).([]VariableDef)
-	defsAndDecls := ht.Get(defsAndDeclsH).([]interface{})
-
-	defs := []VariableDef{}
-	decls := []Declaration{}
-
-	for _, val := range defsAndDecls {
-		switch val.(type) {
-		case VariableDef:
-			defs = append(defs, val.(VariableDef))
-		case Declaration:
-			decls = append(decls, val.(Declaration))
-		default:
-			panic("Value is neither def nor decl")
-		}
-	}
+	block := ht.Get(blockH).(Block)
 
 	return ht.Add(Class{
-		Filename:     curFilename,
-		LineNum:      int(lineNum),
-		Name:         C.GoString(identifier),
-		ArgDefs:      argDefs,
-		VariableDefs: defs,
-		Declarations: decls,
+		Filename: curFilename,
+		LineNum:  int(lineNum),
+		Name:     C.GoString(identifier),
+		ArgDefs:  argDefs,
+		Block:    block,
 	})
 }
 
 //export sawNode
-func sawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle {
-	defsAndDecls := ht.Get(defsAndDeclsHandle).([]interface{})
+func sawNode(lineNum C.int, name *C.char, blockH goHandle) goHandle {
+	block := ht.Get(blockH).(Block)
+
+	return ht.Add(Node{
+		Filename: curFilename,
+		LineNum:  int(lineNum),
+		Name:     C.GoString(name),
+		Block:    block,
+	})
+}
+
+//export sawBlock
+func sawBlock(lineNum C.int, statementsH goHandle) goHandle {
+	statements := ht.Get(statementsH).([]interface{})
 
 	defs := []VariableDef{}
 	decls := []Declaration{}
 
-	for _, val := range defsAndDecls {
+	for _, val := range statements {
 		switch val.(type) {
 		case VariableDef:
 			defs = append(defs, val.(VariableDef))
@@ -128,10 +125,9 @@ func sawNode(lineNum C.int, name *C.char, defsAndDeclsHandle goHandle) goHandle 
 		}
 	}
 
-	return ht.Add(Node{
+	return ht.Add(Block{
 		Filename:     curFilename,
 		LineNum:      int(lineNum),
-		Name:         C.GoString(name),
 		VariableDefs: defs,
 		Declarations: decls,
 	})
@@ -220,7 +216,9 @@ func sawReference(lineNum C.int, typ *C.char, scalar goHandle) goHandle {
 }
 
 //export sawDefine
-func sawDefine(lineNum C.int, modifier, name *C.char, argDefsH, defsAndDeclsH goHandle) goHandle {
+func sawDefine(lineNum C.int, modifier, name *C.char, argDefsH, blockH goHandle) goHandle {
+	block := ht.Get(blockH).(Block)
+
 	var dt DefineType
 	switch C.GoString(modifier) {
 	case "single":
@@ -232,30 +230,14 @@ func sawDefine(lineNum C.int, modifier, name *C.char, argDefsH, defsAndDeclsH go
 	}
 
 	argDefs := ht.Get(argDefsH).([]VariableDef)
-	defsAndDecls := ht.Get(defsAndDeclsH).([]interface{})
-
-	defs := []VariableDef{}
-	decls := []Declaration{}
-
-	for _, val := range defsAndDecls {
-		switch val.(type) {
-		case VariableDef:
-			defs = append(defs, val.(VariableDef))
-		case Declaration:
-			decls = append(decls, val.(Declaration))
-		default:
-			panic("Value is neither def nor decl")
-		}
-	}
 
 	return ht.Add(Define{
-		Filename:     curFilename,
-		LineNum:      int(lineNum),
-		Name:         C.GoString(name),
-		ArgDefs:      argDefs,
-		VariableDefs: defs,
-		Declarations: decls,
-		Type:         dt,
+		Filename: curFilename,
+		LineNum:  int(lineNum),
+		Name:     C.GoString(name),
+		ArgDefs:  argDefs,
+		Block:    block,
+		Type:     dt,
 	})
 }
 

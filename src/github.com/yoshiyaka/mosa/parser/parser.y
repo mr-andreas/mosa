@@ -60,12 +60,11 @@ void yyerror(const char *s);
 %left PLUSMINUS
 %left MULDIV
 
-%type <gohandle> def
-%type <gohandle> defs
 %type <gohandle> define
-%type <gohandle> define_body
 %type <gohandle> class
 %type <gohandle> node
+%type <gohandle> block
+%type <gohandle> statement statements
 %type <gohandle> optional_arg_defs
 %type <gohandle> define_arg_defs
 %type <gohandle> arg_defs
@@ -101,11 +100,24 @@ file_body:
 	| node					{ $$ = appendArray(nilArray(ASTTYPE_ARRAY_INTERFACE), $1); }
 
 node:
-	  NODE QUOTED_STRING '{' defs '}'	{ $$ = sawNode(@1.first_line, $2, $4); }
-	| NODE QUOTED_STRING '{' '}' 		{ $$ = sawNode(@1.first_line, $2, nilArray(ASTTYPE_DEFS)); }
+	  NODE QUOTED_STRING block	{ $$ = sawNode(@1.first_line, $2, $3); }
+
+class:
+	  CLASS STRING optional_arg_defs block { $$ = newClass(@1.first_line, $2, $3, $4); }
+
+block:
+	  '{' statements '}' 	{ $$ = sawBlock(@1.first_line, $2); }
+	| '{' '}'				{ $$ = sawBlock(@1.first_line, nilArray(ASTTYPE_STMTS)); }
+
+statements:
+	  statements statement	{ $$ = appendArray($1, $2); }
+	| statement				{ $$ = appendArray(nilArray(ASTTYPE_STMTS), $1); }
+
+statement:
+	  variable_def | declaration;
 
 define:
-	DEFINE STRING STRING define_arg_defs define_body {
+	DEFINE STRING STRING define_arg_defs block {
 		$$ = sawDefine(@1.first_line, $2, $3, $4, $5);
 		if($$ == -1) {
 			yyerror("Expected 'single' or 'multiple' after define");
@@ -116,14 +128,6 @@ define:
 define_arg_defs:
 	  '(' ')'			{ $$ = nilArray(ASTTYPE_ARGDEFS); }
 	| '(' arg_defs ')'	{ $$ = $2; }
-
-define_body:
-	  '{' '}'		{ $$ = nilArray(ASTTYPE_DEFS); }
-	| '{' defs '}'	{ $$ = $2; }
-
-class:
-	  CLASS STRING optional_arg_defs '{' defs '}'	{ $$ = newClass(@1.first_line, $2, $3, $5);						}
-	| CLASS STRING optional_arg_defs '{' '}'		{ $$ = newClass(@1.first_line, $2, $3, nilArray(ASTTYPE_DEFS));	}
 
 optional_arg_defs:
 	/* empty */					{ $$ = nilArray(ASTTYPE_ARGDEFS); }
@@ -138,13 +142,6 @@ arg_def:
 	  VARIABLENAME ','				{ $$ = sawArgDef(@1.first_line, $1, 0);  }
 	| VARIABLENAME '=' scalar ','	{ $$ = sawArgDef(@1.first_line, $1, $3); }
 	| VARIABLENAME '=' array  ','	{ $$ = sawArgDef(@1.first_line, $1, $3); }
-
-defs:
-	  defs def	{ $$ = appendArray($1, $2);						}
-	| def		{ $$ = appendArray(nilArray(ASTTYPE_DEFS), $1);	}
-	
-def:
-	variable_def | declaration;
 	
 variable_def:
 	VARIABLENAME '=' expression { $$ = sawVariableDef(@1.first_line, $1, $3);	}

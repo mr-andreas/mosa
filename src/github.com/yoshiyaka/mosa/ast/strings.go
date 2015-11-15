@@ -20,7 +20,7 @@ type InterpolatedString struct {
 	Segments []interface{}
 }
 
-func (is *InterpolatedString) String() string {
+func (is InterpolatedString) String() string {
 	str := `"`
 	for _, seg := range is.Segments {
 		switch seg.(type) {
