@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -49,9 +50,24 @@ func parseDirAsASTRecursively(ast *ast.AST, dirName string) error {
 	return nil
 }
 
+func showHelp() {
+	fmt.Println("Usage:")
+	fmt.Printf("%s [options] manifest-directory\n", os.Args[0])
+	flag.PrintDefaults()
+}
+
 func main() {
+	help := false
+	flag.BoolVar(&help, "h", false, "Shows this message")
+
 	dirName := "../testdata"
 	flag.Parse()
+
+	if help {
+		showHelp()
+		return
+	}
+
 	if args := flag.CommandLine.Args(); len(args) == 1 {
 		dirName = args[0]
 	}
