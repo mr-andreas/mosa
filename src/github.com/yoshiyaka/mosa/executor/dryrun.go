@@ -7,10 +7,13 @@ import (
 )
 
 type dryRun struct {
+	verbose bool
 }
 
-func DryRun() Executor {
-	return &dryRun{}
+func DryRun(verbose bool) Executor {
+	return &dryRun{
+		verbose: verbose,
+	}
 }
 
 func (dr *dryRun) Execute(stage *common.Stage) error {
@@ -35,6 +38,12 @@ func (dr *dryRun) Execute(stage *common.Stage) error {
 
 		for _, item := range items {
 			fmt.Printf("%s\n", item.Item)
+
+			if dr.verbose {
+				for key, val := range item.Args {
+					fmt.Printf("\t%s => %s\n", key, val)
+				}
+			}
 		}
 	}
 

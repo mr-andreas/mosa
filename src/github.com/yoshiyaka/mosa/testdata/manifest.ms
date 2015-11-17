@@ -23,6 +23,10 @@ class WebServer {
 	
 	file { '/etc/apache2/sites-available/test-site.conf':
 	  ensure => 'present',
+	  content => 'this
+	  is
+	  a
+	  test',
 	  depends => package['apache2'],
 	}
 	

@@ -1,3 +1,5 @@
-define single file($name, $ensure,) {
-	exec { "touch $name": }
+define single file($name, $ensure, $content = "",) {
+	exec { "cat > $name":
+		stdin => $content,
+	}
 }

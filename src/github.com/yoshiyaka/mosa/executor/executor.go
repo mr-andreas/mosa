@@ -3,7 +3,9 @@ package executor
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
+	"github.com/yoshiyaka/mosa/ast"
 	"github.com/yoshiyaka/mosa/common"
 )
 
@@ -44,6 +46,12 @@ func (e *executor) executeStep(step *common.Step) error {
 	cmd := exec.Command("/bin/bash")
 	cmd.Args = []string{"/bin/bash", "-c", step.Item}
 	fmt.Printf("Exec %s\n", step.Item)
+
+	if step.Args["stdin"] != nil {
+		cmd.Stdin = strings.NewReader(
+			string(step.Args["stdin"].(ast.QuotedString)),
+		)
+	}
 
 	//	cmd.Stdout = os.Stdout
 	//	cmd.Stderr = os.Stderr

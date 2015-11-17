@@ -59,8 +59,10 @@ func showHelp() {
 func main() {
 	help := false
 	run := false
+	verbose := false
 	flag.BoolVar(&help, "h", false, "Shows this message")
 	flag.BoolVar(&run, "run", false, "Actually execute the manifest")
+	flag.BoolVar(&verbose, "v", false, "Verbose output")
 
 	dirName := "../testdata"
 	flag.Parse()
@@ -110,7 +112,7 @@ func main() {
 			os.Exit(1)
 		}
 	} else {
-		exc := executor.DryRun()
+		exc := executor.DryRun(verbose)
 		if err := executor.ExecutePlan(plan, exc); err != nil {
 			panic(err)
 		}
