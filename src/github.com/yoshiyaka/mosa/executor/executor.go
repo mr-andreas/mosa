@@ -2,7 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 
 	"github.com/yoshiyaka/mosa/common"
@@ -23,37 +22,17 @@ func ExecutePlan(p *common.Plan, e Executor) error {
 }
 
 func New(scriptDir string) (Executor, error) {
-	e := &executor{
-		scriptDir: scriptDir,
-		scripts:   map[string]bool{},
-	}
-
-	files, err := ioutil.ReadDir(scriptDir)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, file := range files {
-		if file.Name()[0] == '.' {
-			continue
-		}
-
-		if file.Mode()&0111 != 0 {
-			e.scripts[file.Name()] = true
-		}
-	}
+	e := &executor{}
 
 	return e, nil
 }
 
 type executor struct {
-	scriptDir string
-	scripts   map[string]bool
 }
 
 func (e *executor) Execute(stage *common.Stage) error {
-	for typ, steps := range stage.Steps {
-		if err := e.executeStepsForType(typ, steps); err != nil {
+	for _, step := range stage.Steps["exec"] {
+		if err := e.executeStep(&step); err != nil {
 			return err
 		}
 	}
@@ -61,17 +40,8 @@ func (e *executor) Execute(stage *common.Stage) error {
 	return nil
 }
 
-func (e *executor) executeStepsForType(typ string, steps []common.Step) error {
-	scriptName := typ + "_many.sh"
-	if _, ok := e.scripts[scriptName]; !ok {
-		return fmt.Errorf("Found no script for type %s, expected %s", typ, scriptName)
-	}
-
-	cmd := exec.Command(e.scriptDir + "/" + scriptName)
-	for _, item := range steps {
-		cmd.Args = append(cmd.Args, item.Item)
-	}
-
+func (e *executor) executeStep(step *common.Step) error {
+	cmd := exec.Command(step.Item)
 	fmt.Println("Exec %s", cmd)
 
 	//	var stdout, stderr bytes.Buffer

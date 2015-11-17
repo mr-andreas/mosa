@@ -58,7 +58,9 @@ func showHelp() {
 
 func main() {
 	help := false
+	run := false
 	flag.BoolVar(&help, "h", false, "Shows this message")
+	flag.BoolVar(&run, "run", false, "Actually execute the manifest")
 
 	dirName := "../testdata"
 	flag.Parse()
@@ -74,37 +76,43 @@ func main() {
 
 	mfst := ast.NewAST()
 	if err := parseDirAsASTRecursively(mfst, dirName); err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 
 	reduced, reducedErr := reducer.Reduce(mfst)
 	if reducedErr != nil {
-		panic(reducedErr)
+		fmt.Fprintln(os.Stderr, reducedErr.Error())
+		os.Exit(1)
 	}
 
 	steps, stepsErr := stepconverter.Convert(reduced)
 	if stepsErr != nil {
-		panic(stepsErr)
+		fmt.Fprintln(os.Stderr, stepsErr.Error())
+		os.Exit(1)
 	}
 
 	planner := planner.New()
 	plan, planErr := planner.Plan(steps)
 	if planErr != nil {
-		panic(planErr)
+		fmt.Fprintln(os.Stderr, planErr.Error())
+		os.Exit(1)
 	}
 
-	exc := executor.DryRun()
-	if err := executor.ExecutePlan(plan, exc); err != nil {
-		panic(err)
+	if run {
+		realExc, realExcErr := executor.New("../script")
+		if realExcErr != nil {
+			fmt.Fprintln(os.Stderr, realExcErr.Error())
+			os.Exit(1)
+		}
+		if err := executor.ExecutePlan(plan, realExc); err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+	} else {
+		exc := executor.DryRun()
+		if err := executor.ExecutePlan(plan, exc); err != nil {
+			panic(err)
+		}
 	}
-
-	//	realExc, realExcErr := executor.New("../script")
-	//	if realExcErr != nil {
-	//		panic(realExcErr)
-	//	}
-	//	if err := executor.ExecutePlan(plan, realExc); err != nil {
-	//		panic(err)
-	//	}
-
-	//	fmt.Println(plan)
 }
