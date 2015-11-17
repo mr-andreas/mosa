@@ -41,8 +41,12 @@ func (e *executor) Execute(stage *common.Stage) error {
 }
 
 func (e *executor) executeStep(step *common.Step) error {
-	cmd := exec.Command(step.Item)
-	fmt.Println("Exec %s", cmd)
+	cmd := exec.Command("/bin/bash")
+	cmd.Args = []string{"/bin/bash", "-c", step.Item}
+	fmt.Printf("Exec %s\n", step.Item)
+
+	//	cmd.Stdout = os.Stdout
+	//	cmd.Stderr = os.Stderr
 
 	//	var stdout, stderr bytes.Buffer
 
