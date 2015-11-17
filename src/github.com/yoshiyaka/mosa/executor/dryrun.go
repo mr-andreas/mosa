@@ -2,7 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/yoshiyaka/mosa/common"
 )
@@ -15,12 +14,28 @@ func DryRun() Executor {
 }
 
 func (dr *dryRun) Execute(stage *common.Stage) error {
+	fmt.Println("Realized types:")
 	for typ, items := range stage.Steps {
-		names := make([]string, len(items))
-		for i, item := range items {
-			names[i] = item.Item
+		if typ == "exec" {
+			continue
 		}
-		fmt.Printf("%s[%s]\n", typ, strings.Join(names, ","))
+
+		fmt.Printf("%s:\n", typ)
+		for _, item := range items {
+			fmt.Printf("\t%s\n", item.Item)
+		}
+		fmt.Println("")
+	}
+
+	fmt.Println("Execute:")
+	for typ, items := range stage.Steps {
+		if typ != "exec" {
+			continue
+		}
+
+		for _, item := range items {
+			fmt.Printf("%s\n", item.Item)
+		}
 	}
 
 	return nil
