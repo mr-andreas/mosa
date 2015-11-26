@@ -8,7 +8,7 @@ import (
 	. "github.com/yoshiyaka/mosa/ast"
 	. "github.com/yoshiyaka/mosa/common"
 	"github.com/yoshiyaka/mosa/parser"
-	"github.com/yoshiyaka/mosa/reducer"
+	"github.com/yoshiyaka/mosa/resolver"
 )
 
 var convertTests = []struct {
@@ -153,13 +153,13 @@ func TestConvert(t *testing.T) {
 			t.Fatal(astErr)
 		}
 
-		reduced, reducedErr := reducer.Reduce(ast)
-		if reducedErr != nil {
+		resolved, resolvedErr := resolver.Resolve(ast)
+		if resolvedErr != nil {
 			t.Log(test.manifest)
-			t.Fatal(reducedErr)
+			t.Fatal(resolvedErr)
 		}
 
-		if steps, err := Convert(reduced); err != nil {
+		if steps, err := Convert(resolved); err != nil {
 			t.Fatal(err)
 		} else if !reflect.DeepEqual(steps, test.expectedSteps) {
 			t.Logf("%#v", test.expectedSteps)
@@ -233,13 +233,13 @@ func TestConvertInvalidManifests(t *testing.T) {
 			t.Fatal(astErr)
 		}
 
-		reduced, reducedErr := reducer.Reduce(ast)
-		if reducedErr != nil {
+		resolved, resolvedErr := resolver.Resolve(ast)
+		if resolvedErr != nil {
 			t.Log(test.manifest)
-			t.Fatal(reducedErr)
+			t.Fatal(resolvedErr)
 		}
 
-		if _, err := Convert(reduced); err == nil {
+		if _, err := Convert(resolved); err == nil {
 			t.Log(test.manifest)
 			t.Error("Got no error")
 		} else if err.Error() != test.err {

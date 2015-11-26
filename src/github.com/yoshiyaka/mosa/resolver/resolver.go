@@ -1,4 +1,4 @@
-package reducer
+package resolver
 
 import (
 	"fmt"
@@ -49,7 +49,7 @@ func (ce *CyclicError) Error() string {
 	return msg
 }
 
-// Reduces the whole manifest to a number of concrete declarations. All
+// Resolves the whole manifest to a number of concrete declarations. All
 // parameters in the returned decalartions will be concrete values. For
 // instance, if called with the following manifest:
 //
@@ -103,7 +103,52 @@ func (ce *CyclicError) Error() string {
 //  	],
 //  }
 //
-func Reduce(ast *AST) ([]Declaration, error) {
+func Resolve(ast *AST) ([]Declaration, error) {
 	r := newResolver(ast)
 	return r.resolve()
+}
+
+// Resolves a whole manifest
+type resolver struct {
+	ast *AST
+
+	gs *globalState
+}
+
+func newResolver(ast *AST) *resolver {
+	return &resolver{
+		ast: ast,
+		gs:  newGlobalState(),
+	}
+}
+
+func (r *resolver) resolve() ([]Declaration, error) {
+	if err := r.gs.populateClassesByName(r.ast.Classes); err != nil {
+		return nil, err
+	}
+	if err := r.gs.populateDefinesByName(r.ast.Defines); err != nil {
+		return nil, err
+	}
+
+	for _, node := range r.ast.Nodes {
+		if err := r.resolveNode(&node); err != nil {
+			return nil, err
+		}
+	}
+
+	return r.gs.realizedDeclarationsInOrder, nil
+}
+
+func (r *resolver) resolveNode(node *Node) error {
+	castedClass := Class(*node)
+	return r.realizeClassesRecursive(&castedClass, nil, "", 0)
+}
+
+func (r *resolver) realizeClassesRecursive(c *Class, args []Prop, file string, line int) error {
+	classResolver := newClassResolver(r.gs, c, args, file, line)
+	if _, err := classResolver.resolve(); err != nil {
+		return err
+	}
+
+	return nil
 }

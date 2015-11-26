@@ -1,2 +1,2 @@
-// Converts a reduced manifest into a number of discrete steps
+// Converts a resolved manifest into a number of discrete steps
 package stepconverter

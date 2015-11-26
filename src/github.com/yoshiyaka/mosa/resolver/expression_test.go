@@ -1,4 +1,4 @@
-package reducer
+package resolver
 
 import (
 	"reflect"

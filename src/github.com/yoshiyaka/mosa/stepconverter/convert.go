@@ -9,7 +9,7 @@ import (
 
 // Converts the specified manifest into a number of concrete steps that needs to
 // be execute in order to fullfill it. The manifest should already have all
-// references resolved by the reducer.
+// references resolved by the resolver.
 func Convert(declarations []Declaration) ([]common.Step, error) {
 	steps := make([]common.Step, len(declarations))
 	for i, decl := range declarations {

@@ -1,4 +1,4 @@
-package reducer
+package resolver
 
 import (
 	"fmt"
@@ -229,18 +229,18 @@ func TestResolveClass(t *testing.T) {
 		resolver := newClassResolver(
 			gs, &realAST.Classes[0], nil, "real.ms", realAST.Classes[0].LineNum,
 		)
-		if reducedClass, err := resolver.resolve(); err != nil {
+		if resolvedClass, err := resolver.resolve(); err != nil {
 			t.Log(test.inputManifest)
 			t.Fatal(err)
 		} else {
 			c := expectedAST.Classes[0]
 			c.Filename = "real.ms"
-			if !c.Equals(&reducedClass) {
+			if !c.Equals(&resolvedClass) {
 				t.Logf("%#v", c)
-				t.Logf("%#v", reducedClass)
+				t.Logf("%#v", resolvedClass)
 				t.Fatal(
 					"Got bad manifest, expected", c.String(),
-					"got", reducedClass.String(),
+					"got", resolvedClass.String(),
 				)
 			}
 
@@ -739,23 +739,23 @@ func TestResolveFile(t *testing.T) {
 			t.Fatal(realErr)
 		}
 
-		if reducedDecls, err := Reduce(realAST); err != nil {
+		if resolvedDecls, err := Resolve(realAST); err != nil {
 			t.Log(test.inputManifest)
 			t.Error(err)
-		} else if decls := expectedAST.Classes[0].Block.Declarations; !ast.DeclarationsEquals(decls, reducedDecls) {
+		} else if decls := expectedAST.Classes[0].Block.Declarations; !ast.DeclarationsEquals(decls, resolvedDecls) {
 			t.Logf("%#v", decls)
-			t.Logf("%#v", reducedDecls)
+			t.Logf("%#v", resolvedDecls)
 
 			declsClass := &ast.Class{Block: ast.Block{Declarations: decls}}
-			reducedDeclsClass := &ast.Class{Block: ast.Block{
-				Declarations: reducedDecls,
+			resolvedDeclsClass := &ast.Class{Block: ast.Block{
+				Declarations: resolvedDecls,
 			}}
 
 			t.Log(expectedWrapper)
 
 			t.Fatalf(
 				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
-				declsClass.String(), reducedDeclsClass.String(),
+				declsClass.String(), resolvedDeclsClass.String(),
 			)
 		}
 	}
@@ -1281,7 +1281,7 @@ func TestBadDefs(t *testing.T) {
 			t.Fatal(realErr)
 		}
 
-		if _, err := Reduce(realAST); err == nil {
+		if _, err := Resolve(realAST); err == nil {
 			t.Log(test.manifest)
 			t.Error("Got no error for bad file")
 		} else if err.Error() != test.expectedErr {
@@ -1348,7 +1348,7 @@ func TestBadExpressionManifests(t *testing.T) {
 			continue
 		}
 
-		if _, err := Reduce(ast); err == nil || err.Error() != test.expectedError {
+		if _, err := Resolve(ast); err == nil || err.Error() != test.expectedError {
 			t.Log(test.expression)
 			t.Error("Got bad error:", err)
 		}

@@ -39,13 +39,13 @@ define single file($name, $content,) {
 }
 ```
 
-## reducer
+## resolver
 
-The reducer resolves all declarations in the manifest and returns them. The
+The resolver resolves all declarations in the manifest and returns them. The
 declarations returned will all have concrete values. This gives us a definition
 of how the final state of our target system should look like. 
 
-After our AST above has been run through the reducer, the following will be
+After our AST above has been run through the resolver, the following will be
 returned:
 
 ```
