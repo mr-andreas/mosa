@@ -708,6 +708,29 @@ var resolveFileTest = []struct {
 		mytype { 'foo': }
 		`,
 	},
+
+	{
+		`
+		// Exec with unless
+		node 'x' {
+			exec { 'kde':
+				unless => 'gnome',
+			}
+			exec { 'bash':
+				unless => "zsh",
+			}
+		}
+		`,
+
+		`
+		exec { 'kde':
+			unless => 'gnome',
+		}
+		exec { 'bash':
+			unless => 'zsh',
+		}
+		`,
+	},
 }
 
 func TestResolveFile(t *testing.T) {
@@ -1267,6 +1290,18 @@ var badDefsTest = []struct {
 		}
 		`,
 		`Expressions in if-statements must be boolean at real.ms:4`,
+	},
+
+	{
+		`
+		// Non-string argument to exec's unless
+		node 'n' {
+			exec { "foo":
+				unless => 5,
+			}
+		}
+		`,
+		`Value for parameter 'unless' must be of type string at real.ms:5`,
 	},
 }
 

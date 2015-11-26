@@ -136,6 +136,10 @@ func (r *resolver) resolve() ([]Declaration, error) {
 		}
 	}
 
+	if err := checkDeclarationsValidity(r.gs.realizedDeclarationsInOrder); err != nil {
+		return nil, err
+	}
+
 	return r.gs.realizedDeclarationsInOrder, nil
 }
 
@@ -148,6 +152,31 @@ func (r *resolver) realizeClassesRecursive(c *Class, args []Prop, file string, l
 	classResolver := newClassResolver(r.gs, c, args, file, line)
 	if _, err := classResolver.resolve(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Late checks for manifest validity, such as enforcing that all
+// 'unless'-arguments to the built in exec define are of type string.
+func checkDeclarationsValidity(d []Declaration) error {
+	for _, decl := range d {
+		if decl.Type != "exec" {
+			continue
+		}
+
+		for _, prop := range decl.Props {
+			if prop.Name != "unless" {
+				continue
+			}
+
+			if _, isString := prop.Value.(QuotedString); !isString {
+				return fmt.Errorf(
+					"Value for parameter 'unless' must be of type string at %s:%d",
+					decl.Filename, prop.LineNum,
+				)
+			}
+		}
 	}
 
 	return nil

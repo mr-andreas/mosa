@@ -72,17 +72,17 @@ file { '/etc/nginx/sites-available/server.conf':
 }
 ```
 
-## facter
+## reducer
 
 Now that we have a clear image of what the final state of the target system
-should be, it's time to run the facter. The facter helps us find out which
+should be, it's time to run the reducer. The reducer helps us find out which
 declarations are already fullfilled in the target system. With this knowledge,
 we can remove those declarations from the manifest, as we need no action to
 reach them.
 
 If we for example's sake suppose that `/etc/nginx/sites-available/server.conf`
 already exists on the target system, and has the content specified, our
-declaration list would look like the following after the facter has been
+declaration list would look like the following after the reducer has been
 invoked:
 
 ```

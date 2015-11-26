@@ -14,6 +14,7 @@ var (
 		ArgDefs: []VariableDef{
 			VariableDef{VariableName: VariableName{Str: "$name"}},
 			VariableDef{VariableName: VariableName{Str: "$stdin"}, Val: Bool(false)},
+			VariableDef{VariableName: VariableName{Str: "$unless"}, Val: QuotedString("")},
 		},
 		Type: DefineTypeSingle,
 	}

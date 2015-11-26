@@ -11,6 +11,7 @@ import (
 	"github.com/yoshiyaka/mosa/executor"
 	"github.com/yoshiyaka/mosa/parser"
 	"github.com/yoshiyaka/mosa/planner"
+	"github.com/yoshiyaka/mosa/reducer"
 	"github.com/yoshiyaka/mosa/resolver"
 	"github.com/yoshiyaka/mosa/stepconverter"
 )
@@ -88,7 +89,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	steps, stepsErr := stepconverter.Convert(resolved)
+	reduced, reducedErr := reducer.Reduce(resolved)
+	if reducedErr != nil {
+		fmt.Fprintln(os.Stderr, reducedErr.Error())
+		os.Exit(1)
+	}
+
+	steps, stepsErr := stepconverter.Convert(reduced)
 	if stepsErr != nil {
 		fmt.Fprintln(os.Stderr, stepsErr.Error())
 		os.Exit(1)
