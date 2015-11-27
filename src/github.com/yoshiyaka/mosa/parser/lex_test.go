@@ -1322,6 +1322,7 @@ var lexTests = []struct {
 			$h = "bar{${foo}}"
 			$i = "bar${{foo}}"
 			$j = "bar{{$foo}}"
+			$k = "cat /etc/passwd | grep -q '^$name:'"
 		}`,
 
 		&AST{
@@ -1438,12 +1439,35 @@ var lexTests = []struct {
 									},
 								},
 							},
+							{
+								LineNum:      15,
+								VariableName: VariableName{15, "$k"},
+								Val: InterpolatedString{
+									LineNum: 15,
+									Segments: []interface{}{
+										"cat /etc/passwd | grep -q '^",
+										VariableName{LineNum: 15, Str: "$name"},
+										":'",
+									},
+								},
+							},
 						},
 						Declarations: []Declaration{},
 					},
 				},
 			},
 		},
+	},
+
+	{
+		`define single t($name,) {
+			exec { 
+			"$":
+				unless => "''",
+			}
+		}`,
+
+		&AST{},
 	},
 
 	{
