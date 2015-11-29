@@ -1461,13 +1461,55 @@ var lexTests = []struct {
 
 	{
 		`define single t($name,) {
-			exec { 
-			"$":
+			exec { "'$'":
 				unless => "''",
 			}
 		}`,
 
-		&AST{},
+		&AST{
+			Defines: []Define{
+				{
+					LineNum: 1,
+					Name:    "t",
+					Type:    DefineTypeSingle,
+					ArgDefs: []VariableDef{
+						{
+							LineNum:      1,
+							VariableName: VariableName{1, "$name"},
+						},
+					},
+					Block: Block{
+						LineNum: 1,
+						Declarations: []Declaration{
+							{
+								LineNum: 2,
+								Type:    "exec",
+								Scalar: InterpolatedString{
+									LineNum: 2,
+									Segments: []interface{}{
+										QuotedString("'"),
+										QuotedString("$"),
+										QuotedString("'"),
+									},
+								},
+								Props: []Prop{
+									{
+										LineNum: 3,
+										Name:    "unless",
+										Value: InterpolatedString{
+											LineNum: 3,
+											Segments: []interface{}{
+												QuotedString("''"),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	},
 
 	{

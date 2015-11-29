@@ -11,6 +11,7 @@ int level = 0;
 %}
 
 %option yylineno
+/* %option debug */
 %s INBODY
 %s INSTRING
 
@@ -28,7 +29,7 @@ int level = 0;
   yylval.sval[strlen(yylval.sval)-1] = '\0';
   return INTPOL_VARIABLE;
 }
-<INSTRING>[^\$\"]*						{
+<INSTRING>[^\$"]*						{
   yylval.sval = strdup(yytext);
   return INTPOL_TEXT;
 }
@@ -61,7 +62,10 @@ false			{ return BOOLFALSE; }
   yylval.sval = strdup(yytext);
   return STRING;
 }
-'[^']*' {
+<INITIAL,INBODY>'[^']*' {
+  // Use INITIAL,INBODY here so that we don't match a quoted string inside of an
+  // interpolated string.
+
   // Remove the quotes at scan time
   yylval.sval = strdup(yytext+1);
   yylval.sval[strlen(yylval.sval)-1] = '\0';

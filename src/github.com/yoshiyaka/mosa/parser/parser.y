@@ -1,4 +1,9 @@
 %{
+
+// #define YYDEBUG 1
+
+extern int yydebug;
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -213,6 +218,8 @@ interpolated_string_value:
 char *last_error = NULL;
 
 t_error doparse(char *file) {
+/* 	yydebug = 1; */
+
 	int ret;
 	line_num = 1;
 	level = 0;
