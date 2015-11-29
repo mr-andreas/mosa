@@ -14,6 +14,7 @@ int level = 0;
 /* %option debug */
 %s INBODY
 %s INSTRING
+%s IN_COMMENT
 
 %%
 
@@ -38,6 +39,14 @@ int level = 0;
   return INTPOL_TEXT;
 }
 \"				{ BEGIN(INSTRING); return INTPOL_START; }
+
+<INITIAL,INBODY>"/*"              		{ BEGIN(IN_COMMENT); }
+<IN_COMMENT>{
+     "*/"      if(level > 0) BEGIN(INBODY); else BEGIN(INITIAL);
+     [^*\n]+   // eat comment in chunks
+     "*"       // eat the lone star
+     \n        line_num++;
+}
 
 [ \t]  ;
 \/\/.* ;
