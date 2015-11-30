@@ -95,13 +95,13 @@ false			{ return BOOLFALSE; }
   yylval.sval = strdup(yytext);
   return COMPARISON;
 }
-==				{
+[!=]=				{
   yylval.sval = strdup(yytext);
   return COMPARISON;
 }
-!=				{
+&&|\|\|				{
   yylval.sval = strdup(yytext);
-  return COMPARISON;
+  return BOOLOP;
 }
 [\(\):;=,[\]]	{ return yytext[0]; }
 %%

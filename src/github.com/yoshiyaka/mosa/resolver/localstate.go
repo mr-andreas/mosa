@@ -206,8 +206,8 @@ func (ls *localState) resolveExpression(e Expression) (v Value, retErr error) {
 	defer func() {
 		if r := recover(); r != nil {
 			retErr = fmt.Errorf(
-				"Bad types supplied for operation '%s' at %s:%d",
-				e.Operation, ls.definedInFile, e.LineNum,
+				"Bad types (%T, %T) supplied for operation '%s' at %s:%d",
+				left, right, e.Operation, ls.definedInFile, e.LineNum,
 			)
 		}
 	}()

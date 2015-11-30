@@ -1674,6 +1674,66 @@ var lexTests = []struct {
 			},
 		},
 	},
+
+	{
+		`node 'n' {
+			if $name != $foo && $foo != 'cat' || true {
+				
+			}
+		}`,
+
+		&AST{
+			Nodes: []Node{
+				{
+					LineNum: 1,
+					Name:    "n",
+					Block: Block{
+						LineNum:      1,
+						VariableDefs: []VariableDef{},
+						Ifs: []If{
+							{
+								LineNum: 2,
+								Expression: Expression{
+									LineNum:   2,
+									Operation: "||",
+									Left: Expression{
+										LineNum:   2,
+										Operation: "&&",
+										Left: Expression{
+											LineNum:   2,
+											Operation: "!=",
+											Left: VariableName{
+												LineNum: 2,
+												Str:     "$name",
+											},
+											Right: VariableName{
+												LineNum: 2,
+												Str:     "$foo",
+											},
+										},
+										Right: Expression{
+											LineNum:   2,
+											Operation: "!=",
+											Left: VariableName{
+												LineNum: 2,
+												Str:     "$foo",
+											},
+											Right: QuotedString("cat"),
+										},
+									},
+									Right: true,
+								},
+								Block: Block{
+									LineNum: 2,
+								},
+							},
+						},
+						Declarations: []Declaration{},
+					},
+				},
+			},
+		},
+	},
 }
 
 func normalizeBlock(b *Block, filename string) {

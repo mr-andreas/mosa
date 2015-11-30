@@ -808,6 +808,18 @@ var resolveFileTest = []struct {
 		`,
 		``,
 	},
+
+	{
+		`node 'n' {
+			t { 'bar': foo => 'bar', }
+		}
+		define single t($name,$foo,) {
+			if $name != $foo && $foo != 'cat' {
+				exec { $name: }	
+			}
+		}`,
+		`exec { 'bar': }`,
+	},
 }
 
 func TestResolveFile(t *testing.T) {

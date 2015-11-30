@@ -58,11 +58,13 @@ void yyerror(const char *s);
 %token <sval> PLUSMINUS // + -
 %token <sval> MULDIV // * /
 %token <sval> COMPARISON // == > < >= <=
+%token <sval> BOOLOP // && ||
 %token <sval> QUOTED_STRING
 %token INTPOL_START
 %token <sval> INTPOL_TEXT
 %token <sval> INTPOL_VARIABLE
 
+%left BOOLOP
 %left COMPARISON
 %left PLUSMINUS
 %left MULDIV
@@ -176,6 +178,7 @@ expression:
 	| expression PLUSMINUS	expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
 	| expression MULDIV		expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
 	| expression COMPARISON	expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
+	| expression BOOLOP		expression	{ $$ = sawExpression(@1.first_line, $2, $1, $3); }
 
 value:
 	  scalar		{ $$ = $1; }

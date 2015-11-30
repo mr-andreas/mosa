@@ -58,11 +58,11 @@ func ExpEquals(a, b Value) (Bool, error) {
 }
 
 func ExpNotEquals(a, b Value) (Bool, error) {
-	b, err := ExpEquals(a, b)
-	return Bool(!b.(bool)), err
+	bl, err := ExpEquals(a, b)
+	return Bool(!bl), err
 }
 
-func ExpLT(a, b Value) (bool, error) {
+func ExpLT(a, b Value) (Bool, error) {
 	switch a.(type) {
 	case int:
 		return a.(int) < b.(int), nil
@@ -73,7 +73,7 @@ func ExpLT(a, b Value) (bool, error) {
 	panic("Bad types")
 }
 
-func ExpLTEq(a, b Value) (bool, error) {
+func ExpLTEq(a, b Value) (Bool, error) {
 	switch a.(type) {
 	case int:
 		return a.(int) <= b.(int), nil
@@ -84,7 +84,7 @@ func ExpLTEq(a, b Value) (bool, error) {
 	panic("Bad types")
 }
 
-func ExpGT(a, b Value) (bool, error) {
+func ExpGT(a, b Value) (Bool, error) {
 	switch a.(type) {
 	case int:
 		return a.(int) > b.(int), nil
@@ -95,7 +95,7 @@ func ExpGT(a, b Value) (bool, error) {
 	panic("Bad types")
 }
 
-func ExpGTEq(a, b Value) (bool, error) {
+func ExpGTEq(a, b Value) (Bool, error) {
 	switch a.(type) {
 	case int:
 		return a.(int) > b.(int), nil
@@ -106,19 +106,23 @@ func ExpGTEq(a, b Value) (bool, error) {
 	panic("Bad types")
 }
 
-func ExpBoolAnd(a, b Value) (bool, error) {
+func ExpBoolAnd(a, b Value) (Bool, error) {
 	switch a.(type) {
 	case bool:
-		return a.(bool) && b.(bool), nil
+		return Bool(a.(bool) && b.(bool)), nil
+	case Bool:
+		return a.(Bool) && b.(Bool), nil
 	}
 
 	panic("Bad types")
 }
 
-func ExpBoolOr(a, b Value) (bool, error) {
+func ExpBoolOr(a, b Value) (Bool, error) {
 	switch a.(type) {
 	case bool:
-		return a.(bool) || b.(bool), nil
+		return Bool(a.(bool) || b.(bool)), nil
+	case Bool:
+		return a.(Bool) || b.(Bool), nil
 	}
 
 	panic("Bad types")

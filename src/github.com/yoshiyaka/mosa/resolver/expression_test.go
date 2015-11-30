@@ -16,24 +16,24 @@ var expressionTests = []struct {
 	{Expression{0, "*", 4, 5}, 20},
 	{Expression{0, "/", 6, 2}, 3},
 
-	{Expression{0, "<", 4, 5}, true},
-	{Expression{0, "<=", 4, 5}, true},
-	{Expression{0, ">", 4, 5}, false},
-	{Expression{0, ">=", 4, 5}, false},
+	{Expression{0, "<", 4, 5}, Bool(true)},
+	{Expression{0, "<=", 4, 5}, Bool(true)},
+	{Expression{0, ">", 4, 5}, Bool(false)},
+	{Expression{0, ">=", 4, 5}, Bool(false)},
 
-	{Expression{0, "<", "aa", "ab"}, true},
-	{Expression{0, "<=", "ba", "ab"}, false},
-	{Expression{0, ">", "ba", "ab"}, true},
-	{Expression{0, ">=", "aa", "ab"}, false},
+	{Expression{0, "<", "aa", "ab"}, Bool(true)},
+	{Expression{0, "<=", "ba", "ab"}, Bool(false)},
+	{Expression{0, ">", "ba", "ab"}, Bool(true)},
+	{Expression{0, ">=", "aa", "ab"}, Bool(false)},
 
-	{Expression{0, "&&", false, false}, false},
-	{Expression{0, "&&", false, true}, false},
-	{Expression{0, "&&", true, false}, false},
-	{Expression{0, "&&", true, true}, true},
-	{Expression{0, "||", false, false}, false},
-	{Expression{0, "||", false, true}, true},
-	{Expression{0, "||", true, false}, true},
-	{Expression{0, "||", true, true}, true},
+	{Expression{0, "&&", Bool(false), Bool(false)}, Bool(false)},
+	{Expression{0, "&&", Bool(false), Bool(true)}, Bool(false)},
+	{Expression{0, "&&", Bool(true), Bool(false)}, Bool(false)},
+	{Expression{0, "&&", Bool(true), Bool(true)}, Bool(true)},
+	{Expression{0, "||", Bool(false), Bool(false)}, Bool(false)},
+	{Expression{0, "||", Bool(false), Bool(true)}, Bool(true)},
+	{Expression{0, "||", Bool(true), Bool(false)}, Bool(true)},
+	{Expression{0, "||", Bool(true), Bool(true)}, Bool(true)},
 
 	{Expression{0, "*", Expression{0, "-", 4, 5}, 5}, -5},
 
@@ -63,7 +63,7 @@ func TestExpressions(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(test.expectedValue, val) {
-			t.Error("Got bad value for", test.expression, ": ", val)
+			t.Errorf("Got bad value for %v: %v", test.expression, val)
 		}
 	}
 }
@@ -72,13 +72,13 @@ var badExpressionTests = []struct {
 	expression    Expression
 	expectedError string
 }{
-	{Expression{0, "+", 4, "string"}, "Bad types supplied for operation '+' at t.ms:0"},
-	{Expression{0, "-", 4, "string"}, "Bad types supplied for operation '-' at t.ms:0"},
-	{Expression{0, "*", 4, "string"}, "Bad types supplied for operation '*' at t.ms:0"},
-	{Expression{0, "/", 4, "string"}, "Bad types supplied for operation '/' at t.ms:0"},
+	{Expression{0, "+", 4, "string"}, "Bad types (int, string) supplied for operation '+' at t.ms:0"},
+	{Expression{0, "-", 4, "string"}, "Bad types (int, string) supplied for operation '-' at t.ms:0"},
+	{Expression{0, "*", 4, "string"}, "Bad types (int, string) supplied for operation '*' at t.ms:0"},
+	{Expression{0, "/", 4, "string"}, "Bad types (int, string) supplied for operation '/' at t.ms:0"},
 
-	{Expression{0, "*", "s1", "s2"}, "Bad types supplied for operation '*' at t.ms:0"},
-	{Expression{0, "/", "s1", "s2"}, "Bad types supplied for operation '/' at t.ms:0"},
+	{Expression{0, "*", "s1", "s2"}, "Bad types (string, string) supplied for operation '*' at t.ms:0"},
+	{Expression{0, "/", "s1", "s2"}, "Bad types (string, string) supplied for operation '/' at t.ms:0"},
 }
 
 func TestBadExpressions(t *testing.T) {
