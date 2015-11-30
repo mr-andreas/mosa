@@ -287,7 +287,7 @@ func (ls *localState) setVarsFromArgs(passedArgs []Prop, availableParams []Varia
 	if len(argsByName) > 0 {
 		for _, arg := range argsByName {
 			return fmt.Errorf(
-				"Unsupported argument '%s' sent to class at %s:%d",
+				"Unsupported argument '%s' sent to type at %s:%d",
 				arg.Name, ls.realizedInFile, arg.LineNum,
 			)
 		}

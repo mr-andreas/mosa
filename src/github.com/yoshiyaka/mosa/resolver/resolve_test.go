@@ -1208,7 +1208,7 @@ var badDefsTest = []struct {
 		}
 		class A {}
 		`,
-		`Unsupported argument 'undefined' sent to class at real.ms:5`,
+		`Unsupported argument 'undefined' sent to type at real.ms:5`,
 	},
 
 	{
