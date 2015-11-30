@@ -743,6 +743,71 @@ var resolveFileTest = []struct {
 		}`,
 		``,
 	},
+
+	{
+		`
+		// Realize declaration with array
+		node 'n' {
+			exec { [ "bar", "baz", ]:
+				stdin => "foo",
+			}
+		}`,
+		`
+		exec { 'bar': stdin => 'foo', }
+		exec { 'baz': stdin => 'foo', }
+		`,
+	},
+
+	{
+		`
+		// Realize declaration with array in define
+		node 'n' {
+			t { "t": }
+		}
+		
+		define single t($name,) {
+			exec { [ "bar", "baz", ]:
+				stdin => "foo",
+			}
+		}`,
+		`
+		exec { 'bar': stdin => 'foo', }
+		exec { 'baz': stdin => 'foo', }
+		t { 't': }
+		`,
+	},
+
+	{
+		`
+		// Realize define with array
+		node 'n' {
+			t { [ "bar", "baz", ]:
+				stdin => "foo",
+			}
+		}
+		
+		define single t($name, $stdin,) {}
+		
+		`,
+		`
+		t { 'bar': stdin => 'foo', }
+		t { 'baz': stdin => 'foo', }
+		`,
+	},
+
+	{
+		`
+		// Realizing a declaration with an empty array
+		node 'n' {
+			class { 'A': }
+		}
+		class A {
+			$array = []
+			decl { $array: }
+		}
+		`,
+		``,
+	},
 }
 
 func TestResolveFile(t *testing.T) {
@@ -855,7 +920,9 @@ var badVariableTest = []struct {
 			$foo = $foo
 		}`,
 		&CyclicError{
-			Err:   Err{Line: 2, Type: ErrorTypeCyclicVariable},
+			Err: Err{
+				Line: 2, Type: ErrorTypeCyclicVariable, SymbolName: "$foo",
+			},
 			Cycle: []string{"$foo", "$foo"},
 		},
 	},
@@ -972,6 +1039,8 @@ func TestResolveBadVariable(t *testing.T) {
 					)
 				} else if !reflect.DeepEqual(cyclicE.Cycle, re.Cycle) {
 					t.Log(test.inputManifest)
+					t.Logf("Expected %#v", cyclicE)
+					t.Logf("Got      %#v", re)
 					t.Errorf("%s: Got bad cycle error: %s", test.comment, e)
 				}
 			}
@@ -1124,20 +1193,6 @@ var badDefsTest = []struct {
 		class A {
 			$number = 5
 			decl { $number: }
-		}
-		`,
-		`Can't realize declaration of type decl with non-string name at real.ms:8`,
-	},
-
-	{
-		`
-		// Realizing a declaration with a non-string (array) name
-		node 'n' {
-			class { 'A': }
-		}
-		class A {
-			$array = []
-			decl { $array: }
 		}
 		`,
 		`Can't realize declaration of type decl with non-string name at real.ms:8`,

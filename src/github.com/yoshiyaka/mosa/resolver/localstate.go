@@ -83,46 +83,19 @@ func (ls *localState) resolveVariableRecursive(lookingFor VariableName, lineNum 
 	seenNames[lookingFor] = true
 
 	if _, isVar := foundVar.Val.(VariableName); !isVar {
-		// This is an actual value
-		if array, isArray := foundVar.Val.(Array); isArray {
-			// The value pointed to is an array. Resolve all values in the array
-			// aswell.
-			seenNamesCopy := map[VariableName]bool{}
-			for key, val := range seenNames {
-				seenNamesCopy[key] = val
-			}
+		// This is an actual value, not a variable name. Recurse and continue
+		// resolve in case the value is some thing that needs to be resovled,
+		// such as an array or an interpolated string.
+		resolved, err := ls.resolveValueRecursive(
+			foundVar.Val, foundVar.LineNum, chain, seenNames,
+		)
 
-			resolvedArray, err := ls.resolveArrayRecursive(
-				array, lineNum, chain, seenNamesCopy,
-			)
-			if err == nil {
-				ls.resolvedVars[lookingFor.Str] = resolvedArray
-				delete(ls.varDefsByName, lookingFor.Str)
-			}
-			return resolvedArray, err
-		} else if is, isIs := foundVar.Val.(InterpolatedString); isIs {
-			// The value pointed to is an interpolated string. Resolve all
-			// values in the string aswell.
-			seenNamesCopy := map[VariableName]bool{}
-			for key, val := range seenNames {
-				seenNamesCopy[key] = val
-			}
-
-			quotedString, err := ls.resolveInterpolatedStringRecursive(
-				is, chain, seenNamesCopy,
-			)
-			if err == nil {
-				ls.resolvedVars[lookingFor.Str] = quotedString
-				delete(ls.varDefsByName, lookingFor.Str)
-			}
-
-			return quotedString, err
-		} else {
-			ls.resolvedVars[lookingFor.Str] = foundVar.Val
+		if err == nil {
+			ls.resolvedVars[lookingFor.Str] = resolved
 			delete(ls.varDefsByName, lookingFor.Str)
-
-			return foundVar.Val, nil
 		}
+
+		return resolved, err
 	}
 
 	return ls.resolveVariableRecursive(
@@ -196,15 +169,23 @@ func (ls *localState) resolveInterpolatedStringRecursive(is InterpolatedString, 
 }
 
 func (ls *localState) resolveValue(v Value, lineNum int) (Value, error) {
+	return ls.resolveValueRecursive(v, lineNum, nil, map[VariableName]bool{})
+}
+
+func (ls *localState) resolveValueRecursive(v Value, lineNum int, chain []*VariableDef, seenNames map[VariableName]bool) (Value, error) {
 	switch v.(type) {
 	case VariableName:
-		return ls.resolveVariable(v.(VariableName), lineNum)
+		return ls.resolveVariableRecursive(
+			v.(VariableName), lineNum, chain, seenNames,
+		)
 	case Array:
-		return ls.resolveArray(v.(Array), lineNum)
+		return ls.resolveArrayRecursive(v.(Array), lineNum, chain, seenNames)
 	case Reference:
 		return ls.resolveReference(v.(Reference))
 	case InterpolatedString:
-		return ls.resolveInterpolatedString(v.(InterpolatedString))
+		return ls.resolveInterpolatedStringRecursive(
+			v.(InterpolatedString), chain, seenNames,
+		)
 	case Expression:
 		return ls.resolveExpression(v.(Expression))
 	default:
@@ -220,9 +201,6 @@ func (ls *localState) resolveExpression(e Expression) (v Value, retErr error) {
 	right, rightErr := ls.resolveValue(e.Right, e.LineNum)
 	if rightErr != nil {
 		return nil, rightErr
-	}
-
-	if left == right {
 	}
 
 	defer func() {
