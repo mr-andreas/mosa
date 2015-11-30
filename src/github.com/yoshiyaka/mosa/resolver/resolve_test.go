@@ -814,11 +814,30 @@ var resolveFileTest = []struct {
 			t { 'bar': foo => 'bar', }
 		}
 		define single t($name,$foo,) {
-			if $name != $foo && $foo != 'cat' {
+			if $name == $foo && $foo != 'cat' {
 				exec { $name: }	
 			}
 		}`,
-		`exec { 'bar': }`,
+		`
+		exec { 'bar': }
+		t { 'bar': foo => 'bar', }
+		`,
+	},
+
+	{
+		`node 'n' {
+			$dep = 'a'
+			
+			exec { 'a': }
+			exec { 'b':
+				depends => exec["$dep"],
+			}
+		}
+		`,
+		`
+		exec { 'a': }
+		exec { 'b': require => exec['a'], }
+		`,
 	},
 }
 
@@ -1247,7 +1266,7 @@ var badDefsTest = []struct {
 			}
 		}
 		`,
-		`Reference keys must be strings at real.ms:9 - the value of $array is not.`,
+		`Reference keys must be strings (got ast.Array) at real.ms:9`,
 	},
 
 	{

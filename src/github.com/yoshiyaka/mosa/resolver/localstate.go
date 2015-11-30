@@ -181,7 +181,7 @@ func (ls *localState) resolveValueRecursive(v Value, lineNum int, chain []*Varia
 	case Array:
 		return ls.resolveArrayRecursive(v.(Array), lineNum, chain, seenNames)
 	case Reference:
-		return ls.resolveReference(v.(Reference))
+		return ls.resolveReferenceRecursive(v.(Reference), chain, seenNames)
 	case InterpolatedString:
 		return ls.resolveInterpolatedStringRecursive(
 			v.(InterpolatedString), chain, seenNames,
@@ -308,30 +308,22 @@ func (ls *localState) resolveInterpolatedString(is InterpolatedString) (QuotedSt
 	)
 }
 
-func (ls *localState) resolveReference(r Reference) (Reference, error) {
-	switch r.Scalar.(type) {
-	case QuotedString:
+func (ls *localState) resolveReferenceRecursive(r Reference, chain []*VariableDef, seenNames map[VariableName]bool) (Reference, error) {
+	resolved, err := ls.resolveValueRecursive(
+		r.Scalar, r.LineNum, chain, seenNames,
+	)
+	if err != nil {
 		return r, nil
-	case VariableName:
-		var err error
-		varName := r.Scalar.(VariableName)
-		r.Scalar, err = ls.resolveVariable(varName, r.LineNum)
-		if err != nil {
-			return r, err
-		} else if _, isString := r.Scalar.(QuotedString); !isString {
-			return r, fmt.Errorf(
-				"Reference keys must be strings at %s:%d - the value of %s is not.",
-				ls.definedInFile, r.LineNum, varName.Str,
-			)
-		} else {
-			return r, nil
-		}
+	}
 
-	default:
+	if str, ok := resolved.(QuotedString); !ok {
 		return r, fmt.Errorf(
-			"Reference keys must be strings at %s:%d",
-			ls.definedInFile, r.LineNum,
+			"Reference keys must be strings (got %T) at %s:%d",
+			resolved, ls.definedInFile, r.LineNum,
 		)
+	} else {
+		r.Scalar = str
+		return r, nil
 	}
 }
 
