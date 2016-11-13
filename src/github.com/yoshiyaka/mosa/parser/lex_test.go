@@ -1719,37 +1719,39 @@ func normalizeBlock(b *Block, filename string) {
 
 func TestLex(t *testing.T) {
 	for _, test := range lexTests {
-		for i, _ := range test.ast.Classes {
-			test.ast.Classes[i].Filename = "test.manifest"
-			normalizeBlock(&test.ast.Classes[i].Block, "test.manifest")
-		}
-		for i, _ := range test.ast.Defines {
-			test.ast.Defines[i].Filename = "test.manifest"
-			normalizeBlock(&test.ast.Defines[i].Block, "test.manifest")
-		}
-		for i, _ := range test.ast.Nodes {
-			test.ast.Nodes[i].Filename = "test.manifest"
-			normalizeBlock(&test.ast.Nodes[i].Block, "test.manifest")
-		}
+		t.Run("", func(t *testing.T) {
+			for i, _ := range test.ast.Classes {
+				test.ast.Classes[i].Filename = "test.manifest"
+				normalizeBlock(&test.ast.Classes[i].Block, "test.manifest")
+			}
+			for i, _ := range test.ast.Defines {
+				test.ast.Defines[i].Filename = "test.manifest"
+				normalizeBlock(&test.ast.Defines[i].Block, "test.manifest")
+			}
+			for i, _ := range test.ast.Nodes {
+				test.ast.Nodes[i].Filename = "test.manifest"
+				normalizeBlock(&test.ast.Nodes[i].Block, "test.manifest")
+			}
 
-		ast := NewAST()
-		if err := Parse(ast, "test.manifest", strings.NewReader(test.manifest)); err != nil {
-			t.Log(test.manifest)
-			t.Error(err)
-		} else {
-			if !equalsAsJson(ast, test.ast) {
-				t.Logf("%#v", test.ast)
-				t.Logf("%#v", ast)
-				js2, _ := json.MarshalIndent(test.ast, "", "  ")
-				t.Log(string(js2))
-				js, _ := json.MarshalIndent(ast, "", "  ")
-				t.Log(string(js))
-				t.Error("Expected manifest", test.manifest)
-				if ast != nil {
-					t.Log("Read manifest", ast.String())
+			ast := NewAST()
+			if err := Parse(ast, "test.manifest", strings.NewReader(test.manifest)); err != nil {
+				t.Log(test.manifest)
+				t.Error(err)
+			} else {
+				if !equalsAsJson(ast, test.ast) {
+					t.Logf("%#v", test.ast)
+					t.Logf("%#v", ast)
+					js2, _ := json.MarshalIndent(test.ast, "", "  ")
+					t.Log(string(js2))
+					js, _ := json.MarshalIndent(ast, "", "  ")
+					t.Log(string(js))
+					t.Error("Expected manifest", test.manifest)
+					if ast != nil {
+						t.Log("Read manifest", ast.String())
+					}
 				}
 			}
-		}
+		})
 	}
 }
 
