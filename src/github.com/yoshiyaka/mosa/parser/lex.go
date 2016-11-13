@@ -28,7 +28,7 @@ var (
 func nilArray(typ C.ASTTYPE) goHandle {
 	switch typ {
 	case C.ASTTYPE_STMTS:
-		return ht.Add([]interface{}{})
+		return ht.Add([]Statement{})
 	case C.ASTTYPE_CLASSES:
 		return ht.Add([]Class{})
 	case C.ASTTYPE_PROPLIST:
@@ -48,17 +48,19 @@ func nilArray(typ C.ASTTYPE) goHandle {
 //export appendArray
 func appendArray(arrayHandle, newValue goHandle) goHandle {
 	array := ht.Get(arrayHandle)
-	switch array.(type) {
+	switch a := array.(type) {
 	case []VariableDef:
-		return ht.Add(append(array.([]VariableDef), ht.Get(newValue).(VariableDef)))
+		return ht.Add(append(a, ht.Get(newValue).(VariableDef)))
 	case []Class:
-		return ht.Add(append(array.([]Class), ht.Get(newValue).(Class)))
+		return ht.Add(append(a, ht.Get(newValue).(Class)))
 	case []Prop:
-		return ht.Add(append(array.([]Prop), ht.Get(newValue).(Prop)))
+		return ht.Add(append(a, ht.Get(newValue).(Prop)))
+	case []Statement:
+		return ht.Add(append(a, ht.Get(newValue).(Statement)))
 	case []interface{}:
-		return ht.Add(append(array.([]interface{}), ht.Get(newValue)))
+		return ht.Add(append(a, ht.Get(newValue)))
 	case Array:
-		return ht.Add(append(array.(Array), ht.Get(newValue)))
+		return ht.Add(append(a, ht.Get(newValue)))
 	}
 
 	fmt.Printf("%#v\n", array)
@@ -109,31 +111,12 @@ func sawNode(lineNum C.int, name *C.char, blockH goHandle) goHandle {
 
 //export sawBlock
 func sawBlock(lineNum C.int, statementsH goHandle) goHandle {
-	statements := ht.Get(statementsH).([]interface{})
-
-	defs := []VariableDef{}
-	decls := []Declaration{}
-	ifs := []If{}
-
-	for _, val := range statements {
-		switch val.(type) {
-		case VariableDef:
-			defs = append(defs, val.(VariableDef))
-		case Declaration:
-			decls = append(decls, val.(Declaration))
-		case If:
-			ifs = append(ifs, val.(If))
-		default:
-			panic("Value is neither def nor decl")
-		}
-	}
+	statements := ht.Get(statementsH).([]Statement)
 
 	return ht.Add(Block{
-		Filename:     curFilename,
-		LineNum:      int(lineNum),
-		VariableDefs: defs,
-		Declarations: decls,
-		Ifs:          ifs,
+		Filename:   curFilename,
+		LineNum:    int(lineNum),
+		Statements: statements,
 	})
 }
 
@@ -145,7 +128,7 @@ func sawIf(lineNum C.int, expression, block, _else goHandle) goHandle {
 		loadedElse = &b
 	}
 
-	return ht.Add(If{
+	return ht.Add(&If{
 		LineNum:    int(lineNum),
 		Expression: ht.Get(expression).(Value),
 		Block:      ht.Get(block).(Block),
@@ -165,7 +148,7 @@ func sawBoolFalse() goHandle {
 
 //export sawVariableDef
 func sawVariableDef(lineNum C.int, varName *C.char, val goHandle) goHandle {
-	return ht.Add(VariableDef{
+	return ht.Add(&VariableDef{
 		int(lineNum),
 		VariableName{int(lineNum), C.GoString(varName)},
 		ht.Get(val),
@@ -218,7 +201,7 @@ func sawExpression(lineNum C.int, op *C.char, left, right goHandle) goHandle {
 
 //export sawDeclaration
 func sawDeclaration(lineNum C.int, typ *C.char, scalar, proplist goHandle) goHandle {
-	return ht.Add(Declaration{
+	return ht.Add(&Declaration{
 		Filename: curFilename,
 		LineNum:  int(lineNum),
 		Type:     C.GoString(typ),

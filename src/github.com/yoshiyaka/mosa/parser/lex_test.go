@@ -23,9 +23,8 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    1,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -46,9 +45,8 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    2,
+						Statements: []Statement{},
 					},
 				},
 				{
@@ -56,9 +54,8 @@ var lexTests = []struct {
 					Name:    "Bar",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      4,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    4,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -80,14 +77,13 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$prop"},
 								Val:          Value("x"),
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -111,8 +107,8 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$prop"},
 								Val: Expression{
@@ -127,7 +123,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      4,
 								VariableName: VariableName{4, "$foo"},
 								Val: Expression{
@@ -142,7 +138,7 @@ var lexTests = []struct {
 									Right: 8,
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      5,
 								VariableName: VariableName{5, "$bool"},
 								Val: Expression{
@@ -158,7 +154,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -180,8 +175,8 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$order"},
 								Val: Expression{
@@ -207,7 +202,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -233,10 +227,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 2,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 3,
 								Type:    "exec",
 								Scalar: Expression{
@@ -299,8 +292,8 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$prop"},
 								Val: Array{
@@ -312,7 +305,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -336,14 +328,13 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 3,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      4,
 								VariableName: VariableName{4, "$prop"},
 								Val:          Value("x"),
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -365,10 +356,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 2,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 3,
 								Type:    "package",
 								Scalar:  "pkg-name",
@@ -397,10 +387,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 2,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 3,
 								Type:    "package",
 								Scalar:  "pkg",
@@ -435,10 +424,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 1,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 2,
 								Type:    "package",
 								Scalar:  "pkg",
@@ -487,20 +475,19 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$foo"},
 								Val:          "bar",
 							},
 
-							{
+							&VariableDef{
 								LineNum:      4,
 								VariableName: VariableName{4, "$baz"},
 								Val:          VariableName{4, "$foo"},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 
@@ -510,14 +497,13 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 7,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      8,
 								VariableName: VariableName{8, "$good"},
 								Val:          "text",
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -540,10 +526,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 2,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 3,
 								Type:    "package",
 								Scalar:  "pkg3",
@@ -578,10 +563,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 2,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 3,
 								Type:    "package",
 								Scalar:  "pkg3",
@@ -625,10 +609,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 2,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 3,
 								Type:    "package",
 								Scalar:  "pkg3",
@@ -678,41 +661,40 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$a1"},
 								Val:          Array{},
 							},
-							{
+							&VariableDef{
 								LineNum:      4,
 								VariableName: VariableName{4, "$a2"},
 								Val:          Array{"foo"},
 							},
-							{
+							&VariableDef{
 								LineNum:      5,
 								VariableName: VariableName{5, "$a3"},
 								Val:          Array{"foo", "bar"},
 							},
-							{
+							&VariableDef{
 								LineNum:      6,
 								VariableName: VariableName{6, "$a4"},
 								Val:          Array{VariableName{6, "$a1"}},
 							},
-							{
+							&VariableDef{
 								LineNum:      7,
 								VariableName: VariableName{7, "$a5"},
 								Val: Array{
 									VariableName{7, "$a1"}, VariableName{7, "$a2"},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      8,
 								VariableName: VariableName{8, "$a6"},
 								Val:          Array{VariableName{8, "$a1"}, "foo"},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -737,15 +719,14 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$webserver"},
 								Val:          "nginx",
 							},
-						},
-						Declarations: []Declaration{
-							{
+
+							&Declaration{
 								LineNum: 4,
 								Type:    "package",
 								Scalar:  "pkg3",
@@ -793,15 +774,14 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 2,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      3,
 								VariableName: VariableName{3, "$webserver"},
 								Val:          "nginx",
 							},
-						},
-						Declarations: []Declaration{
-							{
+
+							&Declaration{
 								LineNum: 5,
 								Type:    "package",
 								Scalar:  VariableName{5, "$webserver"},
@@ -813,7 +793,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&Declaration{
 								LineNum: 9,
 								Type:    "package",
 								Scalar:  "website",
@@ -870,10 +850,9 @@ var lexTests = []struct {
 					Name:    "Deps",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      2,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{
-							{
+						LineNum: 2,
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 3,
 								Type:    "package",
 								Scalar:  "pkg1",
@@ -888,7 +867,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&Declaration{
 								LineNum: 7,
 								Type:    "package",
 								Scalar:  "pkg2",
@@ -903,7 +882,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&Declaration{
 								LineNum: 11,
 								Type:    "file",
 								Scalar:  "file1",
@@ -915,7 +894,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&Declaration{
 								LineNum: 15,
 								Type:    "file",
 								Scalar:  "file2",
@@ -927,7 +906,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&Declaration{
 								LineNum: 19,
 								Type:    "shell",
 								Scalar:  "cmd1",
@@ -939,7 +918,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&Declaration{
 								LineNum: 23,
 								Type:    "shell",
 								Scalar:  "cmd2",
@@ -971,14 +950,13 @@ var lexTests = []struct {
 					Type: DefineTypeMultiple,
 					Block: Block{
 						LineNum: 1,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      2,
 								VariableName: VariableName{2, "$foo"},
 								Val:          "x",
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1001,9 +979,8 @@ var lexTests = []struct {
 					},
 					Type: DefineTypeMultiple,
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    1,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -1021,14 +998,13 @@ var lexTests = []struct {
 					LineNum: 1,
 					Block: Block{
 						LineNum: 1,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      2,
 								VariableName: VariableName{2, "$foo"},
 								Val:          "x",
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1043,9 +1019,8 @@ var lexTests = []struct {
 					Name:    "localhost",
 					LineNum: 1,
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    1,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -1065,15 +1040,14 @@ var lexTests = []struct {
 					LineNum: 1,
 					Block: Block{
 						LineNum: 1,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      2,
 								VariableName: VariableName{2, "$foo"},
 								Val:          "x",
 							},
-						},
-						Declarations: []Declaration{
-							{
+
+							&Declaration{
 								LineNum: 4,
 								Type:    "decl",
 								Scalar:  "x",
@@ -1102,9 +1076,8 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    1,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -1127,9 +1100,8 @@ var lexTests = []struct {
 						},
 					},
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    1,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -1160,9 +1132,8 @@ var lexTests = []struct {
 						},
 					},
 					Block: Block{
-						LineNum:      4,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    4,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -1200,9 +1171,8 @@ var lexTests = []struct {
 						},
 					},
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    1,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -1224,8 +1194,8 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 3,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      4,
 								VariableName: VariableName{4, "$foo"},
 								Val: InterpolatedString{
@@ -1234,7 +1204,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1266,9 +1235,8 @@ var lexTests = []struct {
 						},
 					},
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Declarations: []Declaration{},
+						LineNum:    1,
+						Statements: []Statement{},
 					},
 				},
 			},
@@ -1288,8 +1256,8 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 1,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      2,
 								VariableName: VariableName{2, "$a"},
 								Val: InterpolatedString{
@@ -1300,7 +1268,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1333,8 +1300,8 @@ var lexTests = []struct {
 					ArgDefs: []VariableDef{},
 					Block: Block{
 						LineNum: 3,
-						VariableDefs: []VariableDef{
-							{
+						Statements: []Statement{
+							&VariableDef{
 								LineNum:      4,
 								VariableName: VariableName{4, "$a"},
 								Val: InterpolatedString{
@@ -1342,7 +1309,7 @@ var lexTests = []struct {
 									Segments: nil,
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      5,
 								VariableName: VariableName{5, "$b"},
 								Val: InterpolatedString{
@@ -1353,7 +1320,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      6,
 								VariableName: VariableName{6, "$c"},
 								Val: InterpolatedString{
@@ -1365,7 +1332,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      8,
 								VariableName: VariableName{8, "$d"},
 								Val: InterpolatedString{
@@ -1376,7 +1343,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      9,
 								VariableName: VariableName{9, "$e"},
 								Val: InterpolatedString{
@@ -1387,7 +1354,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      10,
 								VariableName: VariableName{10, "$f"},
 								Val: InterpolatedString{
@@ -1395,7 +1362,7 @@ var lexTests = []struct {
 									Segments: []interface{}{"bar{baz}"},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      11,
 								VariableName: VariableName{11, "$g"},
 								Val: InterpolatedString{
@@ -1407,7 +1374,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      12,
 								VariableName: VariableName{12, "$h"},
 								Val: InterpolatedString{
@@ -1419,7 +1386,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      13,
 								VariableName: VariableName{13, "$i"},
 								Val: InterpolatedString{
@@ -1427,7 +1394,7 @@ var lexTests = []struct {
 									Segments: []interface{}{"bar", "$", "{{foo}}"},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      14,
 								VariableName: VariableName{14, "$j"},
 								Val: InterpolatedString{
@@ -1439,7 +1406,7 @@ var lexTests = []struct {
 									},
 								},
 							},
-							{
+							&VariableDef{
 								LineNum:      15,
 								VariableName: VariableName{15, "$k"},
 								Val: InterpolatedString{
@@ -1452,7 +1419,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1480,8 +1446,8 @@ var lexTests = []struct {
 					},
 					Block: Block{
 						LineNum: 1,
-						Declarations: []Declaration{
-							{
+						Statements: []Statement{
+							&Declaration{
 								LineNum: 2,
 								Type:    "exec",
 								Scalar: InterpolatedString{
@@ -1528,10 +1494,9 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      3,
-						VariableDefs: []VariableDef{},
-						Ifs: []If{
-							{
+						LineNum: 3,
+						Statements: []Statement{
+							&If{
 								LineNum: 4,
 								Expression: Expression{
 									LineNum:   4,
@@ -1541,8 +1506,8 @@ var lexTests = []struct {
 								},
 								Block: Block{
 									LineNum: 4,
-									VariableDefs: []VariableDef{
-										{
+									Statements: []Statement{
+										&VariableDef{
 											LineNum:      5,
 											VariableName: VariableName{5, "$foo"},
 											Val:          "bar",
@@ -1551,7 +1516,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1576,16 +1540,15 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      3,
-						VariableDefs: []VariableDef{},
-						Ifs: []If{
-							{
+						LineNum: 3,
+						Statements: []Statement{
+							&If{
 								LineNum:    4,
 								Expression: Bool(true),
 								Block: Block{
 									LineNum: 4,
-									VariableDefs: []VariableDef{
-										{
+									Statements: []Statement{
+										&VariableDef{
 											LineNum:      5,
 											VariableName: VariableName{5, "$foo"},
 											Val:          QuotedString("bar"),
@@ -1594,8 +1557,8 @@ var lexTests = []struct {
 								},
 								Else: &Block{
 									LineNum: 6,
-									VariableDefs: []VariableDef{
-										{
+									Statements: []Statement{
+										&VariableDef{
 											LineNum:      7,
 											VariableName: VariableName{7, "$foo"},
 											Val:          QuotedString("baz"),
@@ -1604,7 +1567,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1631,22 +1593,21 @@ var lexTests = []struct {
 					Name:    "Test",
 					ArgDefs: []VariableDef{},
 					Block: Block{
-						LineNum:      3,
-						VariableDefs: []VariableDef{},
-						Ifs: []If{
-							{
+						LineNum: 3,
+						Statements: []Statement{
+							&If{
 								LineNum:    4,
 								Expression: Bool(true),
 								Block: Block{
 									LineNum: 4,
-									Ifs: []If{
-										{
+									Statements: []Statement{
+										&If{
 											LineNum:    5,
 											Expression: Bool(false),
 											Block: Block{
 												LineNum: 5,
-												VariableDefs: []VariableDef{
-													{
+												Statements: []Statement{
+													&VariableDef{
 														LineNum:      6,
 														VariableName: VariableName{6, "$foo"},
 														Val:          QuotedString("bar"),
@@ -1658,8 +1619,8 @@ var lexTests = []struct {
 								},
 								Else: &Block{
 									LineNum: 8,
-									VariableDefs: []VariableDef{
-										{
+									Statements: []Statement{
+										&VariableDef{
 											LineNum:      9,
 											VariableName: VariableName{9, "$foo"},
 											Val:          QuotedString("baz"),
@@ -1668,7 +1629,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1688,10 +1648,9 @@ var lexTests = []struct {
 					LineNum: 1,
 					Name:    "n",
 					Block: Block{
-						LineNum:      1,
-						VariableDefs: []VariableDef{},
-						Ifs: []If{
-							{
+						LineNum: 1,
+						Statements: []Statement{
+							&If{
 								LineNum: 2,
 								Expression: Expression{
 									LineNum:   2,
@@ -1728,7 +1687,6 @@ var lexTests = []struct {
 								},
 							},
 						},
-						Declarations: []Declaration{},
 					},
 				},
 			},
@@ -1743,25 +1701,19 @@ func normalizeBlock(b *Block, filename string) {
 
 	b.Filename = filename
 
-	if b.VariableDefs == nil {
-		b.VariableDefs = []VariableDef{}
+	if b.Statements == nil {
+		b.Statements = []Statement{}
 	}
 
-	if b.Declarations == nil {
-		b.Declarations = []Declaration{}
-	}
+	for _, stmt := range b.Statements {
+		switch v := stmt.(type) {
+		case *Declaration:
+			v.Filename = filename
 
-	for i, _ := range b.Declarations {
-		b.Declarations[i].Filename = filename
-	}
-
-	if b.Ifs == nil {
-		b.Ifs = []If{}
-	}
-
-	for i, _ := range b.Ifs {
-		normalizeBlock(&b.Ifs[i].Block, filename)
-		normalizeBlock(b.Ifs[i].Else, filename)
+		case *If:
+			normalizeBlock(&v.Block, filename)
+			normalizeBlock(v.Else, filename)
+		}
 	}
 }
 
@@ -1875,11 +1827,10 @@ func TestParseMultipleFiles(t *testing.T) {
 				LineNum:  2,
 				Name:     "n",
 				Block: Block{
-					LineNum:      2,
-					Filename:     "test.ms",
-					VariableDefs: []VariableDef{},
-					Declarations: []Declaration{
-						{
+					LineNum:  2,
+					Filename: "test.ms",
+					Statements: []Statement{
+						&Declaration{
 							Filename: "test.ms",
 							LineNum:  3,
 							Type:     "class",
@@ -1887,7 +1838,6 @@ func TestParseMultipleFiles(t *testing.T) {
 							Props:    []Prop{},
 						},
 					},
-					Ifs: []If{},
 				},
 			},
 		},
@@ -1898,11 +1848,10 @@ func TestParseMultipleFiles(t *testing.T) {
 				Name:     "A",
 				ArgDefs:  []VariableDef{},
 				Block: Block{
-					LineNum:      2,
-					Filename:     "test2.ms",
-					VariableDefs: []VariableDef{},
-					Declarations: []Declaration{
-						{
+					LineNum:  2,
+					Filename: "test2.ms",
+					Statements: []Statement{
+						&Declaration{
 							Filename: "test2.ms",
 							LineNum:  3,
 							Type:     "exec",
@@ -1910,7 +1859,6 @@ func TestParseMultipleFiles(t *testing.T) {
 							Props:    []Prop{},
 						},
 					},
-					Ifs: []If{},
 				},
 			},
 		},

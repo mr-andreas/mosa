@@ -32,9 +32,12 @@ type Block struct {
 	Filename string
 	LineNum  int
 
-	VariableDefs []VariableDef
-	Declarations []Declaration
-	Ifs          []If
+	// Each Statement may be *VariableDef, *Declaration or *If
+	Statements []Statement
+}
+
+type Statement interface {
+	String() string
 }
 
 type DefineType int
@@ -70,28 +73,50 @@ func BlockEquals(b1, b2 *Block) bool {
 		return b1 == b2
 	}
 
-	return VariableDefsEquals(b1.VariableDefs, b2.VariableDefs) &&
-		DeclarationsEquals(b1.Declarations, b2.Declarations) &&
-		IfsEquals(b1.Ifs, b2.Ifs)
+	return StatementsEquals(b1.Statements, b2.Statements)
+}
+
+func StatementsEquals(s1, s2 []Statement) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+
+	for i, _ := range s1 {
+		if reflect.TypeOf(s1[i]) != reflect.TypeOf(s2[i]) {
+			return false
+		}
+
+		switch v := s1[i].(type) {
+		case *If:
+			if !IfEquals(v, s2[i].(*If)) {
+				return false
+			}
+
+		case *Declaration:
+			if !v.Equals(s2[i].(*Declaration)) {
+				return false
+			}
+
+		case *VariableDef:
+			if !v.Equals(s2[i].(*VariableDef)) {
+				return false
+			}
+
+		default:
+			panic("Unknown statement type: " + reflect.TypeOf(s1[i]).String())
+		}
+	}
+
+	return true
 }
 
 func (b *Block) String() string {
-	defs := ""
-	ifs := ""
-	decls := ""
-	for _, def := range b.VariableDefs {
-		defs += fmt.Sprintf("\t%s\n", def.String())
+	str := ""
+	for _, stmt := range b.Statements {
+		str += fmt.Sprintf("\t%s\n", stmt.String())
 	}
 
-	for _, _if := range b.Ifs {
-		ifs += fmt.Sprintf("\t%s\n", _if.String())
-	}
-
-	for _, decl := range b.Declarations {
-		decls += fmt.Sprintf("\t%s\n", decl.String())
-	}
-
-	return fmt.Sprintf("{\n%s\n%s\n%s\n}\n", defs, ifs, decls)
+	return fmt.Sprintf("{\n%s\n}\n", str)
 }
 
 // Returns whether the classes are equal. Line numbers and filenames are not
