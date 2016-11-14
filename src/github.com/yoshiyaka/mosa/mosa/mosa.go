@@ -61,11 +61,14 @@ func main() {
 	help := false
 	run := false
 	verbose := false
+	print := false
+	manifestDir := ""
 	flag.BoolVar(&help, "h", false, "Shows this message")
 	flag.BoolVar(&run, "run", false, "Actually execute the manifest")
 	flag.BoolVar(&verbose, "v", false, "Verbose output")
+	flag.BoolVar(&print, "print", false, "Print resulting manifest instead of executing it")
+	flag.StringVar(&manifestDir, "manifest-dir", "../testdata", "Directory containing manifest")
 
-	dirName := "../testdata"
 	flag.Parse()
 
 	if help {
@@ -73,12 +76,8 @@ func main() {
 		return
 	}
 
-	if args := flag.CommandLine.Args(); len(args) == 1 {
-		dirName = args[0]
-	}
-
 	mfst := ast.NewAST()
-	if err := parseDirAsASTRecursively(mfst, dirName); err != nil {
+	if err := parseDirAsASTRecursively(mfst, manifestDir); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
@@ -87,6 +86,13 @@ func main() {
 	if resolvedErr != nil {
 		fmt.Fprintln(os.Stderr, resolvedErr.Error())
 		os.Exit(1)
+	}
+
+	if print {
+		for _, decl := range resolved {
+			fmt.Printf("\t\t%s\n", decl.String())
+		}
+		os.Exit(0)
 	}
 
 	reduced, reducedErr := reducer.Reduce(resolved)

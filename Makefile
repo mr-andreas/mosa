@@ -15,8 +15,11 @@ clean:
 .PHONY: clean
 
 run: bin/mosa
-	bin/mosa src/github.com/yoshiyaka/mosa/testdata
+	bin/mosa -manifest-dir src/github.com/yoshiyaka/mosa/testdata
 
 test: lex
 	GOPATH=`pwd` go test github.com/yoshiyaka/mosa/...
 .PHONY: test
+
+print: bin/mosa
+	bin/mosa -manifest-dir src/github.com/yoshiyaka/mosa/testdata -print true
