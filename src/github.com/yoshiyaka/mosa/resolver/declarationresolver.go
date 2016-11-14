@@ -65,8 +65,7 @@ func (cr *declarationResolver) resolve() (Define, error) {
 
 	br := newBlockResolver(&cr.define.Block, cr.ls, cr.gs, false)
 	var err error
-	retClass.Block, err = br.resolve()
-	if err != nil {
+	if err = br.resolve(); err != nil {
 		return retClass, err
 	}
 

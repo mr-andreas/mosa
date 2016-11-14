@@ -10,250 +10,6 @@ import (
 	"github.com/yoshiyaka/mosa/parser"
 )
 
-var resolveClassTest = []struct {
-	inputManifest,
-	expectedManifest string
-}{
-	{
-		`class C {}`,
-		`class C {}`,
-	},
-
-	{
-		`class C {
-			$foo = 'x'
-			$bar = $foo
-		}`,
-		`class C {
-			$foo = 'x'
-			$bar = 'x'
-		}`,
-	},
-
-	{
-		`class C {
-			$foo = 'x'
-			$bar = '$foo'
-		}`,
-		`class C {
-			$foo = 'x'
-			$bar = '$foo'
-		}`,
-	},
-
-	{
-		`class C {
-			$bar = $foo
-			$foo = 'x'
-		}`,
-		`class C {
-			$bar = 'x'
-			$foo = 'x'
-		}`,
-	},
-
-	{
-		`class C {
-  			$foo = 'bar'
- 			$baz = $foo
-
-			exec { $baz: }
-		}`,
-
-		`class C {
-  			$foo = 'bar'
-			$baz = 'bar'
-
-			exec { 'bar': }
-		}`,
-	},
-
-	{
-		`class C {
-  			$foo = 'foostr'
-			$bar = 'barstr'
- 			$baz = "$foo x $bar"
-
-			exec { $baz: }
-		}`,
-
-		`class C {
-  			$foo = 'foostr'
-			$bar = 'barstr'
-			$baz = 'foostr x barstr'
-
-			exec { 'foostr x barstr': }
-		}`,
-	},
-
-	{
-		`class C {
-  			$foo = 'foostr'
-			$bar = "$foo barstr"
- 			$baz = "$foo x $bar"
-
-			exec { $baz: }
-		}`,
-
-		`class C {
-  			$foo = 'foostr'
-			$bar = 'foostr barstr'
-			$baz = 'foostr x foostr barstr'
-
-			exec { 'foostr x foostr barstr': }
-		}`,
-	},
-
-	{
-		`
-		class C {
-  			$foo = 'bar'
-
-			package { 'baz': fooVal => $foo, }
-		}
-		define single package($name, $fooVal,){}
-		`,
-
-		`class C {
-  			$foo = 'bar'
-
-			package { 'baz': fooVal => 'bar', }
-		}`,
-	},
-
-	{
-		`class C {
-  			$foo = 'bar'
- 			$baz = $foo
-
-			package { $baz: fooVal => $baz, }
-		}
-		define single package($name, $fooVal,){}
-		`,
-
-		`class C {
-  			$foo = 'bar'
-			$baz = 'bar'
-
-			package { 'bar': fooVal => 'bar', }
-		}`,
-	},
-
-	{
-		`class C {
-			$foo = 'x'
-			$bar = [ $foo, ]
-		}`,
-		`class C {
-			$foo = 'x'
-			$bar = [ 'x', ]
-		}`,
-	},
-
-	{
-		`class C {
-			$foo = 'foo'
-			$bar = [ $foo, 1, 'z', ]
-			$baz = [ 'baz', $bar, ]
-		}`,
-		`class C {
-			$foo = 'foo'
-			$bar = [ 'foo', 1, 'z', ]
-			$baz = [ 'baz', [ 'foo', 1, 'z', ], ]
-		}`,
-	},
-
-	{
-		`class C {
-			$foo = 'foo'
-			bar { 'baz':
-				val => ref[$foo],
-			}
-		}
-		define single bar($name,$val,){}
-		`,
-		`class C {
-			$foo = 'foo'
-			bar { 'baz':
-				val => ref['foo'],
-			}
-		}`,
-	},
-
-	{
-		`class C {
-			$foo = 'foo'
-			$ref = [ ref[$foo], ]
-		}`,
-		`class C {
-			$foo = 'foo'
-			$ref = [ ref['foo'], ]
-		}`,
-	},
-
-	{
-		`class C {
-			$foo = 'foo'
-			$ref = [ [ ref[$foo], ], ]
-		}`,
-		`class C {
-			$foo = 'foo'
-			$ref = [ [ ref['foo'], ], ]
-		}`,
-	},
-}
-
-func TestResolveClass(t *testing.T) {
-	for _, test := range resolveClassTest {
-		expectedAST := ast.NewAST()
-		err := parser.Parse(
-			expectedAST,
-			"expected.ms", strings.NewReader(test.expectedManifest),
-		)
-		if err != nil {
-			t.Log(test.inputManifest)
-			t.Fatal(err)
-		}
-
-		realAST := ast.NewAST()
-		realErr := parser.Parse(
-			realAST, "real.ms", strings.NewReader(test.inputManifest),
-		)
-		if realErr != nil {
-			t.Fatal(realErr)
-		}
-
-		gs := newGlobalState()
-		gs.populateClassesByName(realAST.Classes)
-		gs.populateDefinesByName(realAST.Defines)
-		resolver := newClassResolver(
-			gs, &realAST.Classes[0], nil, "real.ms", realAST.Classes[0].LineNum,
-		)
-		if resolvedClass, err := resolver.resolve(); err != nil {
-			t.Log(test.inputManifest)
-			t.Fatal(err)
-		} else {
-			c := expectedAST.Classes[0]
-			c.Filename = "real.ms"
-			if !c.Equals(&resolvedClass) {
-				t.Logf("%#v", c)
-				t.Logf("%#v", resolvedClass)
-				t.Fatal(
-					"Got bad manifest, expected", c.String(),
-					"got", resolvedClass.String(),
-				)
-			}
-
-			if len(resolver.ls.varDefsByName) != 0 && false {
-				t.Fatal(
-					"Not all variables were resolved in", test.inputManifest,
-					resolver.ls.varDefsByName,
-				)
-			}
-		}
-	}
-}
-
 var resolveFileTest = []struct {
 	inputManifest,
 	expectedManifest string
@@ -283,6 +39,39 @@ var resolveFileTest = []struct {
 	},
 
 	{
+
+		`
+		// Variable definition of same name in header and body
+		node 'x' {
+			class { 'A': }
+		}
+		class A($foo = "bar",) {
+			$foo = "baz"
+			file { $foo: }
+		}
+		define single file($name,) {}
+		`,
+		`file { 'baz': }`,
+	},
+
+	{
+
+		`
+		// Multiple definitions of the same name
+		node 'x' {
+			class { 'A': }
+		}
+		class A {
+			$foo = 1
+			$foo = 'bar'
+			file { $foo: }
+		}
+		define single file($name,) {}
+		`,
+		`file { 'bar': }`,
+	},
+
+	{
 		`
 		node 'x' {
 			class { 'A': }
@@ -309,8 +98,8 @@ var resolveFileTest = []struct {
 		}
 
 		class A {
-			$fooArray = [ $bar, ]
 			$bar = 'barVal'
+			$fooArray = [ $bar, ]
 			file { 'filename':
 				value => $fooArray,
 			}
@@ -648,11 +437,10 @@ var resolveFileTest = []struct {
 		// If-statements
 		node 'x' { class { 'A': } }
 		class A {
-			$myval = "foo$bar"
-			
 			if true {
 				$bar = 'baz'
 			}
+			$myval = "foo$bar"
 			
 			exec { $myval: }
 		}
@@ -843,7 +631,8 @@ var resolveFileTest = []struct {
 
 func TestResolveFile(t *testing.T) {
 	for _, test := range resolveFileTest {
-		expectedWrapper := fmt.Sprintf(`
+		t.Run("", func(t *testing.T) {
+			expectedWrapper := fmt.Sprintf(`
 			node 'x' {
 				class { '__X': }
 			}
@@ -851,44 +640,51 @@ func TestResolveFile(t *testing.T) {
 				%s
 			}
 			`, test.expectedManifest,
-		)
-		expectedAST := ast.NewAST()
-		err := parser.Parse(
-			expectedAST, "expected.ms", strings.NewReader(expectedWrapper),
-		)
-		if err != nil {
-			t.Log(expectedWrapper)
-			t.Fatal(err)
-		}
-
-		realAST := ast.NewAST()
-		realErr := parser.Parse(
-			realAST, "real.ms", strings.NewReader(test.inputManifest),
-		)
-		if realErr != nil {
-			t.Log(test.inputManifest)
-			t.Fatal(realErr)
-		}
-
-		if resolvedDecls, err := Resolve(realAST); err != nil {
-			t.Log(test.inputManifest)
-			t.Error(err)
-		} else if decls := expectedAST.Classes[0].Block.Declarations; !ast.DeclarationsEquals(decls, resolvedDecls) {
-			t.Logf("%#v", decls)
-			t.Logf("%#v", resolvedDecls)
-
-			declsClass := &ast.Class{Block: ast.Block{Declarations: decls}}
-			resolvedDeclsClass := &ast.Class{Block: ast.Block{
-				Declarations: resolvedDecls,
-			}}
-
-			t.Log(expectedWrapper)
-
-			t.Fatalf(
-				"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
-				declsClass.String(), resolvedDeclsClass.String(),
 			)
-		}
+			expectedAST := ast.NewAST()
+			err := parser.Parse(
+				expectedAST, "expected.ms", strings.NewReader(expectedWrapper),
+			)
+			if err != nil {
+				t.Log(expectedWrapper)
+				t.Fatal(err)
+			}
+
+			realAST := ast.NewAST()
+			realErr := parser.Parse(
+				realAST, "real.ms", strings.NewReader(test.inputManifest),
+			)
+			if realErr != nil {
+				t.Log(test.inputManifest)
+				t.Fatal(realErr)
+			}
+
+			if resolvedDecls, err := Resolve(realAST); err != nil {
+				t.Log(test.inputManifest)
+				t.Error(err)
+			} else {
+				decls := expectedAST.Classes[0].Block.Statements
+				r := make([]ast.Statement, len(resolvedDecls))
+				for i, decl := range resolvedDecls {
+					_copy := decl
+					r[i] = &_copy
+				}
+
+				if !ast.StatementsEquals(decls, r) {
+					declsClass := &ast.Class{Block: ast.Block{Statements: decls}}
+					resolvedDeclsClass := &ast.Class{Block: ast.Block{
+						Statements: r,
+					}}
+					t.Error(resolvedDecls)
+					//					t.Log(expectedWrapper)
+
+					t.Fatalf(
+						"Got bad manifest, expected\n>>%s<< but got\n>>%s<<",
+						declsClass.String(), resolvedDeclsClass.String(),
+					)
+				}
+			}
+		})
 	}
 }
 
@@ -903,7 +699,7 @@ var badVariableTest = []struct {
 		`class C {
 			$foo = "$foo"
 		}`,
-		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
+		&Err{Line: 2, Type: ErrorTypeUnresolvableVariable},
 	},
 
 	{
@@ -911,7 +707,7 @@ var badVariableTest = []struct {
 		`class C {
 			$a = [ $a, ]
 		}`,
-		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
+		&Err{Line: 2, Type: ErrorTypeUnresolvableVariable},
 	},
 
 	{
@@ -937,81 +733,13 @@ var badVariableTest = []struct {
 	},
 
 	{
-		"Non-existing nested variable",
-		`class C {
-			$foo = $bar
-			$bar = $baz
-		}`,
-		&Err{Line: 3, Type: ErrorTypeUnresolvableVariable},
-	},
-
-	{
 		"Cyclic variables",
 		`class C {
 			$foo = $foo
 		}`,
-		&CyclicError{
-			Err: Err{
-				Line: 2, Type: ErrorTypeCyclicVariable, SymbolName: "$foo",
-			},
-			Cycle: []string{"$foo", "$foo"},
+		&Err{
+			Line: 2, Type: ErrorTypeUnresolvableVariable, SymbolName: "$foo",
 		},
-	},
-
-	{
-		"Cyclic variables",
-		`class C {
-			$foo = $bar
-			$bar = $foo
-		}`,
-		&Err{Line: 3, Type: ErrorTypeCyclicVariable},
-	},
-
-	{
-		"Nested cyclic variables $foo -> $bar -> $baz -> $foo",
-		`class C {
-			$foo = $bar
-			$bar = $baz
-			$baz = $foo
-		}`,
-		&Err{Line: 3, Type: ErrorTypeCyclicVariable},
-	},
-
-	{
-		"Nested cyclic variables in string $foo -> $bar -> $baz -> $foo",
-		`class C {
-			$foo = $bar
-			$bar = "$baz"
-			$baz = $foo
-		}`,
-		&Err{Line: 3, Type: ErrorTypeCyclicVariable},
-	},
-
-	{
-		"Nested cyclic variables with arrays",
-		`class C {
-			$foo = $bar
-			$bar = [ 1, 'foo', $foo, ]
-		}`,
-		&Err{Line: 2, Type: ErrorTypeCyclicVariable},
-	},
-
-	{
-		"Multiple definitions of the same name",
-		`class C {
-			$foo = 1
-			$foo = 1
-		}`,
-		&Err{Line: 3, Type: ErrorTypeMultipleDefinition},
-	},
-
-	{
-		"Multiple definitions of the same name",
-		`class C {
-			$foo = 1
-			$foo = 'bar'
-		}`,
-		&Err{Line: 3, Type: ErrorTypeMultipleDefinition},
 	},
 
 	{
@@ -1019,70 +747,65 @@ var badVariableTest = []struct {
 		`class C($foo = 4, $foo = 5,) {}`,
 		&Err{Line: 1, Type: ErrorTypeMultipleDefinition},
 	},
-	{
-		"Variable definition of same name in header and body",
-		`class C($foo = 5,) {
-			$foo = 4
-		}`,
-		&Err{Line: 2, Type: ErrorTypeMultipleDefinition},
-	},
 }
 
 func TestResolveBadVariable(t *testing.T) {
 	for _, test := range badVariableTest {
-		ast := ast.NewAST()
-		err := parser.Parse(
-			ast, "err.ms", strings.NewReader(test.inputManifest),
-		)
-		if err != nil {
-			t.Log(test.inputManifest)
-			t.Fatal(err)
-		}
-
-		gs := newGlobalState()
-		resolver := newClassResolver(
-			gs, &ast.Classes[0], nil, "err.ms", ast.Classes[0].LineNum,
-		)
-		resolved, resolveErr := resolver.resolve()
-		if resolveErr == nil {
-			t.Log(test.inputManifest)
-			t.Log(&resolved)
-			t.Fatal("Got no error for", test.comment)
-		} else {
-			var e, expE *Err
-			if ce, ok := resolveErr.(*CyclicError); ok {
-				e = &ce.Err
-			} else {
-				e = resolveErr.(*Err)
+		t.Run(test.comment, func(t *testing.T) {
+			ast := ast.NewAST()
+			err := parser.Parse(
+				ast, "err.ms", strings.NewReader(test.inputManifest),
+			)
+			if err != nil {
+				t.Log(test.inputManifest)
+				t.Fatal(err)
 			}
 
-			if ce, ok := test.expectedError.(*CyclicError); ok {
-				expE = &ce.Err
+			gs := newGlobalState()
+			resolver := newClassResolver(
+				gs, &ast.Classes[0], nil, "err.ms", ast.Classes[0].LineNum,
+			)
+			resolveErr := resolver.resolve()
+			if resolveErr == nil {
+				t.Log(test.inputManifest)
+				t.Log(resolver.ls)
+				t.Fatal("Got no error for", test.comment)
 			} else {
-				expE = test.expectedError.(*Err)
-			}
+				var e, expE *Err
+				if ce, ok := resolveErr.(*CyclicError); ok {
+					e = &ce.Err
+				} else {
+					e = resolveErr.(*Err)
+				}
 
-			if cyclicE, ok := test.expectedError.(*CyclicError); ok {
-				if re, cyclic := resolveErr.(*CyclicError); !cyclic {
+				if ce, ok := test.expectedError.(*CyclicError); ok {
+					expE = &ce.Err
+				} else {
+					expE = test.expectedError.(*Err)
+				}
+
+				if cyclicE, ok := test.expectedError.(*CyclicError); ok {
+					if re, cyclic := resolveErr.(*CyclicError); !cyclic {
+						t.Log(test.inputManifest)
+						t.Errorf(
+							"%s: Got non-cyclic error: %s", test.comment, resolveErr,
+						)
+					} else if !reflect.DeepEqual(cyclicE.Cycle, re.Cycle) {
+						t.Log(test.inputManifest)
+						t.Logf("Expected %#v", cyclicE)
+						t.Logf("Got      %#v", re)
+						t.Errorf("%s: Got bad cycle error: %s", test.comment, e)
+					}
+				}
+
+				if e.Line != expE.Line || e.Type != expE.Type {
 					t.Log(test.inputManifest)
 					t.Errorf(
-						"%s: Got non-cyclic error: %s", test.comment, resolveErr,
+						"%s: Got bad error: %s. Expected %s", test.comment, e, expE,
 					)
-				} else if !reflect.DeepEqual(cyclicE.Cycle, re.Cycle) {
-					t.Log(test.inputManifest)
-					t.Logf("Expected %#v", cyclicE)
-					t.Logf("Got      %#v", re)
-					t.Errorf("%s: Got bad cycle error: %s", test.comment, e)
 				}
 			}
-
-			if e.Line != expE.Line || e.Type != expE.Type {
-				t.Log(test.inputManifest)
-				t.Errorf(
-					"%s: Got bad error: %s. Expected %s", test.comment, e, expE,
-				)
-			}
-		}
+		})
 	}
 }
 

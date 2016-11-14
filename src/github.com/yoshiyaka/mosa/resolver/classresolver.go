@@ -48,22 +48,20 @@ func newClassResolver(gs *globalState, class *Class, withArgs []Prop, realizedIn
 //
 //		package { 'bar': }
 //	}
-func (cr *classResolver) resolve() (Class, error) {
+func (cr *classResolver) resolve() error {
 	c := cr.original
-	retClass := *cr.original
 
 	// Start by loading all top-level variables defined
 	if err := cr.ls.setVarsFromArgs(cr.args, cr.original.ArgDefs); err != nil {
-		return retClass, err
+		return err
 	}
 
 	br := newBlockResolver(&c.Block, cr.ls, cr.gs, true)
 
 	var err error
-	retClass.Block, err = br.resolve()
-	if err != nil {
-		return retClass, err
+	if err = br.resolve(); err != nil {
+		return err
 	}
 
-	return retClass, nil
+	return nil
 }

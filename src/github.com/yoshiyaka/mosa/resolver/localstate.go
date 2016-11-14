@@ -9,9 +9,6 @@ import (
 // Holds local state when resolving a node, class or define. This includes stuff
 // such as which variables are currently defined, and what values they hold.
 type localState struct {
-	// Contains a map of all top level variable definitions seen in the class.
-	varDefsByName map[string]VariableDef
-
 	// When a variable is resolved, it will be removed from varDefsByName and
 	// stored here with its final value.
 	resolvedVars map[string]Value
@@ -25,7 +22,6 @@ type localState struct {
 
 func newLocalState(definedInFile, realizedInFile string, realizedAtLine int) *localState {
 	return &localState{
-		varDefsByName:  map[string]VariableDef{},
 		resolvedVars:   map[string]Value{},
 		definedInFile:  definedInFile,
 		realizedInFile: realizedInFile,
@@ -55,53 +51,11 @@ func (ls *localState) resolveVariableRecursive(lookingFor VariableName, lineNum 
 		return val, nil
 	}
 
-	foundVar, found := ls.varDefsByName[lookingFor.Str]
-	if !found {
-		return nil, &Err{
-			Line:       lineNum,
-			Type:       ErrorTypeUnresolvableVariable,
-			SymbolName: string(lookingFor.String()),
-		}
+	return nil, &Err{
+		Line:       lineNum,
+		Type:       ErrorTypeUnresolvableVariable,
+		SymbolName: string(lookingFor.String()),
 	}
-
-	chain = append(chain, &foundVar)
-	if _, seen := seenNames[lookingFor]; seen {
-		cycle := make([]string, len(chain)+1)
-		for i, def := range chain {
-			cycle[i] = string(def.VariableName.Str)
-		}
-		cycle[len(cycle)-1] = string(lookingFor.Str)
-		return nil, &CyclicError{
-			Err: Err{
-				Line:       chain[0].LineNum,
-				Type:       ErrorTypeCyclicVariable,
-				SymbolName: string(chain[0].VariableName.Str),
-			},
-			Cycle: cycle,
-		}
-	}
-	seenNames[lookingFor] = true
-
-	if _, isVar := foundVar.Val.(VariableName); !isVar {
-		// This is an actual value, not a variable name. Recurse and continue
-		// resolve in case the value is some thing that needs to be resovled,
-		// such as an array or an interpolated string.
-		resolved, err := ls.resolveValueRecursive(
-			foundVar.Val, foundVar.LineNum, chain, seenNames,
-		)
-
-		if err == nil {
-			ls.resolvedVars[lookingFor.Str] = resolved
-			delete(ls.varDefsByName, lookingFor.Str)
-		}
-
-		return resolved, err
-	}
-
-	return ls.resolveVariableRecursive(
-		foundVar.Val.(VariableName), foundVar.LineNum, append(chain, &foundVar),
-		seenNames,
-	)
 }
 
 func (ls *localState) resolveArrayRecursive(a Array, lineNum int, chain []*VariableDef, seenNames map[VariableName]bool) (Array, error) {
@@ -259,14 +213,6 @@ func (ls *localState) setVarsFromArgs(passedArgs []Prop, availableParams []Varia
 	delete(argsByName, "depends")
 
 	for _, def := range availableParams {
-		if _, exists := ls.varDefsByName[def.VariableName.Str]; exists {
-			return &Err{
-				Line:       def.LineNum,
-				Type:       ErrorTypeMultipleDefinition,
-				SymbolName: string(def.VariableName.Str),
-			}
-		}
-
 		if arg, hasArg := argsByName[def.VariableName.Str[1:]]; hasArg {
 			// Pass the argument value
 			def.Val = arg.Value
@@ -280,7 +226,8 @@ func (ls *localState) setVarsFromArgs(passedArgs []Prop, availableParams []Varia
 			)
 		}
 
-		ls.varDefsByName[def.VariableName.Str] = def
+		ls.resolvedVars[def.VariableName.Str] = def.Val
+		//		ls.varDefsByName[def.VariableName.Str] = def
 	}
 
 	// Make sure no args which doesn't exist in the class was passed to it.

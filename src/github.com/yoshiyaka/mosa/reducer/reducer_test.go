@@ -102,7 +102,12 @@ func TestReducer(t *testing.T) {
 		}
 
 		if !DeclarationsEquals(reduced, expectedDecls) {
-			b := &Block{Declarations: reduced}
+			reducedStmts := make([]Statement, len(reduced))
+			for i, _ := range reduced {
+				reducedStmts[i] = &reduced[i]
+			}
+
+			b := &Block{Statements: reducedStmts}
 			t.Errorf(
 				"Bad manifest encountered. Wanted \n%s but got \n%s",
 				test.expectedManifest, b.String(),

@@ -150,7 +150,7 @@ func (r *resolver) resolveNode(node *Node) error {
 
 func (r *resolver) realizeClassesRecursive(c *Class, args []Prop, file string, line int) error {
 	classResolver := newClassResolver(r.gs, c, args, file, line)
-	if _, err := classResolver.resolve(); err != nil {
+	if err := classResolver.resolve(); err != nil {
 		return err
 	}
 

@@ -27,54 +27,30 @@ func newBlockResolver(b *Block, ls *localState, gs *globalState, allowClassReali
 	}
 }
 
-func (br *blockResolver) resolve() (Block, error) {
-	retBlock := *br.block
-
-	for _, def := range br.block.VariableDefs {
-		if _, exists := br.ls.varDefsByName[def.VariableName.Str]; exists {
-			return retBlock, &Err{
-				Line:       def.LineNum,
-				Type:       ErrorTypeMultipleDefinition,
-				SymbolName: string(def.VariableName.Str),
+func (br *blockResolver) resolve() error {
+	for _, stmt := range br.block.Statements {
+		switch v := stmt.(type) {
+		case *VariableDef:
+			if val, err := br.ls.resolveValue(v.Val, v.LineNum); err != nil {
+				return err
+			} else {
+				br.ls.resolvedVars[v.VariableName.Str] = val
 			}
-		}
+			//			newStmts[i] = val
 
-		br.ls.varDefsByName[def.VariableName.Str] = def
-	}
+		case *If:
+			if err := br.resolveIf(v); err != nil {
+				return err
+			}
 
-	// Resolve top-level variables defined
-	newDefs := make([]VariableDef, len(br.block.VariableDefs))
-	for i, def := range br.block.VariableDefs {
-		var err error
-		def.Val, err = br.ls.resolveValue(def.Val, def.LineNum)
-		if err != nil {
-			return retBlock, err
-		}
-		newDefs[i] = def
-	}
-	retBlock.VariableDefs = newDefs
-
-	retBlock.Ifs = make([]If, len(br.block.Ifs))
-	for i, _if := range br.block.Ifs {
-		var err error
-		retBlock.Ifs[i], err = br.resolveIf(&_if)
-		if err != nil {
-			return retBlock, err
-		}
-	}
-
-	retBlock.Declarations = make([]Declaration, 0, len(br.block.Declarations))
-	for _, decl := range br.block.Declarations {
-		if decls, err := br.resolveDeclaration(&decl); err != nil {
-			return retBlock, err
-		} else {
-			for _, d := range decls {
-				retBlock.Declarations = append(retBlock.Declarations, d)
+		case *Declaration:
+			if _, err := br.resolveDeclaration(v); err != nil {
+				return err
 			}
 		}
 	}
 
-	return retBlock, nil
+	return nil
 }
 
 func (cr *blockResolver) resolveDeclaration(decl *Declaration) ([]Declaration, error) {
@@ -206,19 +182,16 @@ func (br *blockResolver) realizeClass(name string, decl *Declaration) error {
 		nestedResolver := newClassResolver(
 			br.gs, class, decl.Props, br.block.Filename, decl.LineNum,
 		)
-		_, err := nestedResolver.resolve()
-		return err
+		return nestedResolver.resolve()
 	}
 }
 
-func (br *blockResolver) resolveIf(_if *If) (If, error) {
-	retIf := *_if
-
+func (br *blockResolver) resolveIf(_if *If) error {
 	var boolean bool
 	if boolVal, err := br.ls.resolveValue(_if.Expression, _if.LineNum); err != nil {
-		return retIf, err
+		return err
 	} else if realBool, ok := boolVal.(Bool); !ok {
-		return retIf, fmt.Errorf(
+		return fmt.Errorf(
 			"Expressions in if-statements must be boolean at %s:%d",
 			br.block.Filename, _if.LineNum,
 		)
@@ -231,22 +204,18 @@ func (br *blockResolver) resolveIf(_if *If) (If, error) {
 			&_if.Block, br.ls, br.gs, br.allowClassRealizations,
 		)
 
-		var err error
-		retIf.Block, err = br.resolve()
-		if err != nil {
-			return retIf, err
+		if err := br.resolve(); err != nil {
+			return err
 		}
 	} else if _if.Else != nil {
 		br := newBlockResolver(
 			_if.Else, br.ls, br.gs, br.allowClassRealizations,
 		)
 
-		if block, err := br.resolve(); err != nil {
-			return retIf, err
-		} else {
-			retIf.Else = &block
+		if err := br.resolve(); err != nil {
+			return err
 		}
 	}
 
-	return retIf, nil
+	return nil
 }
